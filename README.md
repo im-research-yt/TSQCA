@@ -21,16 +21,12 @@ Implemented sweep types:
 - **OTS-QCA (otSweep)**: Sweep the threshold of Y only  
 - **DTS-QCA (dtSweep)**: Sweep X and Y thresholds simultaneously (2D sweep)
 
----
-
 ## Installation
 
 ```r
 install.packages("devtools")
 devtools::install_github("your-account/TSQCA")
 ```
-
----
 
 ## Basic Setup
 
@@ -45,8 +41,6 @@ Xvars <- c("X1", "X2", "X3")
 
 str(dat)
 ```
-
----
 
 # 1. CTS-QCA: single-condition X sweep (ctSweepS)
 
@@ -71,8 +65,6 @@ res_cts <- ctSweepS(
 head(res_cts)
 ```
 
----
-
 # 2. MCTS-QCA: multi-condition X sweep (ctSweepM)
 
 ```r
@@ -95,8 +87,6 @@ res_mcts <- ctSweepM(
 head(res_mcts)
 ```
 
----
-
 # 3. OTS-QCA: outcome Y sweep (otSweep)
 
 ```r
@@ -114,8 +104,6 @@ res_ots <- otSweep(
 
 head(res_ots)
 ```
-
----
 
 # 4. DTS-QCA: 2D sweep of X and Y (dtSweep)
 
@@ -142,8 +130,6 @@ res_dts <- dtSweep(
 head(res_dts)
 ```
 
----
-
 ## Sample Data
 
 ```r
@@ -151,7 +137,24 @@ d <- read.csv("sample_data.csv", fileEncoding = "UTF-8")
 save(d, file = "data/sample_data.rda")
 ```
 
----
+## References
+
+### Core QCA Methodology
+
+- Ragin, C. C. (2008). *Redesigning Social Inquiry: Fuzzy Sets and Beyond*. University of Chicago Press. [DOI: 10.7208/chicago/9780226702797.001.0001](https://doi.org/10.7208/chicago/9780226702797.001.0001)
+- Schneider, C. Q., & Wagemann, C. (2012). *Set-Theoretic Methods for the Social Sciences: A Guide to Qualitative Comparative Analysis*. Cambridge University Press. [DOI: 10.1017/CBO9781139004244](https://doi.org/10.1017/CBO9781139004244)
+
+### QCA R Package
+
+- Duşa, A. (2019). *QCA with R: A Comprehensive Resource*. Springer. [DOI: 10.1007/978-3-319-75668-4](https://doi.org/10.1007/978-3-319-75668-4)
+- Duşa, A. (2018). Consistency Cubes: A Fast, Efficient Method for Exact Boolean Minimization. *The R Journal*, 10(2), 357–370. [DOI: 10.32614/RJ-2018-080](https://doi.org/10.32614/RJ-2018-080)
+
+### Robustness and Threshold Sensitivity
+
+- Oana, I.-E., & Schneider, C. Q. (2024). A Robustness Test Protocol for Applied QCA: Theory and R Software Application. *Sociological Methods & Research*, 53(1), 57–88. [DOI: 10.1177/00491241211036158](https://doi.org/10.1177/00491241211036158)
+- Oana, I.-E., & Schneider, C. Q. (2018). SetMethods: An Add-on R Package for Advanced QCA. *The R Journal*, 10(1), 507–533. [DOI: 10.32614/RJ-2018-031](https://doi.org/10.32614/RJ-2018-031)
+- Skaaning, S.-E. (2011). Assessing the Robustness of Crisp-Set and Fuzzy-Set QCA Results. *Sociological Methods & Research*, 40(2), 391–408. [DOI: 10.1177/0049124111404818](https://doi.org/10.1177/0049124111404818)
+- Thiem, A., Spöhel, R., & Duşa, A. (2016). Enhancing Sensitivity Diagnostics for Qualitative Comparative Analysis: A Combinatorial Approach. *Political Analysis*, 24(1), 104–120. [DOI: 10.1093/pan/mpv028](https://doi.org/10.1093/pan/mpv028)
 
 ## License
 

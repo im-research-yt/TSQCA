@@ -4,3 +4,7 @@
 ^Meta$
 ^README_JA\.md$
 ^LICENSE\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

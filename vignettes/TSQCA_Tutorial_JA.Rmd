@@ -198,7 +198,15 @@ CTS / MCTS / OTS / DTS の各手法により、研究者は：
 
 を実現できます。
 
----
+
+## References
+
+For more information on TS-QCA methodology, see:
+
+- Ragin, C. C. (2008). *Redesigning Social Inquiry: Fuzzy Sets and Beyond*. University of Chicago Press. DOI: [10.7208/chicago/9780226702797.001.0001](https://doi.org/10.7208/chicago/9780226702797.001.0001)
+- Duşa, A. (2019). *QCA with R: A Comprehensive Resource*. Springer. DOI: [10.1007/978-3-319-75668-4](https://doi.org/10.1007/978-3-319-75668-4)
+- Oana, I.-E., & Schneider, C. Q. (2024). A Robustness Test Protocol for Applied QCA: Theory and R Software Application. *Sociological Methods & Research*, 53(1), 57–88. DOI: [10.1177/00491241211036158](https://doi.org/10.1177/00491241211036158)
+
 
 # セッション情報
 ```{r}
