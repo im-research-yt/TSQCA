@@ -1,0 +1,206 @@
+---
+title: "TSQCA Tutorial (Japanese)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{TSQCA Tutorial (Japanese)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# はじめに
+
+TS-QCA（Threshold-Sweep QCA）は、crisp-set QCA において  
+**アウトカム Y と条件 X の閾値設定が結果に与える影響を体系的に評価する**  
+ためのフレームワークです。
+
+QCA はキャリブレーション後、設定した閾値に基づいて  
+データを 0/1 の集合に分けます。  
+しかし、閾値が少し変わるだけで、Truth Table や最小化解が変化することがあります。
+
+TS-QCA はその問題に対して、以下を自動実行します。
+
+- 多数の閾値候補に基づくデータの二値化  
+- Truth Table の生成  
+- `QCA::minimize()` による最小化  
+- 解（式・整合性・被覆値）の抽出  
+
+---
+
+# 実装されている4手法
+
+TSQCA パッケージでは、TS-QCA の4つのスイープ手法を実装しています。
+
+| 手法 | 変化させる閾値 | 固定する閾値 | 目的 |
+|------|----------------|--------------|------|
+| **CTS–QCA** | 1つの X | Y + 他の X | 個別条件の影響を見る |
+| **MCTS–QCA** | 複数の X | Y | 複数条件の組合せの影響 |
+| **OTS–QCA** | Y | 全ての X | アウトカム閾値の影響 |
+| **DTS–QCA** | X と Y | なし | 全面的感度分析 |
+
+---
+
+# データ準備
+
+TS-QCA は、キャリブレーション済みデータ（例：0〜10 スケール）を想定しています。  
+閾値は数値（整数・実数）であれば構いません。
+```{r}
+# Adjust the file name as needed
+library(TSQCA)
+data("sample_data")
+dat <- sample_data
+str(dat)
+
+Yvar  <- "Y"
+Xvars <- c("X1", "X2", "X3")
+```
+
+※ 欠損値（NA）が含まれている場合、スイープ実行前に除去または補完を行ってください。
+
+---
+
+# CTS–QCA（ctSweepS）：単一条件 X スイープ
+
+CTS–QCA は、**1つの X 条件の閾値だけを変化させ**、  
+Y とその他の X の閾値は固定したまま、結果の変化を確認する手法です。
+```{r, error=TRUE}
+sweep_var   <- "X3"   # 閾値を変化させる対象の条件（X）
+sweep_range <- 6:9    # 試す閾値候補
+
+thrY         <- 7     # Y の閾値（固定）
+thrX_default <- 7     # その他 X の閾値（固定）
+
+res_cts <- ctSweepS(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_var      = sweep_var,
+  sweep_range    = sweep_range,
+  thrY           = thrY,
+  thrX_default   = thrX_default,
+  return_details = FALSE
+)
+
+head(res_cts)
+```
+
+---
+
+# MCTS–QCA（ctSweepM）：複数条件 X スイープ
+
+MCTS–QCA は、**複数の X 条件の閾値を同時に変化させ**、  
+すべての組合せに対して QCA を実行する手法です。
+```{r, error=TRUE}
+sweep_list <- list(
+  X1 = 6:8,
+  X2 = 6:8,
+  X3 = 6:8
+)
+
+res_mcts <- ctSweepM(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_list     = sweep_list,
+  thrY           = 7,
+  return_details = FALSE
+)
+
+head(res_mcts)
+```
+
+---
+
+# OTS–QCA（otSweep）：アウトカム Y のスイープ
+
+OTS–QCA は、**アウトカム Y の閾値だけを変化させる**手法です。  
+条件 X の閾値は固定したまま、Y の閾値の取り方が結果に与える影響を評価します。
+```{r}
+thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # X の閾値（固定）
+
+res_ots <- otSweep(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_range    = 6:9,            # Y の閾値候補
+  thrX           = thrX,
+  return_details = FALSE
+)
+
+head(res_ots)
+```
+
+---
+
+# DTS–QCA（dtSweep）：X×Y 二次元スイープ
+
+DTS–QCA は、**X の閾値（複数条件）と Y の閾値を同時に変化させる**  
+最も包括的なスイープ手法です。
+```{r}
+# X 側の閾値候補（複数条件）
+sweep_list_X <- list(
+  X1 = 6:8,
+  X2 = 6:8,
+  X3 = 6:8
+)
+
+# Y 側の閾値候補
+sweep_range_Y <- 6:8
+
+res_dts <- dtSweep(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_list_X   = sweep_list_X,   # X 側の閾値候補
+  sweep_range_Y  = sweep_range_Y,  # Y 側の閾値候補
+  return_details = FALSE
+)
+
+head(res_dts)
+```
+
+---
+
+# 出力の読み方
+
+各スイープ関数の出力には、概ね次の情報が含まれます。
+
+- どの閾値を用いたか（X または Y の閾値）
+- その閾値のもとで得られた最小化解（`expression`）
+- 解の整合性（`inclS`）
+- 解の被覆値（`covS`）
+
+一般的な解釈の目安：
+
+- **整合性（inclS）がおおよそ 0.8 以上**であれば、十分条件として望ましいとされることが多いです。  
+- **被覆値（covS）**は、その解がどの程度のケースを説明できているか（実質的な影響力）を示します。
+
+※ 閾値をわずかに変えただけで最小化解が大きく変化する場合、  
+その結果は閾値設定に敏感であり、ロバスト性に課題があると判断できます。
+
+---
+
+# まとめ
+
+TSQCA を用いることで、QCA における閾値設定の影響を体系的に評価し、  
+分析結果のロバスト性を確認できます。
+
+CTS / MCTS / OTS / DTS の各手法により、研究者は：
+
+- 頑健な因果パターンの特定  
+- 閾値に敏感な結果の検出  
+- 分析全体の信頼性向上  
+
+を実現できます。
+
+---
+
+# セッション情報
+```{r}
+sessionInfo()
+```

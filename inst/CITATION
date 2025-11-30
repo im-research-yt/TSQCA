@@ -1,0 +1,10 @@
+citHeader("To cite TSQCA in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "TSQCA: Threshold Sweep Extensions for Qualitative Comparative Analysis",
+  author   = "Yuki Toyoda",
+  year     = "2025",
+  note     = "R package version 0.1.0",
+  url      = "https://github.com/your-account/TSQCA"
+)
