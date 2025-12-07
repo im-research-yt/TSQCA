@@ -75,9 +75,23 @@
 #'         insights from threshold variation patterns
 #' }
 #' 
-#' ## Relationship to Existing QCA Packages
+#' ## Relationship with QCA Package
 #' 
-#' TSQCA is built as a complementary extension to the \pkg{QCA} package:
+#' TSQCA is built on top of the \pkg{QCA} package (Duşa, 2024). All threshold 
+#' sweep functions use \code{\link[QCA]{truthTable}} and \code{\link[QCA]{minimize}} 
+#' internally. Function arguments such as \code{incl.cut}, \code{n.cut}, 
+#' \code{pri.cut}, \code{include}, and \code{dir.exp} follow QCA package 
+#' conventions. For detailed explanations of these parameters, please refer to 
+#' the QCA package documentation:
+#' 
+#' \itemize{
+#'   \item \code{\link[QCA]{truthTable}} - For threshold and frequency cutoffs 
+#'         (\code{incl.cut}, \code{n.cut}, \code{pri.cut})
+#'   \item \code{\link[QCA]{minimize}} - For minimization parameters 
+#'         (\code{include}, \code{dir.exp})
+#' }
+#' 
+#' This design ensures:
 #' 
 #' \itemize{
 #'   \item \strong{QCA package's role}: Truth table generation, logical 
@@ -86,10 +100,9 @@
 #'         stability analysis, critical point detection
 #'   \item \strong{Integration}: TSQCA calls QCA functions internally; 
 #'         it does not reimplement core QCA algorithms
+#'   \item \strong{Compatibility}: Works seamlessly with established QCA 
+#'         workflows while adding new analytical capabilities
 #' }
-#' 
-#' This design ensures compatibility with established QCA workflows while 
-#' adding new analytical capabilities that existing packages do not provide.
 #' 
 #' ## Typical Workflow
 #' 
@@ -117,8 +130,8 @@
 #' @section Main Functions:
 #' 
 #' \describe{
-#'   \item{\code{\link{otsSweep}}}{Execute OTS-QCA (Outcome Threshold Sweep)}
-#'   \item{\code{\link{ctsSweep}}}{Execute CTS-QCA (Condition Threshold Sweep)}
+#'   \item{\code{\link{otSweep}}}{Execute OTS-QCA (Outcome Threshold Sweep)}
+#'   \item{\code{\link{ctSweepS}}}{Execute CTS-QCA (Condition Threshold Sweep)}
 #'   \item{\code{\link{ctSweepM}}}{Execute MCTS-QCA (Multi-dimensional CTS)}
 #'   \item{\code{\link{dtSweep}}}{Execute DTS-QCA (Dual Threshold Sweep)}
 #' }
@@ -132,8 +145,8 @@
 #'
 #' @seealso 
 #' \itemize{
-#'   \item GitHub repository: \url{https://github.com/ytoyoda/tsqca}
-#'   \item Bug reports: \url{https://github.com/ytoyoda/tsqca/issues}
+#'   \item GitHub repository: \url{https://github.com/im-research-yt/TSQCA}
+#'   \item Bug reports: \url{https://github.com/im-research-yt/TSQCA/issues}
 #'   \item \pkg{QCA} package for standard QCA analysis
 #' }
 #' 
@@ -143,27 +156,27 @@
 #' library(TSQCA)
 #' 
 #' # Example: OTS-QCA with outcome threshold sweep
-#' result_ots <- otsSweep(
-#'   data = mydata,
-#'   outcome = "performance",
-#'   conditions = c("strategy", "resources", "competition"),
-#'   thresholds_y = seq(6, 9, by = 1)
+#' result_ots <- otSweep(
+#'   dat = sample_data,
+#'   Yvar = "Y",
+#'   Xvars = c("X1", "X2", "X3"),
+#'   sweep_range = 6:9,
+#'   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 #' )
 #' 
 #' # Example: CTS-QCA with single condition threshold sweep
-#' result_cts <- ctsSweep(
-#'   data = mydata,
-#'   outcome = "performance",
-#'   conditions = c("strategy", "resources", "competition"),
-#'   sweep_condition = "strategy",
-#'   thresholds_x = seq(5, 8, by = 1)
+#' result_cts <- ctSweepS(
+#'   dat = sample_data,
+#'   Yvar = "Y",
+#'   Xvars = c("X1", "X2", "X3"),
+#'   sweep_var = "X1",
+#'   sweep_range = 5:8,
+#'   thrY = 7,
+#'   thrX_default = 7
 #' )
 #' 
 #' # See vignettes for detailed tutorials
-#' vignette("TSQCA-intro")
+#' vignette("TSQCA_Tutorial_EN", package = "TSQCA")
 #' }
 #'
-#' @docType package
-#' @name TSQCA-package
-#' @aliases TSQCA
-NULL
+

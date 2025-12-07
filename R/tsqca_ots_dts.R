@@ -227,25 +227,48 @@ otSweep <- function(dat, Yvar, Xvars,
 #' # Load sample data
 #' data(sample_data)
 #' 
-#' # Define threshold ranges for conditions
+#' # Quick demonstration with reduced complexity (< 5 seconds)
+#' # Using 2 conditions and 2 threshold levels
 #' sweep_list_X <- list(
+#'   X1 = 6:7,  # Reduced from 6:8 to 6:7
+#'   X2 = 6:7   # Reduced from 6:8 to 6:7
+#' )
+#' 
+#' sweep_range_Y <- 6:7  # Reduced from 6:8 to 6:7
+#' 
+#' # Run dual threshold sweep with reduced parameters
+#' # This explores 2 × 2^2 = 8 threshold combinations
+#' result_quick <- dtSweep(
+#'   dat = sample_data,
+#'   Yvar = "Y",
+#'   Xvars = c("X1", "X2"),  # Reduced from 3 to 2 conditions
+#'   sweep_list_X = sweep_list_X,
+#'   sweep_range_Y = sweep_range_Y
+#' )
+#' head(result_quick)
+#' 
+#' \donttest{
+#' # Full analysis with all conditions and thresholds
+#' # This explores 3 × 3^3 = 81 threshold combinations (takes ~10-15 seconds)
+#' sweep_list_X_full <- list(
 #'   X1 = 6:8,
 #'   X2 = 6:8,
 #'   X3 = 6:8
 #' )
 #' 
-#' # Define threshold range for outcome
-#' sweep_range_Y <- 6:8
+#' sweep_range_Y_full <- 6:8
 #' 
-#' # Run dual threshold sweep
-#' result <- dtSweep(
+#' result_full <- dtSweep(
 #'   dat = sample_data,
 #'   Yvar = "Y",
 #'   Xvars = c("X1", "X2", "X3"),
-#'   sweep_list_X = sweep_list_X,
-#'   sweep_range_Y = sweep_range_Y
+#'   sweep_list_X = sweep_list_X_full,
+#'   sweep_range_Y = sweep_range_Y_full
 #' )
-#' head(result)
+#' 
+#' # Analyze threshold-dependent causal structures
+#' head(result_full)
+#' }
 #' @export
 dtSweep <- function(dat, Yvar, Xvars,
                     sweep_list_X, sweep_range_Y,

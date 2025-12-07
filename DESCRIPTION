@@ -12,24 +12,22 @@ Description:
     Sweep (DTS) for systematic exploration of threshold calibration effects on 
     crisp-set QCA results. These methods extend traditional robustness approaches 
     by treating threshold variation as an exploratory tool for discovering causal 
-    structures. Based on Ragin (2008) <doi:10.7208/chicago/9780226702797.001.0001>, 
-    Duşa (2019) <doi:10.1007/978-3-319-75668-4>, and robustness protocols by 
-    Oana and Schneider (2024) <doi:10.1177/00491241211036158>.
-Depends: 
-    R (>= 4.0)
-Imports:
-    QCA
-Suggests:
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
+    structures. Built on top of the 'QCA' package by Duşa (2019) 
+    <doi:10.1007/978-3-319-75668-4>, with function arguments following 'QCA' 
+    conventions. Based on Ragin (2008) <doi:10.7208/chicago/9780226702797.001.0001> 
+    and robustness protocols by Oana and Schneider (2024) 
+    <doi:10.1177/00491241211036158>.
+Depends: R (>= 4.0)
+Imports: QCA
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 License: MIT + file LICENSE
 URL: https://github.com/im-research-yt/TSQCA,
-    https://im-research-yt.github.io/TSQCA/
+        https://im-research-yt.github.io/TSQCA/
 BugReports: https://github.com/im-research-yt/TSQCA/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+NeedsCompilation: no

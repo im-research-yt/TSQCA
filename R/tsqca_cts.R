@@ -246,22 +246,43 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #' # Load sample data
 #' data(sample_data)
 #' 
-#' # Define threshold ranges for multiple conditions
+#' # Quick demonstration with 2 conditions (< 5 seconds)
+#' # This explores 2^2 = 4 threshold combinations
 #' sweep_list <- list(
+#'   X1 = 6:7,  # Reduced from 6:8 to 6:7
+#'   X2 = 6:7   # Reduced from 6:8 to 6:7
+#' )
+#' 
+#' # Run multiple condition threshold sweep with reduced parameters
+#' result_quick <- ctSweepM(
+#'   dat = sample_data,
+#'   Yvar = "Y",
+#'   Xvars = c("X1", "X2"),  # Reduced from 3 to 2 conditions
+#'   sweep_list = sweep_list,
+#'   thrY = 7
+#' )
+#' head(result_quick)
+#' 
+#' \donttest{
+#' # Full multi-condition analysis with 3 conditions
+#' # This explores 3^3 = 27 threshold combinations (takes ~5-8 seconds)
+#' sweep_list_full <- list(
 #'   X1 = 6:8,
 #'   X2 = 6:8,
 #'   X3 = 6:8
 #' )
 #' 
-#' # Run multiple condition threshold sweep
-#' result <- ctSweepM(
+#' result_full <- ctSweepM(
 #'   dat = sample_data,
 #'   Yvar = "Y",
 #'   Xvars = c("X1", "X2", "X3"),
-#'   sweep_list = sweep_list,
+#'   sweep_list = sweep_list_full,
 #'   thrY = 7
 #' )
-#' head(result)
+#' 
+#' # Visualize threshold-dependent solution paths
+#' head(result_full)
+#' }
 ctSweepM <- function(dat, Yvar, Xvars,
                      sweep_list, thrY,
                      dir.exp = NULL, include = "?",

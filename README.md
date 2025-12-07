@@ -25,7 +25,42 @@ Implemented sweep types:
 
 ```r
 install.packages("devtools")
-devtools::install_github("your-account/TSQCA")
+devtools::install_github("im-research-yt/TSQCA")
+```
+
+## Relationship with QCA Package
+
+TSQCA is built on top of the [QCA package](https://cran.r-project.org/package=QCA) (Duşa, 2019). All function arguments follow QCA conventions:
+
+- **`incl.cut`, `n.cut`, `pri.cut`** → See `QCA::truthTable()`
+  - Consistency, frequency, and PRI cutoffs for truth table construction
+- **`include`, `dir.exp`** → See `QCA::minimize()`
+  - Inclusion rule and directional expectations for logical minimization
+
+### Why This Matters
+
+- **Familiar Workflow**: If you know QCA, you already know TSQCA's parameters
+- **Detailed Documentation**: For in-depth parameter explanations, refer to QCA package documentation
+- **Seamless Integration**: TSQCA extends QCA without replacing it
+
+### Quick Reference
+
+```r
+# Check QCA parameter documentation
+?QCA::truthTable  # For incl.cut, n.cut, pri.cut
+?QCA::minimize    # For include, dir.exp
+
+# TSQCA uses these same parameters
+result <- dtSweep(
+  dat = sample_data,
+  Yvar = "Y",
+  Xvars = c("X1", "X2"),
+  sweep_list_X = list(X1 = 6:7, X2 = 6:7),
+  sweep_range_Y = 6:7,
+  incl.cut = 0.8,   # QCA parameter
+  n.cut = 2,        # QCA parameter
+  pri.cut = 0.5     # QCA parameter
+)
 ```
 
 ## Basic Setup
@@ -148,6 +183,7 @@ save(d, file = "data/sample_data.rda")
 
 - Duşa, A. (2019). *QCA with R: A Comprehensive Resource*. Springer. [DOI: 10.1007/978-3-319-75668-4](https://doi.org/10.1007/978-3-319-75668-4)
 - Duşa, A. (2018). Consistency Cubes: A Fast, Efficient Method for Exact Boolean Minimization. *The R Journal*, 10(2), 357–370. [DOI: 10.32614/RJ-2018-080](https://doi.org/10.32614/RJ-2018-080)
+- Duşa, A. (2024). *QCA: Qualitative Comparative Analysis*. R package version 3.22. https://CRAN.R-project.org/package=QCA
 
 ### Robustness and Threshold Sensitivity
 
