@@ -1,0 +1,12 @@
+pandoc: 3.7.0.2
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  TSQCA_Reproducible_EN: TSQCA_Reproducible_EN.html
+  TSQCA_Reproducible_JA: TSQCA_Reproducible_JA.html
+  TSQCA_Tutorial_EN: TSQCA_Tutorial_EN.html
+  TSQCA_Tutorial_JA: TSQCA_Tutorial_JA.html
+last_built: 2025-11-30T12:35Z
+urls:
+  reference: https://im-research-yt.github.io/TSQCA/reference
+  article: https://im-research-yt.github.io/TSQCA/articles

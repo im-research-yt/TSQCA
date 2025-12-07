@@ -1,12 +1,4 @@
-/Meta/
 .Rproj.user
 .Rhistory
 .RData
-.httr-oauth
-.DS_Store
-.quarto
-docs
-docs/
-doc/
-docs/
-doc/
+.Ruserdata

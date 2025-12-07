@@ -1,0 +1,206 @@
+---
+title: "TSQCA Tutorial (English)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{TSQCA Tutorial (English)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+Threshold-Sweep QCA (TS-QCA) is a framework for systematically exploring how different threshold settings affect the results of crisp-set Qualitative Comparative Analysis (QCA).  
+In crisp-set QCA, the researcher must choose thresholds to binarize:
+
+- the outcome **Y**, and
+- the conditions **X**.
+
+Small changes in these thresholds may lead to substantial differences in truth tables and minimized solutions.
+
+TS-QCA provides:
+
+- a **systematic** way to vary thresholds,
+- a **transparent** way to evaluate sensitivity,
+- and a **reproducible** workflow for robustness assessment.
+
+The `TSQCA` package implements four sweep methods:
+
+| Method | What varies | What stays fixed | Purpose |
+|--------|-------------|------------------|----------|
+| **CTS–QCA** | One X threshold | Y + other Xs | Evaluate influence of a single condition |
+| **MCTS–QCA** | Multiple X thresholds | Y | Explore combinations of X thresholds |
+| **OTS–QCA** | Y threshold | All Xs | Assess robustness to Y calibration |
+| **DTS–QCA** | X and Y thresholds | None | Full 2D sensitivity analysis |
+
+---
+
+# Data Requirements
+
+TS-QCA assumes:
+
+- Data are calibrated (e.g., 0–10 scale or fuzzy-set values).
+- Thresholds are numeric (integer or real).
+- Missing values should be handled before running sweeps.
+
+Example dataset structure:
+```{r}
+library(TSQCA)
+data("sample_data")
+dat <- sample_data
+str(dat)
+```
+
+Define outcome and conditions:
+```{r}
+Yvar  <- "Y"
+Xvars <- c("X1", "X2", "X3")
+```
+
+---
+
+# CTS–QCA: Single-Condition Sweep (`ctSweepS`)
+
+CTS–QCA varies the threshold for **one X condition**, keeping the others fixed.
+```{r, error=TRUE}
+sweep_var   <- "X3"   # 閾値を変化させる対象の条件（X）
+sweep_range <- 6:9    # 試す閾値候補
+
+thrY         <- 7     # Y の閾値（固定）
+thrX_default <- 7     # その他 X の閾値（固定）
+
+res_cts <- ctSweepS(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_var      = sweep_var,
+  sweep_range    = sweep_range,
+  thrY           = thrY,
+  thrX_default   = thrX_default,
+  return_details = FALSE
+)
+
+head(res_cts)
+```
+
+---
+
+# MCTS–QCA: Multiple X Sweep (`ctSweepM`)
+
+MCTS–QCA evaluates all combinations of thresholds for multiple X conditions.
+```{r, error=TRUE}
+sweep_list <- list(
+  X1 = 6:8,
+  X2 = 6:8,
+  X3 = 6:8
+)
+
+res_mcts <- ctSweepM(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_list     = sweep_list,
+  thrY           = 7,
+  return_details = FALSE
+)
+
+head(res_mcts)
+```
+
+---
+
+# OTS–QCA: Outcome Sweep (`otSweep`)
+
+OTS–QCA varies only the threshold of **Y**, keeping X thresholds fixed.
+```{r}
+thrX <- c(X1 = 7, X2 = 7, X3 = 7)
+
+res_ots <- otSweep(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_range    = 6:9,
+  thrX           = thrX,
+  return_details = FALSE
+)
+
+head(res_ots)
+```
+
+---
+
+# DTS–QCA: Two-Dimensional Sweep (`dtSweep`)
+
+DTS–QCA varies both **X thresholds** and **Y thresholds**, creating a full 2D grid.
+```{r}
+sweep_list_X <- list(
+  X1 = 6:8,
+  X2 = 6:8,
+  X3 = 6:8
+)
+
+sweep_range_Y <- 6:8
+
+res_dts <- dtSweep(
+  dat            = dat,
+  Yvar           = Yvar,
+  Xvars          = Xvars,
+  sweep_list_X   = sweep_list_X,
+  sweep_range_Y  = sweep_range_Y,
+  return_details = FALSE
+)
+
+head(res_dts)
+```
+
+---
+
+# Understanding the Output
+
+Each sweep result contains:
+
+- threshold values tested,
+- minimized solution expression,
+- solution consistency (`inclS`),
+- solution coverage (`covS`).
+
+General guidance:
+
+- **Consistency ≥ 0.8** is typically required for sufficiency.
+- **Coverage** indicates empirical relevance; higher is better.
+- A solution sensitive to small threshold changes suggests low robustness.
+
+---
+
+# Conclusion
+
+TSQCA provides a structured and reproducible way to evaluate  
+how threshold choices influence QCA results.
+
+Using CTS, MCTS, OTS, and DTS sweeps, researchers can:
+
+- assess robustness,
+- identify stable causal patterns,
+- detect threshold-sensitive relationships,
+- and strengthen QCA validity.
+
+
+## References
+
+For more information on TS-QCA methodology, see:
+
+- Ragin, C. C. (2008). *Redesigning Social Inquiry: Fuzzy Sets and Beyond*. University of Chicago Press. DOI: [10.7208/chicago/9780226702797.001.0001](https://doi.org/10.7208/chicago/9780226702797.001.0001)
+- Duşa, A. (2019). *QCA with R: A Comprehensive Resource*. Springer. DOI: [10.1007/978-3-319-75668-4](https://doi.org/10.1007/978-3-319-75668-4)
+- Oana, I.-E., & Schneider, C. Q. (2024). A Robustness Test Protocol for Applied QCA: Theory and R Software Application. *Sociological Methods & Research*, 53(1), 57–88. DOI: [10.1177/00491241211036158](https://doi.org/10.1177/00491241211036158)
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
