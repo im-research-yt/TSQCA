@@ -26,7 +26,42 @@ TS-QCA は、多数の閾値候補を体系的に試しながら以下を自動�
 
 ```r
 install.packages("devtools")
-devtools::install_github("your-account/TSQCA")
+devtools::install_github("im-research-yt/TSQCA")
+```
+
+## QCAパッケージとの関係
+
+TSQCAは[QCAパッケージ](https://cran.r-project.org/package=QCA)（Duşa, 2019）の上に構築されています。すべての関数引数はQCAの規約に従っています：
+
+- **`incl.cut`, `n.cut`, `pri.cut`** → `QCA::truthTable()`を参照
+  - Truth Table構築のための整合性、頻度、PRIのカットオフ値
+- **`include`, `dir.exp`** → `QCA::minimize()`を参照
+  - 論理最小化のための包含ルールと方向性期待値
+
+### なぜこれが重要か
+
+- **馴染みのあるワークフロー**：QCAを知っていれば、TSQCAのパラメータも既に理解しています
+- **詳細なドキュメント**：パラメータの詳しい説明は、QCAパッケージのドキュメントを参照してください
+- **シームレスな統合**：TSQCAはQCAを置き換えるのではなく、拡張します
+
+### クイックリファレンス
+
+```r
+# QCAパラメータのドキュメントを確認
+?QCA::truthTable  # incl.cut, n.cut, pri.cut について
+?QCA::minimize    # include, dir.exp について
+
+# TSQCAは同じパラメータを使用
+result <- dtSweep(
+  dat = sample_data,
+  Yvar = "Y",
+  Xvars = c("X1", "X2"),
+  sweep_list_X = list(X1 = 6:7, X2 = 6:7),
+  sweep_range_Y = 6:7,
+  incl.cut = 0.8,   # QCAパラメータ
+  n.cut = 2,        # QCAパラメータ
+  pri.cut = 0.5     # QCAパラメータ
+)
 ```
 
 ## 基本設定
@@ -42,6 +77,56 @@ Xvars <- c("X1", "X2", "X3")
 
 str(dat)
 ```
+
+## 混合データタイプの扱い
+
+### 2値変数（0/1）の取り扱い
+
+データセットに**連続変数と2値変数（0/1）が混在している場合**、以下の点に注意が必要です：
+
+- **2値変数に対して閾値スイープを行わない** — すでに2値化されているため
+- **2値変数には閾値 1 を指定**して元の値を保持する
+- **`sweep_list`で各変数の閾値を明示的に定義**する
+
+#### なぜ2値変数には閾値1を指定するのか？
+
+`qca_bin()`関数は `x >= thr` で2値化を行います：
+- `x = 0` の場合: `0 >= 1` → FALSE → **0**（元の値を保持）
+- `x = 1` の場合: `1 >= 1` → TRUE → **1**（元の値を保持）
+
+#### 例：混合データの場合
+
+```r
+# X1が2値変数（0/1）、X2とX3が連続変数（0-10）の場合
+sweep_list <- list(
+  X1 = 1,      # 2値変数：閾値1で元の値を保持
+  X2 = 6:8,    # 連続変数：閾値をスイープ
+  X3 = 6:8     # 連続変数：閾値をスイープ
+)
+
+res_mcts <- ctSweepM(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_list = sweep_list,
+  thrY = 7
+)
+```
+
+これにより 1 × 3 × 3 = 9 通りの閾値組み合わせを探索し、X1は固定された2値条件として扱われます。
+
+#### よくある間違い
+
+```r
+# 間違い：2値変数に対してスイープ範囲を指定
+sweep_list <- list(
+  X1 = 6:8,    # すべての値が0になる（0 < 6 かつ 1 < 6 のため）
+  X2 = 6:8,
+  X3 = 6:8
+)
+```
+
+**推奨方法**：各変数のデータタイプに基づいて、常に閾値を明示的に指定してください。
 
 # 1. CTS–QCA：単一条件 X スイープ（ctSweepS）
 
@@ -149,6 +234,7 @@ save(d, file = "data/sample_data.rda")
 
 - Duşa, A. (2019). *QCA with R: A Comprehensive Resource*. Springer. [DOI: 10.1007/978-3-319-75668-4](https://doi.org/10.1007/978-3-319-75668-4)
 - Duşa, A. (2018). Consistency Cubes: A Fast, Efficient Method for Exact Boolean Minimization. *The R Journal*, 10(2), 357–370. [DOI: 10.32614/RJ-2018-080](https://doi.org/10.32614/RJ-2018-080)
+- Duşa, A. (2024). *QCA: Qualitative Comparative Analysis*. R package version 3.22. https://CRAN.R-project.org/package=QCA
 
 ### ロバストネスと閾値感度分析
 

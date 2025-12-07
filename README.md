@@ -77,6 +77,56 @@ Xvars <- c("X1", "X2", "X3")
 str(dat)
 ```
 
+## Working with Mixed Data Types
+
+### Handling Binary Variables (0/1)
+
+When your dataset contains **both continuous and binary (0/1) variables**, special attention is needed:
+
+- **Do NOT use threshold sweep for binary variables** — they are already binarized
+- **Specify threshold = 1** for binary variables to preserve their original values
+- **Explicitly define thresholds** for each variable in `sweep_list`
+
+#### Why Threshold = 1 for Binary Variables?
+
+The `qca_bin()` function uses `x >= thr` for binarization:
+- If `x = 0`: `0 >= 1` → FALSE → **0** (preserved)
+- If `x = 1`: `1 >= 1` → TRUE → **1** (preserved)
+
+#### Example: Mixed Data
+
+```r
+# Suppose X1 is binary (0/1), while X2 and X3 are continuous (0-10)
+sweep_list <- list(
+  X1 = 1,      # Binary variable: use threshold 1 to preserve values
+  X2 = 6:8,    # Continuous: sweep thresholds
+  X3 = 6:8     # Continuous: sweep thresholds
+)
+
+res_mcts <- ctSweepM(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_list = sweep_list,
+  thrY = 7
+)
+```
+
+This explores 1 × 3 × 3 = 9 threshold combinations, treating X1 as a fixed binary condition.
+
+#### Common Mistake
+
+```r
+# WRONG: Using sweep range for binary variables
+sweep_list <- list(
+  X1 = 6:8,    # All values become 0 (since 0 < 6 and 1 < 6)
+  X2 = 6:8,
+  X3 = 6:8
+)
+```
+
+**Best Practice**: Always specify thresholds explicitly for each variable based on its data type.
+
 # 1. CTS-QCA: single-condition X sweep (ctSweepS)
 
 ```r

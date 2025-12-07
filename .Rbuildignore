@@ -10,3 +10,4 @@
 ^vignette_build\.txt$
 ^build$
 ^cran-comments\.md$
+^doc$
