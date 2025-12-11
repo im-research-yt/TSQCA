@@ -1,5 +1,7 @@
 # TSQCA（日本語版）
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
+
 [English README](README.md)
 
 TSQCA は、Qualitative Comparative Analysis（QCA）に対して  

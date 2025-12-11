@@ -23,7 +23,7 @@ Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 License: MIT + file LICENSE
 URL: https://github.com/im-research-yt/TSQCA,
-        https://im-research-yt.github.io/TSQCA/
+    https://doi.org/10.5281/zenodo.17899391
 BugReports: https://github.com/im-research-yt/TSQCA/issues
 Encoding: UTF-8
 LazyData: true
