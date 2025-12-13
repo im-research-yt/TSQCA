@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
 
-[English README](README.md)
+[English README](https://github.com/im-research-yt/TSQCA/blob/master/README.md)
 
 TSQCA は、Qualitative Comparative Analysis（QCA）に対して  
 **閾値スイープ型の分析（TS-QCA）**を実行する R パッケージです。
@@ -23,6 +23,8 @@ TS-QCA は、多数の閾値候補を体系的に試しながら以下を自動�
 - **MCTS–QCA（ctSweepM）**：複数の X の閾値を同時に変化  
 - **OTS–QCA（otSweep）**：Y の閾値だけを変化  
 - **DTS–QCA（dtSweep）**：X と Y の閾値を同時に変化（2次元スイープ）
+
+> **対象範囲:** バージョン 0.1.0 は**十分条件分析**に特化しています。必要条件分析は将来のバージョンで対応予定です。
 
 ## インストール
 

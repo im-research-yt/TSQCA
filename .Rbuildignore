@@ -11,3 +11,4 @@
 ^build$
 ^cran-comments\.md$
 ^doc$
+^CRAN-SUBMISSION$

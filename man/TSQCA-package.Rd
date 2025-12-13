@@ -6,7 +6,7 @@
 \alias{TSQCA-package}
 \title{TSQCA: Threshold Sweep Extensions for Qualitative Comparative Analysis}
 \description{
-Provides threshold sweep methods for Qualitative Comparative Analysis (QCA). Implements Condition Threshold Sweep-Single (CTS-S), Condition Threshold Sweep-Multiple (CTS-M), Outcome Threshold Sweep (OTS), and Dual Threshold Sweep (DTS) for systematic exploration of threshold calibration effects on crisp-set QCA results. These methods extend traditional robustness approaches by treating threshold variation as an exploratory tool for discovering causal structures. Built on top of the 'QCA' package by Duşa (2019) \doi{10.1007/978-3-319-75668-4}, with function arguments following 'QCA' conventions. Based on Ragin (2008) \doi{10.7208/chicago/9780226702797.001.0001} and robustness protocols by Oana and Schneider (2024) \doi{10.1177/00491241211036158}.
+Provides threshold sweep methods for Qualitative Comparative Analysis (QCA). Implements Condition Threshold Sweep-Single (CTS-S), Condition Threshold Sweep-Multiple (CTS-M), Outcome Threshold Sweep (OTS), and Dual Threshold Sweep (DTS) for systematic exploration of threshold calibration effects on crisp-set QCA results. These methods extend traditional robustness approaches by treating threshold variation as an exploratory tool for discovering causal structures. Built on top of the 'QCA' package \doi{10.1007/978-3-319-75668-4}, with function arguments following 'QCA' conventions. Based on set-theoretic methods \doi{10.7208/chicago/9780226702797.001.0001} and established robustness protocols \doi{10.1177/00491241211036158}.
 }
 \seealso{
 Useful links:

@@ -38,6 +38,8 @@ The `TSQCA` package implements four sweep methods:
 | **OTS–QCA** | Y threshold | All Xs | Assess robustness to Y calibration |
 | **DTS–QCA** | X and Y thresholds | None | Full 2D sensitivity analysis |
 
+> **Scope:** This package focuses on **sufficiency analysis**—identifying condition combinations that are sufficient for an outcome. Necessity analysis (whether a condition is required for an outcome) involves different logical structures and evaluation metrics, and is planned for future versions.
+
 ---
 
 # Data Requirements

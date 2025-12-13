@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
 
-[Japanese README](README_JA.md)
+[Japanese README](https://github.com/im-research-yt/TSQCA/blob/master/README_JA.md)
 
 TSQCA is an R package implementing **Threshold-Sweep QCA (TS-QCA)**,  
 a framework for systematically varying the thresholds used to binarize  
@@ -23,8 +23,9 @@ Implemented sweep types:
 - **OTS-QCA (otSweep)**: Sweep the threshold of Y only  
 - **DTS-QCA (dtSweep)**: Sweep X and Y thresholds simultaneously (2D sweep)
 
-## Installation
+> **Scope:** Version 0.1.0 focuses on **sufficiency analysis**. Necessity analysis is planned for future versions.
 
+## Installation
 ```r
 install.packages("devtools")
 devtools::install_github("im-research-yt/TSQCA")
