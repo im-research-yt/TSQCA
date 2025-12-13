@@ -245,6 +245,10 @@ save(d, file = "data/sample_data.rda")
 - Skaaning, S.-E. (2011). Assessing the Robustness of Crisp-Set and Fuzzy-Set QCA Results. *Sociological Methods & Research*, 40(2), 391–408. [DOI: 10.1177/0049124111404818](https://doi.org/10.1177/0049124111404818)
 - Thiem, A., Spöhel, R., & Duşa, A. (2016). Enhancing Sensitivity Diagnostics for Qualitative Comparative Analysis: A Combinatorial Approach. *Political Analysis*, 24(1), 104–120. [DOI: 10.1093/pan/mpv028](https://doi.org/10.1093/pan/mpv028)
 
+## 謝辞
+
+本パッケージは、JSPS科研費JP20K01998の助成を受けた研究で開発された手法を実装しています。
+
 ## ライセンス
 
 MIT License.

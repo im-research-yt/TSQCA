@@ -12,13 +12,18 @@ Provides threshold sweep methods for Qualitative Comparative Analysis (QCA). Imp
 Useful links:
 \itemize{
   \item \url{https://github.com/im-research-yt/TSQCA}
-  \item \url{https://im-research-yt.github.io/TSQCA/}
+  \item \doi{10.5281/zenodo.17899391}
   \item Report bugs at \url{https://github.com/im-research-yt/TSQCA/issues}
 }
 
 }
 \author{
 \strong{Maintainer}: Yuki Toyoda \email{yuki.toyoda.ds@hosei.ac.jp}
+
+Other contributors:
+\itemize{
+  \item Japan Society for the Promotion of Science (KAKENHI Grant Number JP20K01998) [funder]
+}
 
 }
 \keyword{internal}
