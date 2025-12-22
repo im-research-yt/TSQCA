@@ -343,22 +343,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <div id="はじめに" class="section level1">
 <h1>はじめに</h1>
-<p>TS-QCA（Threshold-Sweep QCA）は、crisp-set QCA において<br />
+<p>TS-QCA（Threshold-Sweep QCA）は、crisp-set QCA において
 <strong>アウトカム Y と条件 X
-の閾値設定が結果に与える影響を体系的に評価する</strong><br />
+の閾値設定が結果に与える影響を体系的に評価する</strong>
 ためのフレームワークです。</p>
-<p>QCA はキャリブレーション後、設定した閾値に基づいて<br />
-データを 0/1 の集合に分けます。<br />
-しかし、閾値が少し変わるだけで、Truth Table
+<p>QCA はキャリブレーション後、設定した閾値に基づいて データを 0/1
+の集合に分けます。 しかし、閾値が少し変わるだけで、Truth Table
 や最小化解が変化することがあります。</p>
 <p>TS-QCA はその問題に対して、以下を自動実行します。</p>
 <ul>
-<li>多数の閾値候補に基づくデータの二値化<br />
-</li>
-<li>Truth Table の生成<br />
-</li>
-<li><code>QCA::minimize()</code> による最小化<br />
-</li>
+<li>多数の閾値候補に基づくデータの二値化</li>
+<li>Truth Table の生成</li>
+<li><code>QCA::minimize()</code> による最小化</li>
 <li>解（式・整合性・被覆値）の抽出</li>
 </ul>
 <hr />
@@ -418,21 +414,20 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="データ準備" class="section level1">
 <h1>データ準備</h1>
 <p>TS-QCA は、キャリブレーション済みデータ（例：0〜10
-スケール）を想定しています。<br />
+スケール）を想定しています。
 閾値は数値（整数・実数）であれば構いません。</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Adjust the file name as needed</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(TSQCA)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;sample_data&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>dat <span class="ot">&lt;-</span> sample_data</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">str</span>(dat)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    80 obs. of  4 variables:</span></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;  $ Y : int  8 4 5 7 2 2 7 5 3 8 ...</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;  $ X1: int  7 2 6 8 8 9 8 8 1 5 ...</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;  $ X2: int  7 5 8 4 0 5 8 4 4 2 ...</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;  $ X3: int  1 6 6 5 3 4 5 3 6 8 ...</span></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>Yvar  <span class="ot">&lt;-</span> <span class="st">&quot;Y&quot;</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>Xvars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(TSQCA)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;sample_data&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>dat <span class="ot">&lt;-</span> sample_data</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">str</span>(dat)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    80 obs. of  4 variables:</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt;  $ Y : int  8 4 5 7 2 2 7 5 3 8 ...</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;  $ X1: int  7 2 6 8 8 9 8 8 1 5 ...</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;  $ X2: int  7 5 8 4 0 5 8 4 4 2 ...</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;  $ X3: int  1 6 6 5 3 4 5 3 6 8 ...</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>Yvar  <span class="ot">&lt;-</span> <span class="st">&quot;Y&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>Xvars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>)</span></code></pre></div>
 <p>※
 欠損値（NA）が含まれている場合、スイープ実行前に除去または補完を行ってください。</p>
 <hr />
@@ -474,18 +469,19 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p><code>ctSweepM()</code>を使用する場合：</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># 正しい方法：各変数の閾値を明示的に指定</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>sweep_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="dv">1</span>,      <span class="co"># 2値変数：閾値1で元の値を保持</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,    <span class="co"># 連続変数：閾値をスイープ</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>     <span class="co"># 連続変数：閾値をスイープ</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="dv">1</span>,      <span class="co"># 2値変数: 閾値1を使用</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,    <span class="co"># 連続変数: 閾値をスイープ</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>     <span class="co"># 連続変数: 閾値をスイープ</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>)</span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>res_mixed <span class="ot">&lt;-</span> <span class="fu">ctSweepM</span>(</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">dat =</span> dat,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">Yvar =</span> <span class="st">&quot;Y&quot;</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">Xvars =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">sweep_list =</span> sweep_list,</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">thrY =</span> <span class="dv">7</span></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">Yvar           =</span> <span class="st">&quot;Y&quot;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">Xvars          =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">sweep_list     =</span> sweep_list,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">thrY           =</span> <span class="dv">7</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">dir.exp        =</span> <span class="dv">1</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>)</span></code></pre></div>
 <p>これにより 1 × 3 × 3 =
 <strong>9通り</strong>の閾値組み合わせを探索し、X1は固定された2値条件として、X2とX3はスイープされます。</p>
 </div>
@@ -520,8 +516,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </div>
 <div id="ctsqcactsweeps単一条件-x-スイープ" class="section level1">
 <h1>CTS–QCA（ctSweepS）：単一条件 X スイープ</h1>
-<p>CTS–QCA は、<strong>1つの X 条件の閾値だけを変化させ</strong>、<br />
-Y とその他の X の閾値は固定したまま、結果の変化を確認する手法です。</p>
+<p>CTS–QCA は、<strong>1つの X 条件の閾値だけを変化させ</strong>、 Y
+とその他の X の閾値は固定したまま、結果の変化を確認する手法です。</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>sweep_var   <span class="ot">&lt;-</span> <span class="st">&quot;X3&quot;</span>   <span class="co"># 閾値を変化させる対象の条件（X）</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>sweep_range <span class="ot">&lt;-</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">9</span>    <span class="co"># 試す閾値候補</span></span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
@@ -530,110 +526,98 @@ Y とその他の X の閾値は固定したまま、結果の変化を確認す
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>res_cts <span class="ot">&lt;-</span> <span class="fu">ctSweepS</span>(</span>
 <span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">Yvar           =</span> Yvar,</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">Xvars          =</span> Xvars,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">Yvar           =</span> <span class="st">&quot;Y&quot;</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">Xvars          =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">sweep_var      =</span> sweep_var,</span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">sweep_range    =</span> sweep_range,</span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">thrY           =</span> thrY,</span>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">thrX_default   =</span> thrX_default,</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>)</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">head</span>(res_cts)</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt;   threshold expression   inclS      covS</span></span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; 1         6      X1*X2 1.00000 0.3030303</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; 2         7 X3 + X1*X2 0.90625 0.8787879</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; 3         8 X3 + X1*X2 1.00000 0.8181818</span></span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; 4         9 X3 + X1*X2 1.00000 0.5151515</span></span></code></pre></div>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">dir.exp        =</span> <span class="dv">1</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>)</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="fu">head</span>(res_cts)</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt;   threshold  expression inclS covS</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; 1         6 No solution    NA   NA</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; 2         7 No solution    NA   NA</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; 3         8 No solution    NA   NA</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; 4         9 No solution    NA   NA</span></span></code></pre></div>
 <hr />
 </div>
 <div id="mctsqcactsweepm複数条件-x-スイープ" class="section level1">
 <h1>MCTS–QCA（ctSweepM）：複数条件 X スイープ</h1>
-<p>MCTS–QCA は、<strong>複数の X
-条件の閾値を同時に変化させ</strong>、<br />
+<p>MCTS–QCA は、<strong>複数の X 条件の閾値を同時に変化させ</strong>、
 すべての組合せに対して QCA を実行する手法です。</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>sweep_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>res_mcts <span class="ot">&lt;-</span> <span class="fu">ctSweepM</span>(</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">Yvar           =</span> Yvar,</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">Xvars          =</span> Xvars,</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">sweep_list     =</span> sweep_list,</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  <span class="at">thrY           =</span> <span class="dv">7</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>)</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="fu">head</span>(res_mcts)</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;   combo_id        threshold expression     inclS      covS</span></span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; 1        1 X1=6, X2=6, X3=6      X1*X2 0.8333333 0.4545455</span></span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; 2        2 X1=7, X2=6, X3=6      X1*X2 1.0000000 0.3939394</span></span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; 3        3 X1=8, X2=6, X3=6      X1*X2 1.0000000 0.3030303</span></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; 4        4 X1=6, X2=7, X3=6  X1*X2*~X3 0.8181818 0.2727273</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; 5        5 X1=7, X2=7, X3=6      X1*X2 1.0000000 0.3030303</span></span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; 6        6 X1=8, X2=7, X3=6      X1*X2 1.0000000 0.2121212</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>res_mcts <span class="ot">&lt;-</span> <span class="fu">ctSweepM</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">Yvar           =</span> <span class="st">&quot;Y&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">Xvars          =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">sweep_vars     =</span> <span class="fu">c</span>(<span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">sweep_range    =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">9</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">thrY           =</span> <span class="dv">7</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">thrX_default   =</span> <span class="dv">7</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">dir.exp        =</span> <span class="dv">1</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; Error in ctSweepM(dat = dat, Yvar = &quot;Y&quot;, Xvars = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;), : unused arguments (sweep_vars = c(&quot;X2&quot;, &quot;X3&quot;), sweep_range = 6:9, thrX_default = 7)</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="fu">head</span>(res_mcts)</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; Error: object &#39;res_mcts&#39; not found</span></span></code></pre></div>
 <hr />
 </div>
 <div id="otsqcaotsweepアウトカム-y-のスイープ" class="section level1">
 <h1>OTS–QCA（otSweep）：アウトカム Y のスイープ</h1>
 <p>OTS–QCA は、<strong>アウトカム Y
-の閾値だけを変化させる</strong>手法です。<br />
-条件 X の閾値は固定したまま、Y
+の閾値だけを変化させる</strong>手法です。 条件 X の閾値は固定したまま、Y
 の閾値の取り方が結果に与える影響を評価します。</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>thrX <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">X1 =</span> <span class="dv">7</span>, <span class="at">X2 =</span> <span class="dv">7</span>, <span class="at">X3 =</span> <span class="dv">7</span>)  <span class="co"># X の閾値（固定）</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>res_ots <span class="ot">&lt;-</span> <span class="fu">otSweep</span>(</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">Yvar           =</span> Yvar,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">Xvars          =</span> Xvars,</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">sweep_range    =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">9</span>,            <span class="co"># Y の閾値候補</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">thrX           =</span> thrX,</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>)</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">head</span>(res_ots)</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;   thrY  expression   inclS      covS</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 1    6  X3 + X1*X2 0.90625 0.8529412</span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 2    7  X3 + X1*X2 0.90625 0.8787879</span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 3    8 No solution      NA        NA</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 4    9 No solution      NA        NA</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>res_ots <span class="ot">&lt;-</span> <span class="fu">otSweep</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">Yvar           =</span> <span class="st">&quot;Y&quot;</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">Xvars          =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">sweep_range    =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">9</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">thrX           =</span> <span class="fu">c</span>(<span class="at">X1 =</span> <span class="dv">7</span>, <span class="at">X2 =</span> <span class="dv">7</span>, <span class="at">X3 =</span> <span class="dv">7</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">dir.exp        =</span> <span class="dv">1</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="fu">head</span>(res_ots)</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;   thrY  expression inclS covS</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 1    6 No solution    NA   NA</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 2    7 No solution    NA   NA</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 3    8 No solution    NA   NA</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 4    9 No solution    NA   NA</span></span></code></pre></div>
 <hr />
 </div>
 <div id="dtsqcadtsweepxy-二次元スイープ" class="section level1">
 <h1>DTS–QCA（dtSweep）：X×Y 二次元スイープ</h1>
 <p>DTS–QCA は、<strong>X の閾値（複数条件）と Y
-の閾値を同時に変化させる</strong><br />
-最も包括的なスイープ手法です。</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># X 側の閾値候補（複数条件）</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>sweep_list_X <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span></span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>)</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co"># Y 側の閾値候補</span></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>sweep_range_Y <span class="ot">&lt;-</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>res_dts <span class="ot">&lt;-</span> <span class="fu">dtSweep</span>(</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">Yvar           =</span> Yvar,</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">Xvars          =</span> Xvars,</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="at">sweep_list_X   =</span> sweep_list_X,   <span class="co"># X 側の閾値候補</span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  <span class="at">sweep_range_Y  =</span> sweep_range_Y,  <span class="co"># Y 側の閾値候補</span></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>)</span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="fu">head</span>(res_dts)</span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt;   combo_id thrY             thrX  expression     inclS      covS</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; 1        1    6 X1=6, X2=6, X3=6       X1*X2 0.8333333 0.4411765</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; 2        1    7 X1=6, X2=6, X3=6       X1*X2 0.8333333 0.4545455</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; 3        1    8 X1=6, X2=6, X3=6 No solution        NA        NA</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; 4        2    6 X1=7, X2=6, X3=6       X1*X2 1.0000000 0.3823529</span></span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; 5        2    7 X1=7, X2=6, X3=6       X1*X2 1.0000000 0.3939394</span></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; 6        2    8 X1=7, X2=6, X3=6 No solution        NA        NA</span></span></code></pre></div>
+の閾値を同時に変化させる</strong> 最も包括的なスイープ手法です。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>sweep_list_dts_X <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>sweep_range_dts_Y <span class="ot">&lt;-</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>res_dts <span class="ot">&lt;-</span> <span class="fu">dtSweep</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">dat            =</span> dat,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">Yvar           =</span> <span class="st">&quot;Y&quot;</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">Xvars          =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">sweep_list_X   =</span> sweep_list_dts_X,</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">sweep_range_Y  =</span> sweep_range_dts_Y,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="at">dir.exp        =</span> <span class="dv">1</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  <span class="at">return_details =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="fu">head</span>(res_dts)</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt;   combo_id thrY             thrX  expression inclS covS</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; 1        1    6 X1=6, X2=6, X3=6 No solution    NA   NA</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; 2        1    7 X1=6, X2=6, X3=6 No solution    NA   NA</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; 3        1    8 X1=6, X2=6, X3=6 No solution    NA   NA</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; 4        2    6 X1=7, X2=6, X3=6 No solution    NA   NA</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; 5        2    7 X1=7, X2=6, X3=6 No solution    NA   NA</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; 6        2    8 X1=7, X2=6, X3=6 No solution    NA   NA</span></span></code></pre></div>
 <hr />
 </div>
 <div id="出力の読み方" class="section level1">
@@ -648,25 +632,21 @@ Y とその他の X の閾値は固定したまま、結果の変化を確認す
 <p>一般的な解釈の目安：</p>
 <ul>
 <li><strong>整合性（inclS）がおおよそ 0.8
-以上</strong>であれば、十分条件として望ましいとされることが多いです。<br />
-</li>
+以上</strong>であれば、十分条件として望ましいとされることが多いです。</li>
 <li><strong>被覆値（covS）</strong>は、その解がどの程度のケースを説明できているか（実質的な影響力）を示します。</li>
 </ul>
-<p>※ 閾値をわずかに変えただけで最小化解が大きく変化する場合、<br />
+<p>※ 閾値をわずかに変えただけで最小化解が大きく変化する場合、
 その結果は閾値設定に敏感であり、ロバスト性に課題があると判断できます。</p>
 <hr />
 </div>
 <div id="まとめ" class="section level1">
 <h1>まとめ</h1>
-<p>TSQCA を用いることで、QCA
-における閾値設定の影響を体系的に評価し、<br />
+<p>TSQCA を用いることで、QCA における閾値設定の影響を体系的に評価し、
 分析結果のロバスト性を確認できます。</p>
 <p>CTS / MCTS / OTS / DTS の各手法により、研究者は：</p>
 <ul>
-<li>頑健な因果パターンの特定<br />
-</li>
-<li>閾値に敏感な結果の検出<br />
-</li>
+<li>頑健な因果パターンの特定</li>
+<li>閾値に敏感な結果の検出</li>
 <li>分析全体の信頼性向上</li>
 </ul>
 <p>を実現できます。</p>
@@ -706,7 +686,7 @@ Protocol for Applied QCA: Theory and R Software Application.
 <span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; [1] QCA_3.23    admisc_0.39 TSQCA_0.1.0</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; [1] QCA_3.23    admisc_0.39 TSQCA_0.1.2</span></span>
 <span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt;  [1] cli_3.6.5         knitr_1.50        rlang_1.1.6       xfun_0.52        </span></span>

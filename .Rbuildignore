@@ -1,6 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^Meta$
 ^README_JA\.md$
 ^LICENSE\.md$
 ^_pkgdown\.yml$
@@ -8,7 +7,7 @@
 ^pkgdown$
 ^\.github$
 ^vignette_build\.txt$
-^build$
 ^cran-comments\.md$
 ^doc$
 ^CRAN-SUBMISSION$
+^Meta$

@@ -44,12 +44,13 @@ thrX_default <- 7     # その他 X の閾値（固定）
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_var      = sweep_var,
-  sweep_range    = sweep_range,
-  thrY           = thrY,
-  thrX_default   = thrX_default,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_var      = "X3",
+  sweep_range    = 6:9,
+  thrY           = 7,
+  thrX_default   = 7,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -61,18 +62,15 @@ head(res_cts)
 
 ## ----error=TRUE---------------------------------------------------------------
 try({
-sweep_list <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
-)
-
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list     = sweep_list,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_vars     = c("X2", "X3"),
+  sweep_range    = 6:9,
   thrY           = 7,
+  thrX_default   = 7,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -87,10 +85,11 @@ sweep_range_ots <- 6:9
 
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -105,14 +104,16 @@ sweep_list_dts_X <- list(
   X2 = 6:8,
   X3 = 6:8
 )
+
 sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
+  dir.exp        = 1,
   return_details = FALSE
 )
 

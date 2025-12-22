@@ -5,7 +5,6 @@ knitr::opts_chunk$set(
 )
 
 ## -----------------------------------------------------------------------------
-# Adjust the file name as needed
 library(TSQCA)
 data("sample_data")
 dat <- sample_data
@@ -17,17 +16,18 @@ Xvars <- c("X1", "X2", "X3")
 ## ----eval=FALSE---------------------------------------------------------------
 # # 正しい方法：各変数の閾値を明示的に指定
 # sweep_list <- list(
-#   X1 = 1,      # 2値変数：閾値1で元の値を保持
-#   X2 = 6:8,    # 連続変数：閾値をスイープ
-#   X3 = 6:8     # 連続変数：閾値をスイープ
+#   X1 = 1,      # 2値変数: 閾値1を使用
+#   X2 = 6:8,    # 連続変数: 閾値をスイープ
+#   X3 = 6:8     # 連続変数: 閾値をスイープ
 # )
 # 
 # res_mixed <- ctSweepM(
-#   dat = dat,
-#   Yvar = "Y",
-#   Xvars = c("X1", "X2", "X3"),
-#   sweep_list = sweep_list,
-#   thrY = 7
+#   dat            = dat,
+#   Yvar           = "Y",
+#   Xvars          = c("X1", "X2", "X3"),
+#   sweep_list     = sweep_list,
+#   thrY           = 7,
+#   dir.exp        = 1
 # )
 
 ## ----eval=FALSE---------------------------------------------------------------
@@ -62,12 +62,13 @@ thrX_default <- 7     # その他 X の閾値（固定）
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
   sweep_var      = sweep_var,
   sweep_range    = sweep_range,
   thrY           = thrY,
   thrX_default   = thrX_default,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -76,18 +77,15 @@ head(res_cts)
 
 ## ----error=TRUE---------------------------------------------------------------
 try({
-sweep_list <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
-)
-
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list     = sweep_list,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_vars     = c("X2", "X3"),
+  sweep_range    = 6:9,
   thrY           = 7,
+  thrX_default   = 7,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -95,36 +93,34 @@ head(res_mcts)
 })
 
 ## -----------------------------------------------------------------------------
-thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # X の閾値（固定）
-
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_range    = 6:9,            # Y の閾値候補
-  thrX           = thrX,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_range    = 6:9,
+  thrX           = c(X1 = 7, X2 = 7, X3 = 7),
+  dir.exp        = 1,
   return_details = FALSE
 )
 
 head(res_ots)
 
 ## -----------------------------------------------------------------------------
-# X 側の閾値候補（複数条件）
-sweep_list_X <- list(
+sweep_list_dts_X <- list(
   X1 = 6:8,
   X2 = 6:8,
   X3 = 6:8
 )
 
-# Y 側の閾値候補
-sweep_range_Y <- 6:8
+sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list_X   = sweep_list_X,   # X 側の閾値候補
-  sweep_range_Y  = sweep_range_Y,  # Y 側の閾値候補
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_list_X   = sweep_list_dts_X,
+  sweep_range_Y  = sweep_range_dts_Y,
+  dir.exp        = 1,
   return_details = FALSE
 )
 

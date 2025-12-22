@@ -23,11 +23,12 @@ Xvars <- c("X1", "X2", "X3")
 # )
 # 
 # res_mixed <- ctSweepM(
-#   dat = dat,
-#   Yvar = "Y",
-#   Xvars = c("X1", "X2", "X3"),
-#   sweep_list = sweep_list,
-#   thrY = 7
+#   dat            = dat,
+#   Yvar           = "Y",
+#   Xvars          = c("X1", "X2", "X3"),
+#   sweep_list     = sweep_list,
+#   thrY           = 7,
+#   dir.exp        = 1
 # )
 
 ## ----eval=FALSE---------------------------------------------------------------
@@ -54,20 +55,21 @@ Xvars <- c("X1", "X2", "X3")
 
 ## ----error=TRUE---------------------------------------------------------------
 try({
-sweep_var   <- "X3"   # 閾値を変化させる対象の条件（X）
-sweep_range <- 6:9    # 試す閾値候補
+sweep_var   <- "X3"   # Condition (X) whose threshold is swept
+sweep_range <- 6:9    # Candidate threshold values to evaluate
 
-thrY         <- 7     # Y の閾値（固定）
-thrX_default <- 7     # その他 X の閾値（固定）
+thrY         <- 7     # Outcome (Y) threshold (fixed)
+thrX_default <- 7     # Threshold for other X conditions (fixed)
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
   sweep_var      = sweep_var,
   sweep_range    = sweep_range,
   thrY           = thrY,
   thrX_default   = thrX_default,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -76,18 +78,15 @@ head(res_cts)
 
 ## ----error=TRUE---------------------------------------------------------------
 try({
-sweep_list <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
-)
-
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list     = sweep_list,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_vars     = c("X2", "X3"),
+  sweep_range    = 6:9,
   thrY           = 7,
+  thrX_default   = 7,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
@@ -95,34 +94,34 @@ head(res_mcts)
 })
 
 ## -----------------------------------------------------------------------------
-thrX <- c(X1 = 7, X2 = 7, X3 = 7)
-
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
-  thrX           = thrX,
+  thrX           = c(X1 = 7, X2 = 7, X3 = 7),
+  dir.exp        = 1,
   return_details = FALSE
 )
 
 head(res_ots)
 
 ## -----------------------------------------------------------------------------
-sweep_list_X <- list(
+sweep_list_dts_X <- list(
   X1 = 6:8,
   X2 = 6:8,
   X3 = 6:8
 )
 
-sweep_range_Y <- 6:8
+sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list_X   = sweep_list_X,
-  sweep_range_Y  = sweep_range_Y,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_list_X   = sweep_list_dts_X,
+  sweep_range_Y  = sweep_range_dts_Y,
+  dir.exp        = 1,
   return_details = FALSE
 )
 
