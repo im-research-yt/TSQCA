@@ -23,10 +23,33 @@ qca_bin <- function(x, thr) {
 #' @keywords internal
 get_n_solutions <- function(sol) {
   if (is.null(sol)) return(0L)
-  sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
-  if (inherits(sol_list, "try-error") || is.null(sol_list)) {
-    return(0L)
+  
+  # Try multiple paths to get solutions
+  sol_list <- NULL
+  
+  # Path 1: sol$solution (always exists for valid solutions)
+  sol_list <- try(sol$solution, silent = TRUE)
+  if (inherits(sol_list, "try-error") || is.null(sol_list) || length(sol_list) == 0) {
+    sol_list <- NULL
   }
+  
+  # Path 2: sol$i.sol$C1P1$solution (for intermediate solutions with dir.exp)
+  if (is.null(sol_list)) {
+    sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
+    if (inherits(sol_list, "try-error") || is.null(sol_list)) {
+      sol_list <- NULL
+    }
+  }
+  
+  # Path 3: First element of i.sol
+  if (is.null(sol_list) && !is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    sol_list <- try(sol$i.sol[[1]]$solution, silent = TRUE)
+    if (inherits(sol_list, "try-error") || is.null(sol_list)) {
+      sol_list <- NULL
+    }
+  }
+  
+  if (is.null(sol_list)) return(0L)
   length(sol_list)
 }
 
@@ -82,18 +105,78 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     return(null_response(extract_mode))
   }
   
-  # Get all solutions
-  sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
-  if (inherits(sol_list, "try-error") || is.null(sol_list) || length(sol_list) == 0) {
+  # === FIXED: Try multiple paths to get solutions ===
+  sol_list <- NULL
+  
+  # Path 1: sol$solution (always exists for valid solutions)
+  if (is.null(sol_list) || length(sol_list) == 0) {
+    sol_list <- try(sol$solution, silent = TRUE)
+    if (inherits(sol_list, "try-error")) sol_list <- NULL
+  }
+  
+  # Path 2: sol$i.sol$C1P1$solution (for intermediate solutions with dir.exp)
+  if (is.null(sol_list) || length(sol_list) == 0) {
+    sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
+    if (inherits(sol_list, "try-error")) sol_list <- NULL
+  }
+  
+  # Path 3: First element of i.sol
+  if (is.null(sol_list) || length(sol_list) == 0) {
+    if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+      sol_list <- try(sol$i.sol[[1]]$solution, silent = TRUE)
+      if (inherits(sol_list, "try-error")) sol_list <- NULL
+    }
+  }
+  
+  if (is.null(sol_list) || length(sol_list) == 0) {
     return(null_response(extract_mode))
   }
   
-  # Get metrics (may be NA for multiple solutions)
-  incl_val <- try(sol$i.sol$C1P1$IC$sol.incl.cov$inclS, silent = TRUE)
-  inclS <- if (inherits(incl_val, "try-error") || is.null(incl_val)) NA_real_ else incl_val
+  # === FIXED: Try multiple paths to get metrics ===
+  inclS <- NA_real_
+  covS <- NA_real_
   
-  cov_val <- try(sol$i.sol$C1P1$IC$sol.incl.cov$covS, silent = TRUE)
-  covS <- if (inherits(cov_val, "try-error") || is.null(cov_val)) NA_real_ else cov_val
+  # Path 1: sol$IC$sol.incl.cov (for parsimonious solutions without dir.exp)
+  if (is.na(inclS)) {
+    incl_val <- try(sol$IC$sol.incl.cov$inclS, silent = TRUE)
+    if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
+      inclS <- incl_val
+    }
+  }
+  if (is.na(covS)) {
+    cov_val <- try(sol$IC$sol.incl.cov$covS, silent = TRUE)
+    if (!inherits(cov_val, "try-error") && !is.null(cov_val)) {
+      covS <- cov_val
+    }
+  }
+  
+  # Path 2: sol$i.sol$C1P1$IC$sol.incl.cov (for intermediate solutions with dir.exp)
+  if (is.na(inclS)) {
+    incl_val <- try(sol$i.sol$C1P1$IC$sol.incl.cov$inclS, silent = TRUE)
+    if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
+      inclS <- incl_val
+    }
+  }
+  if (is.na(covS)) {
+    cov_val <- try(sol$i.sol$C1P1$IC$sol.incl.cov$covS, silent = TRUE)
+    if (!inherits(cov_val, "try-error") && !is.null(cov_val)) {
+      covS <- cov_val
+    }
+  }
+  
+  # Path 3: First element of i.sol
+  if (is.na(inclS) && !is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    incl_val <- try(sol$i.sol[[1]]$IC$sol.incl.cov$inclS, silent = TRUE)
+    if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
+      inclS <- incl_val
+    }
+  }
+  if (is.na(covS) && !is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    cov_val <- try(sol$i.sol[[1]]$IC$sol.incl.cov$covS, silent = TRUE)
+    if (!inherits(cov_val, "try-error") && !is.null(cov_val)) {
+      covS <- cov_val
+    }
+  }
   
   n_solutions <- length(sol_list)
   

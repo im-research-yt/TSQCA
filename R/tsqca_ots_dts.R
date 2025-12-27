@@ -142,9 +142,10 @@ otSweep <- function(dat, Yvar, Xvars,
       next
     }
     
+    # Handle dir.exp: NULL or scalar -> expand to vector
     local_dir.exp <- dir.exp
-    if (is.null(local_dir.exp)) {
-      local_dir.exp <- rep(1, length(Xvars))
+    if (is.null(local_dir.exp) || length(local_dir.exp) == 1) {
+      local_dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(Xvars))
       names(local_dir.exp) <- Xvars
     }
     
@@ -395,8 +396,9 @@ dtSweep <- function(dat, Yvar, Xvars,
   
   details_list <- list()
   
-  if (is.null(dir.exp)) {
-    dir.exp <- rep(1, length(Xvars))
+  # Handle dir.exp: NULL or scalar -> expand to vector
+  if (is.null(dir.exp) || length(dir.exp) == 1) {
+    dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(Xvars))
     names(dir.exp) <- Xvars
   }
   
