@@ -139,7 +139,8 @@ otSweep <- function(dat, Yvar, Xvars,
           thrY        = thrY,
           thrX_vec    = thrX,
           truth_table = NULL,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = NULL
         )
       }
       next
@@ -179,7 +180,8 @@ otSweep <- function(dat, Yvar, Xvars,
           thrY        = thrY,
           thrX_vec    = thrX,
           truth_table = tt,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = dat_bin
         )
       }
       next
@@ -214,7 +216,8 @@ otSweep <- function(dat, Yvar, Xvars,
         thrY        = thrY,
         thrX_vec    = thrX,
         truth_table = tt,
-        solution    = sol
+        solution    = sol,
+        dat_bin     = dat_bin
       )
     }
   }
@@ -239,6 +242,7 @@ otSweep <- function(dat, Yvar, Xvars,
         Yvar = Yvar,
         Xvars = Xvars,
         thrX = thrX,
+        sweep_range = sweep_range,
         incl.cut = incl.cut,
         n.cut = n.cut,
         pri.cut = pri.cut,
@@ -446,7 +450,8 @@ dtSweep <- function(dat, Yvar, Xvars,
             thrY        = thrY,
             thrX_vec    = thrX_vec,
             truth_table = NULL,
-            solution    = NULL
+            solution    = NULL,
+            dat_bin     = NULL
           )
         }
         
@@ -490,7 +495,8 @@ dtSweep <- function(dat, Yvar, Xvars,
             thrY        = thrY,
             thrX_vec    = thrX_vec,
             truth_table = tt,
-            solution    = NULL
+            solution    = NULL,
+            dat_bin     = dat_bin
           )
         }
         
@@ -530,7 +536,8 @@ dtSweep <- function(dat, Yvar, Xvars,
           thrY        = thrY,
           thrX_vec    = thrX_vec,
           truth_table = tt,
-          solution    = sol
+          solution    = sol,
+          dat_bin     = dat_bin
         )
       }
     }

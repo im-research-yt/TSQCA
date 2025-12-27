@@ -153,7 +153,8 @@ ctSweepS <- function(dat, Yvar, Xvars,
           threshold   = thr,
           thrX_vec    = thrX_vec,
           truth_table = NULL,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = NULL
         )
       }
       next
@@ -194,7 +195,8 @@ ctSweepS <- function(dat, Yvar, Xvars,
           threshold   = thr,
           thrX_vec    = thrX_vec,
           truth_table = tt,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = dat_bin
         )
       }
       next
@@ -229,7 +231,8 @@ ctSweepS <- function(dat, Yvar, Xvars,
         threshold   = thr,
         thrX_vec    = thrX_vec,
         truth_table = tt,
-        solution    = sol
+        solution    = sol,
+        dat_bin     = dat_bin
       )
     }
   }
@@ -452,7 +455,8 @@ ctSweepM <- function(dat, Yvar, Xvars,
           combo_id    = i,
           thrX_vec    = thrX_vec,
           truth_table = NULL,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = NULL
         )
       }
       next
@@ -487,7 +491,8 @@ ctSweepM <- function(dat, Yvar, Xvars,
           combo_id    = i,
           thrX_vec    = thrX_vec,
           truth_table = tt,
-          solution    = NULL
+          solution    = NULL,
+          dat_bin     = dat_bin
         )
       }
       next
@@ -516,7 +521,8 @@ ctSweepM <- function(dat, Yvar, Xvars,
         combo_id    = i,
         thrX_vec    = thrX_vec,
         truth_table = tt,
-        solution    = sol
+        solution    = sol,
+        dat_bin     = dat_bin
       )
     }
   }

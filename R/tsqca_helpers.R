@@ -62,17 +62,19 @@ extract_all_metrics <- function(IC, sol_obj = NULL) {
     }
     
     # Method 3: individual (multiple solutions, first solution metrics)
-    if (is.na(result$sol_inclS) && "individual" %in% names(IC)) {
+    if ("individual" %in% names(IC)) {
       indiv <- IC$individual
       if (is.list(indiv) && length(indiv) > 0) {
         first_indiv <- indiv[[1]]
         if (is.list(first_indiv)) {
-          if ("sol.incl.cov" %in% names(first_indiv)) {
+          # Get sol_inclS if not already found
+          if (is.na(result$sol_inclS) && "sol.incl.cov" %in% names(first_indiv)) {
             sol <- first_indiv$sol.incl.cov
             if (!is.null(sol$inclS)) result$sol_inclS <- sol$inclS[1]
             if (!is.null(sol$PRI)) result$sol_PRI <- sol$PRI[1]
             if (!is.null(sol$covS)) result$sol_covS <- sol$covS[1]
           }
+          # Always try to get term_df from individual
           if (is.null(result$term_df) && "incl.cov" %in% names(first_indiv)) {
             result$term_df <- first_indiv$incl.cov
           }
@@ -96,6 +98,11 @@ extract_all_metrics <- function(IC, sol_obj = NULL) {
     if (!is.null(sol_obj$IC)) {
       IC <- sol_obj$IC
       
+      # Try to get term_df from sol_obj$IC$incl.cov first
+      if (is.null(result$term_df) && "incl.cov" %in% names(IC)) {
+        result$term_df <- IC$incl.cov
+      }
+      
       if ("overall" %in% names(IC)) {
         overall <- IC$overall
         if (is.list(overall)) {
@@ -117,12 +124,13 @@ extract_all_metrics <- function(IC, sol_obj = NULL) {
         }
       }
       
-      if (is.na(result$sol_inclS) && "individual" %in% names(IC)) {
+      # Method 4b: individual (always check for term_df)
+      if ("individual" %in% names(IC)) {
         indiv <- IC$individual
         if (is.list(indiv) && length(indiv) > 0) {
           first_indiv <- indiv[[1]]
           if (is.list(first_indiv)) {
-            if ("sol.incl.cov" %in% names(first_indiv)) {
+            if (is.na(result$sol_inclS) && "sol.incl.cov" %in% names(first_indiv)) {
               sol <- first_indiv$sol.incl.cov
               if (!is.null(sol$inclS)) result$sol_inclS <- sol$inclS[1]
               if (!is.null(sol$PRI)) result$sol_PRI <- sol$PRI[1]
@@ -137,11 +145,12 @@ extract_all_metrics <- function(IC, sol_obj = NULL) {
     }
     
     # Method 5: i.sol (named list: C1P1, C1P2, etc.)
-    if (is.na(result$sol_inclS) && !is.null(sol_obj$i.sol) && length(sol_obj$i.sol) > 0) {
+    # Check for term_df even if sol_inclS is already found
+    if (!is.null(sol_obj$i.sol) && length(sol_obj$i.sol) > 0) {
       first_isol <- sol_obj$i.sol[[1]]
       if (!is.null(first_isol$IC)) {
         IC_isol <- first_isol$IC
-        if ("sol.incl.cov" %in% names(IC_isol)) {
+        if (is.na(result$sol_inclS) && "sol.incl.cov" %in% names(IC_isol)) {
           sol <- IC_isol$sol.incl.cov
           if (!is.null(sol$inclS)) result$sol_inclS <- sol$inclS[1]
           if (!is.null(sol$PRI)) result$sol_PRI <- sol$PRI[1]
@@ -149,6 +158,16 @@ extract_all_metrics <- function(IC, sol_obj = NULL) {
         }
         if (is.null(result$term_df) && "incl.cov" %in% names(IC_isol)) {
           result$term_df <- IC_isol$incl.cov
+        }
+        # Also check individual within i.sol
+        if (is.null(result$term_df) && "individual" %in% names(IC_isol)) {
+          indiv_isol <- IC_isol$individual
+          if (is.list(indiv_isol) && length(indiv_isol) > 0) {
+            first_indiv_isol <- indiv_isol[[1]]
+            if (is.list(first_indiv_isol) && "incl.cov" %in% names(first_indiv_isol)) {
+              result$term_df <- first_indiv_isol$incl.cov
+            }
+          }
         }
       }
     }

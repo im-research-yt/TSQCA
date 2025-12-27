@@ -12,6 +12,9 @@
 #' @param output_file Character. Path to output markdown file.
 #' @param format Character. Report format: \code{"full"} or \code{"simple"}.
 #' @param title Character. Report title.
+#' @param dat Optional data frame. Original data for descriptive statistics.
+#' @param desc_vars Optional character vector. Variables for descriptive statistics.
+#'   If NULL and dat is provided, uses Yvar and Xvars from params.
 #'
 #' @return Invisibly returns the path to the generated report.
 #' @export
@@ -30,12 +33,16 @@
 #'   return_details = TRUE
 #' )
 #' 
-#' generate_report(result, "my_report.md", format = "full")
+#' # With descriptive statistics
+#' generate_report(result, "my_report.md", format = "full", 
+#'                 dat = sample_data)
 #' }
 generate_report <- function(result,
                             output_file = "qca_report.md",
                             format = c("full", "simple"),
-                            title = "QCA Analysis Report") {
+                            title = "QCA Analysis Report",
+                            dat = NULL,
+                            desc_vars = NULL) {
   
   format <- match.arg(format)
   
@@ -60,7 +67,7 @@ generate_report <- function(result,
   
   # Dispatch to appropriate format
   if (format == "full") {
-    write_full_report(result, con)
+    write_full_report(result, con, dat, desc_vars)
   } else {
     write_simple_report(result, con)
   }
@@ -72,19 +79,25 @@ generate_report <- function(result,
 
 #' Write full report content
 #' @keywords internal
-write_full_report <- function(result, con) {
+write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   
   summary_df <- result$summary
   details <- result$details
+  params <- result$params
   
-  # 0. Analysis Settings (if params available)
-  if (!is.null(result$params)) {
-    writeLines("## 0. Analysis Settings\n", con)
-    writeLines("| Parameter | Value |", con)
-    writeLines("|-----------|-------|", con)
-    
-    params <- result$params
-    
+  # ============================================
+  # 0. Analysis Overview
+  # ============================================
+  writeLines("## 0. Analysis Overview\n", con)
+  writeLines("| Item | Value |", con)
+  writeLines("|------|-------|", con)
+  writeLines(paste0("| Analysis Date | ", format(Sys.time(), "%Y-%m-%d %H:%M"), " |"), con)
+  
+  if (!is.null(dat)) {
+    writeLines(paste0("| Total N | ", nrow(dat), " |"), con)
+  }
+  
+  if (!is.null(params)) {
     if (!is.null(params$Yvar)) {
       writeLines(paste0("| Outcome Variable | ", params$Yvar, " |"), con)
     }
@@ -95,40 +108,116 @@ write_full_report <- function(result, con) {
       thrX_str <- paste(names(params$thrX), params$thrX, sep = "=", collapse = ", ")
       writeLines(paste0("| X Thresholds | ", thrX_str, " |"), con)
     }
+    if (!is.null(params$sweep_range)) {
+      writeLines(paste0("| Y Sweep Range | ", min(params$sweep_range), "-", max(params$sweep_range), " |"), con)
+    }
     if (!is.null(params$thrY)) {
       writeLines(paste0("| Y Threshold | ", params$thrY, " |"), con)
     }
     if (!is.null(params$incl.cut)) {
-      writeLines(paste0("| Consistency Cutoff (incl.cut) | ", params$incl.cut, " |"), con)
+      writeLines(paste0("| Consistency Cutoff | ", params$incl.cut, " |"), con)
     }
     if (!is.null(params$n.cut)) {
       writeLines(paste0("| Frequency Cutoff (n.cut) | ", params$n.cut, " |"), con)
     }
-    if (!is.null(params$pri.cut)) {
-      writeLines(paste0("| PRI Cutoff (pri.cut) | ", params$pri.cut, " |"), con)
-    }
     if (!is.null(params$include)) {
       writeLines(paste0("| Include | ", params$include, " |"), con)
     }
+    if (!is.null(params$dir.exp)) {
+      dir_str <- ifelse(all(params$dir.exp == 1), "positive (all)", 
+                        paste(params$dir.exp, collapse = ", "))
+      writeLines(paste0("| Directional Expectations | ", dir_str, " |"), con)
+    }
+  }
+  writeLines("\n---\n", con)
+  
+  # ============================================
+  # 1. Descriptive Statistics (if dat provided)
+  # ============================================
+  if (!is.null(dat)) {
+    writeLines("## 1. Descriptive Statistics\n", con)
     
+    # Determine variables
+    if (is.null(desc_vars) && !is.null(params)) {
+      desc_vars <- c(params$Yvar, params$Xvars)
+    }
+    
+    if (!is.null(desc_vars)) {
+      desc_df <- data.frame(
+        Variable = character(0),
+        n = integer(0),
+        Mean = numeric(0),
+        SD = numeric(0),
+        Min = numeric(0),
+        Max = numeric(0),
+        Skew = numeric(0),
+        Kurtosis = numeric(0),
+        stringsAsFactors = FALSE
+      )
+      
+      for (var in desc_vars) {
+        if (var %in% names(dat)) {
+          x <- dat[[var]]
+          x <- x[!is.na(x)]
+          n <- length(x)
+          m <- mean(x)
+          s <- sd(x)
+          
+          # Skewness
+          skew <- if (n > 2 && s > 0) {
+            sum((x - m)^3) / (n * s^3)
+          } else {
+            NA
+          }
+          
+          # Kurtosis (excess)
+          kurt <- if (n > 3 && s > 0) {
+            sum((x - m)^4) / (n * s^4) - 3
+          } else {
+            NA
+          }
+          
+          desc_df <- rbind(desc_df, data.frame(
+            Variable = var,
+            n = n,
+            Mean = round(m, 3),
+            SD = round(s, 3),
+            Min = round(min(x), 3),
+            Max = round(max(x), 3),
+            Skew = round(skew, 3),
+            Kurtosis = round(kurt, 3),
+            stringsAsFactors = FALSE
+          ))
+        }
+      }
+      
+      if (nrow(desc_df) > 0) {
+        writeLines(df_to_md_table(desc_df), con)
+      }
+    }
     writeLines("\n---\n", con)
   }
   
-  # 1. Summary Table
-  writeLines("## 1. Summary Table\n", con)
+  # ============================================
+  # 2. Summary Table
+  # ============================================
+  section_num <- if (!is.null(dat)) 2 else 1
+  writeLines(paste0("## ", section_num, ". Summary Table\n"), con)
   writeLines(df_to_md_table(summary_df), con)
-  writeLines("\n", con)
-  writeLines("---\n", con)
+  writeLines("\n---\n", con)
   
-  # 2. Detailed Results per Threshold
-  writeLines("## 2. Detailed Results\n", con)
+  # ============================================
+  # 3. Detailed Results per Threshold
+  # ============================================
+  section_num <- section_num + 1
+  writeLines(paste0("## ", section_num, ". Detailed Results\n"), con)
   
   for (key in names(details)) {
     det <- details[[key]]
     
     # Determine threshold label
     if (!is.null(det$thrY)) {
-      writeLines(paste0("### Threshold Y = ", det$thrY, "\n"), con)
+      writeLines(paste0("### CPY = ", det$thrY, "\n"), con)
     } else if (!is.null(det$threshold)) {
       writeLines(paste0("### Threshold = ", det$threshold, "\n"), con)
     } else if (!is.null(det$combo_id)) {
@@ -143,25 +232,54 @@ write_full_report <- function(result, con) {
       writeLines(paste0("**X Thresholds**: ", thrX_str, "\n"), con)
     }
     
-    # Solution
+    # ---- Necessity Analysis ----
+    dat_bin <- det$dat_bin
+    if (!is.null(dat_bin) && !is.null(det$thrX_vec)) {
+      Xvars <- names(det$thrX_vec)
+      nec <- try(QCA::pofind(dat_bin, outcome = "Y", conditions = Xvars), silent = TRUE)
+      if (!inherits(nec, "try-error") && !is.null(nec$incl.cov)) {
+        writeLines("#### Necessity Analysis\n", con)
+        nec_df <- nec$incl.cov
+        nec_df <- cbind(Condition = rownames(nec_df), nec_df)
+        rownames(nec_df) <- NULL
+        writeLines(df_to_md_table(nec_df), con)
+        writeLines("\n", con)
+      }
+    }
+    
+    # ---- Truth Table ----
+    tt <- det$truth_table
+    if (!is.null(tt) && !is.null(tt$tt)) {
+      writeLines("#### Truth Table (observed configurations)\n", con)
+      tt_df <- tt$tt
+      tt_observed <- tt_df[tt_df$n > 0, , drop = FALSE]
+      if (nrow(tt_observed) > 0) {
+        tt_cols <- intersect(c(names(det$thrX_vec), "OUT", "n", "incl", "PRI"), names(tt_observed))
+        tt_subset <- tt_observed[, tt_cols, drop = FALSE]
+        tt_subset <- cbind(Row = rownames(tt_subset), tt_subset)
+        rownames(tt_subset) <- NULL
+        writeLines(df_to_md_table(tt_subset), con)
+      } else {
+        writeLines("*(No observed configurations)*", con)
+      }
+      writeLines("\n", con)
+    }
+    
+    # ---- Solution ----
     sol <- det$solution
     if (is.null(sol)) {
-      writeLines("**Solution**: No solution\n", con)
+      writeLines("#### Solution\n", con)
+      writeLines("**No solution**\n", con)
     } else {
-      # Get all solutions
       n_sol <- get_n_solutions(sol)
+      writeLines("#### Solution\n", con)
       writeLines(paste0("**Number of Solutions**: ", n_sol, "\n"), con)
       
-      # IMPORTANT: Use sol$solution first - it contains the correct distinct solutions
-      # sol$i.sol entries may contain duplicates or different organization
+      # Get solution list
       sol_list <- NULL
-      
-      # Try sol$solution first (preferred - contains correct distinct solutions)
       if (!is.null(sol$solution) && length(sol$solution) > 0) {
         sol_list <- sol$solution
       }
-      
-      # Fallback to i.sol only if sol$solution is empty
       if (is.null(sol_list) || length(sol_list) == 0) {
         if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
           all_sols <- list()
@@ -180,22 +298,17 @@ write_full_report <- function(result, con) {
       }
       
       if (!is.null(sol_list) && length(sol_list) > 0) {
-        writeLines("**Solutions**:\n", con)
+        writeLines("**Full Solutions**:\n", con)
         for (i in seq_along(sol_list)) {
           expr <- paste(sol_list[[i]], collapse = " + ")
           writeLines(paste0("- M", i, ": ", expr, " -> Y\n"), con)
         }
         writeLines("\n", con)
         
-        # Core and peripheral (if multiple solutions)
+        # Core/Peripheral/Unique (if multiple solutions)
         if (length(sol_list) > 1) {
           sol_terms <- lapply(sol_list, function(x) {
-            # x is already a character vector of terms
-            if (is.character(x)) {
-              x
-            } else {
-              unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
-            }
+            if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
           })
           core_terms <- Reduce(intersect, sol_terms)
           all_terms <- Reduce(union, sol_terms)
@@ -212,31 +325,46 @@ write_full_report <- function(result, con) {
             writeLines(paste0("**Peripheral Terms**: ", 
                               paste(peripheral_terms, collapse = " + "), "\n"), con)
           }
+          
+          # Unique Terms
+          unique_terms_list <- lapply(seq_along(sol_terms), function(i) {
+            other_terms <- unique(unlist(sol_terms[-i]))
+            setdiff(sol_terms[[i]], other_terms)
+          })
+          unique_terms_formatted <- sapply(seq_along(unique_terms_list), function(i) {
+            if (length(unique_terms_list[[i]]) > 0) {
+              paste0("M", i, ": ", paste(unique_terms_list[[i]], collapse = " + "))
+            } else {
+              NULL
+            }
+          })
+          unique_terms_filtered <- unique_terms_formatted[!sapply(unique_terms_formatted, is.null)]
+          if (length(unique_terms_filtered) > 0) {
+            writeLines(paste0("**Unique Terms**: ", 
+                              paste(unique_terms_filtered, collapse = "; "), "\n"), con)
+          }
           writeLines("\n", con)
         }
       }
       
-      # Metrics
-      metrics <- extract_all_metrics(sol$i.sol$C1P1$IC, sol)
-      writeLines("**Solution Fit**:\n", con)
+      # ---- Solution Fit ----
+      writeLines("#### Solution Fit\n", con)
+      # Use sol$IC directly for better compatibility with multiple solutions
+      metrics <- extract_all_metrics(sol$IC, sol)
       writeLines("| Metric | Value |", con)
       writeLines("|--------|-------|", con)
       writeLines(paste0("| Consistency (inclS) | ", 
-                        ifelse(is.na(metrics$sol_inclS), "N/A", 
-                               round(metrics$sol_inclS, 3)), " |"), con)
+                        ifelse(is.na(metrics$sol_inclS), "N/A", round(metrics$sol_inclS, 3)), " |"), con)
       writeLines(paste0("| PRI | ", 
-                        ifelse(is.na(metrics$sol_PRI), "N/A", 
-                               round(metrics$sol_PRI, 3)), " |"), con)
+                        ifelse(is.na(metrics$sol_PRI), "N/A", round(metrics$sol_PRI, 3)), " |"), con)
       writeLines(paste0("| Coverage (covS) | ", 
-                        ifelse(is.na(metrics$sol_covS), "N/A", 
-                               round(metrics$sol_covS, 3)), " |"), con)
+                        ifelse(is.na(metrics$sol_covS), "N/A", round(metrics$sol_covS, 3)), " |"), con)
       writeLines("\n", con)
       
-      # Per-term metrics
+      # ---- Per-Term Metrics ----
       if (!is.null(metrics$term_df)) {
-        writeLines("**Per-Term Metrics**:\n", con)
+        writeLines("#### Per-Term Metrics\n", con)
         term_df <- metrics$term_df
-        # Remove cases column if present (too long)
         if ("cases" %in% names(term_df)) {
           term_df <- term_df[, !names(term_df) %in% "cases", drop = FALSE]
         }
@@ -247,16 +375,113 @@ write_full_report <- function(result, con) {
       }
     }
     
+    # ---- Settings for Reproducibility ----
+    writeLines("#### Settings (for reproducibility)\n", con)
+    writeLines("```", con)
+    if (!is.null(det$thrX_vec)) {
+      writeLines(paste0("CPX: ", paste(det$thrX_vec, collapse = ", ")), con)
+    }
+    if (!is.null(det$thrY)) {
+      writeLines(paste0("CPY: ", det$thrY), con)
+    }
+    if (!is.null(params$incl.cut)) {
+      writeLines(paste0("incl.cut: ", params$incl.cut), con)
+    }
+    if (!is.null(params$dir.exp)) {
+      writeLines(paste0("dir.exp: ", paste(params$dir.exp, collapse = ", ")), con)
+    }
+    writeLines("```\n", con)
+    
     writeLines("---\n", con)
   }
   
-  # 3. Notes
-  writeLines("## Notes\n", con)
+  # ============================================
+  # 4. Cross-Threshold Comparison
+  # ============================================
+  section_num <- section_num + 1
+  writeLines(paste0("## ", section_num, ". Cross-Threshold Comparison\n"), con)
+  
+  # Build comparison table
+  comp_df <- data.frame(
+    Threshold = character(0),
+    inclS = numeric(0),
+    PRI = numeric(0),
+    covS = numeric(0),
+    n_solutions = integer(0),
+    N_Core = integer(0),
+    stringsAsFactors = FALSE
+  )
+  
+  for (key in names(details)) {
+    det <- details[[key]]
+    sol <- det$solution
+    
+    # Threshold label
+    thr_label <- if (!is.null(det$thrY)) {
+      paste0("CPY=", det$thrY)
+    } else if (!is.null(det$threshold)) {
+      as.character(det$threshold)
+    } else {
+      key
+    }
+    
+    if (is.null(sol)) {
+      comp_df <- rbind(comp_df, data.frame(
+        Threshold = thr_label,
+        inclS = NA,
+        PRI = NA,
+        covS = NA,
+        n_solutions = 0,
+        N_Core = 0,
+        stringsAsFactors = FALSE
+      ))
+    } else {
+      metrics <- extract_all_metrics(sol$IC, sol)
+      n_sol <- get_n_solutions(sol)
+      
+      # Count core terms
+      n_core <- 0
+      sol_list <- sol$solution
+      if (!is.null(sol_list) && length(sol_list) > 1) {
+        sol_terms <- lapply(sol_list, function(x) {
+          if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
+        })
+        core_terms <- Reduce(intersect, sol_terms)
+        n_core <- length(core_terms)
+      } else if (!is.null(sol_list) && length(sol_list) == 1) {
+        n_core <- length(sol_list[[1]])
+      }
+      
+      comp_df <- rbind(comp_df, data.frame(
+        Threshold = thr_label,
+        inclS = round(metrics$sol_inclS, 3),
+        PRI = round(metrics$sol_PRI, 3),
+        covS = round(metrics$sol_covS, 3),
+        n_solutions = n_sol,
+        N_Core = n_core,
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+  
+  writeLines(df_to_md_table(comp_df), con)
+  writeLines("\n---\n", con)
+  
+  # ============================================
+  # 5. Notes
+  # ============================================
+  section_num <- section_num + 1
+  writeLines(paste0("## ", section_num, ". Notes\n"), con)
   writeLines("- **Core Conditions**: Terms shared across all intermediate solutions.", con)
   writeLines("- **Peripheral Terms**: Terms that appear in some but not all solutions.", con)
+  writeLines("- **Unique Terms**: Terms that appear only in one specific solution.", con)
   writeLines("- **inclS**: Solution consistency (sufficiency).", con)
   writeLines("- **covS**: Solution coverage.", con)
   writeLines("- **PRI**: Proportional Reduction in Inconsistency.", con)
+  writeLines("- **covU**: Unique coverage (coverage by this term alone).", con)
+  writeLines("- **inclN**: Necessity consistency (>= 0.9 typically indicates necessary condition).", con)
+  writeLines("- **RoN**: Relevance of Necessity.", con)
+  writeLines("- **covN**: Necessity coverage.", con)
 }
 
 

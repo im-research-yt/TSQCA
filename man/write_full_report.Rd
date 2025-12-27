@@ -4,7 +4,7 @@
 \alias{write_full_report}
 \title{Write full report content}
 \usage{
-write_full_report(result, con)
+write_full_report(result, con, dat = NULL, desc_vars = NULL)
 }
 \description{
 Write full report content

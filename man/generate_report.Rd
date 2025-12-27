@@ -8,7 +8,9 @@ generate_report(
   result,
   output_file = "qca_report.md",
   format = c("full", "simple"),
-  title = "QCA Analysis Report"
+  title = "QCA Analysis Report",
+  dat = NULL,
+  desc_vars = NULL
 )
 }
 \arguments{
@@ -20,6 +22,11 @@ generate_report(
 \item{format}{Character. Report format: \code{"full"} or \code{"simple"}.}
 
 \item{title}{Character. Report title.}
+
+\item{dat}{Optional data frame. Original data for descriptive statistics.}
+
+\item{desc_vars}{Optional character vector. Variables for descriptive statistics.
+If NULL and dat is provided, uses Yvar and Xvars from params.}
 }
 \value{
 Invisibly returns the path to the generated report.
@@ -42,6 +49,8 @@ result <- otSweep(
   return_details = TRUE
 )
 
-generate_report(result, "my_report.md", format = "full")
+# With descriptive statistics
+generate_report(result, "my_report.md", format = "full", 
+                dat = sample_data)
 }
 }
