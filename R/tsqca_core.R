@@ -24,33 +24,27 @@ qca_bin <- function(x, thr) {
 get_n_solutions <- function(sol) {
   if (is.null(sol)) return(0L)
   
-  # Try multiple paths to get solutions
-  sol_list <- NULL
-  
-  # Path 1: sol$solution (always exists for valid solutions)
+  # Use sol$solution as primary source (contains correct distinct solutions)
   sol_list <- try(sol$solution, silent = TRUE)
-  if (inherits(sol_list, "try-error") || is.null(sol_list) || length(sol_list) == 0) {
-    sol_list <- NULL
+  if (!inherits(sol_list, "try-error") && !is.null(sol_list) && length(sol_list) > 0) {
+    return(length(sol_list))
   }
   
-  # Path 2: sol$i.sol$C1P1$solution (for intermediate solutions with dir.exp)
-  if (is.null(sol_list)) {
-    sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
-    if (inherits(sol_list, "try-error") || is.null(sol_list)) {
-      sol_list <- NULL
+  # Fallback: count from i.sol structure
+  if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    total_count <- 0L
+    for (model_name in names(sol$i.sol)) {
+      model_sols <- sol$i.sol[[model_name]]$solution
+      if (!is.null(model_sols) && length(model_sols) > 0) {
+        total_count <- total_count + length(model_sols)
+      }
+    }
+    if (total_count > 0) {
+      return(total_count)
     }
   }
   
-  # Path 3: First element of i.sol
-  if (is.null(sol_list) && !is.null(sol$i.sol) && length(sol$i.sol) > 0) {
-    sol_list <- try(sol$i.sol[[1]]$solution, silent = TRUE)
-    if (inherits(sol_list, "try-error") || is.null(sol_list)) {
-      sol_list <- NULL
-    }
-  }
-  
-  if (is.null(sol_list)) return(0L)
-  length(sol_list)
+  return(0L)
 }
 
 #' Extract solution information from a QCA minimization result
@@ -103,26 +97,23 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     return(null_response(extract_mode))
   }
   
-  # === FIXED: Try multiple paths to get solutions ===
+  # === Use sol$solution as the primary source (contains correct distinct solutions) ===
   sol_list <- NULL
   
-  # Path 1: sol$solution (always exists for valid solutions)
-  if (is.null(sol_list) || length(sol_list) == 0) {
-    sol_list <- try(sol$solution, silent = TRUE)
-    if (inherits(sol_list, "try-error")) sol_list <- NULL
+  # Try sol$solution first (preferred - contains correct distinct solutions)
+  if (!is.null(sol$solution) && length(sol$solution) > 0) {
+    sol_list <- sol$solution
   }
   
-  # Path 2: sol$i.sol$C1P1$solution (for intermediate solutions with dir.exp)
+  # Fallback: try i.sol entries
   if (is.null(sol_list) || length(sol_list) == 0) {
     sol_list <- try(sol$i.sol$C1P1$solution, silent = TRUE)
-    if (inherits(sol_list, "try-error")) sol_list <- NULL
-  }
-  
-  # Path 3: First element of i.sol
-  if (is.null(sol_list) || length(sol_list) == 0) {
-    if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
-      sol_list <- try(sol$i.sol[[1]]$solution, silent = TRUE)
-      if (inherits(sol_list, "try-error")) sol_list <- NULL
+    if (inherits(sol_list, "try-error") || is.null(sol_list) || length(sol_list) == 0) {
+      # Try first i.sol entry
+      if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+        sol_list <- try(sol$i.sol[[1]]$solution, silent = TRUE)
+        if (inherits(sol_list, "try-error")) sol_list <- NULL
+      }
     }
   }
   
@@ -190,7 +181,8 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     }
   }
   
-  n_solutions <- length(sol_list)
+  # Get total solution count (always use get_n_solutions for consistency)
+  n_solutions <- get_n_solutions(sol)
   
   # Mode-specific processing
   if (extract_mode == "first") {

@@ -152,10 +152,31 @@ write_full_report <- function(result, con) {
       n_sol <- get_n_solutions(sol)
       writeLines(paste0("**Number of Solutions**: ", n_sol, "\n"), con)
       
-      # Try multiple paths to get solution list (same logic as qca_extract)
-      sol_list <- sol$i.sol$C1P1$solution
-      if (is.null(sol_list) || length(sol_list) == 0) {
+      # IMPORTANT: Use sol$solution first - it contains the correct distinct solutions
+      # sol$i.sol entries may contain duplicates or different organization
+      sol_list <- NULL
+      
+      # Try sol$solution first (preferred - contains correct distinct solutions)
+      if (!is.null(sol$solution) && length(sol$solution) > 0) {
         sol_list <- sol$solution
+      }
+      
+      # Fallback to i.sol only if sol$solution is empty
+      if (is.null(sol_list) || length(sol_list) == 0) {
+        if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+          all_sols <- list()
+          for (model_name in names(sol$i.sol)) {
+            model_sols <- sol$i.sol[[model_name]]$solution
+            if (!is.null(model_sols) && length(model_sols) > 0) {
+              for (s in model_sols) {
+                all_sols <- c(all_sols, list(s))
+              }
+            }
+          }
+          if (length(all_sols) > 0) {
+            sol_list <- all_sols
+          }
+        }
       }
       
       if (!is.null(sol_list) && length(sol_list) > 0) {
@@ -167,9 +188,14 @@ write_full_report <- function(result, con) {
         writeLines("\n", con)
         
         # Core and peripheral (if multiple solutions)
-        if (n_sol > 1) {
+        if (length(sol_list) > 1) {
           sol_terms <- lapply(sol_list, function(x) {
-            unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
+            # x is already a character vector of terms
+            if (is.character(x)) {
+              x
+            } else {
+              unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
+            }
           })
           core_terms <- Reduce(intersect, sol_terms)
           all_terms <- Reduce(union, sol_terms)
@@ -267,25 +293,45 @@ write_simple_report <- function(result, con) {
     
     n_sol <- get_n_solutions(sol)
     
-    # Try multiple paths to get solution list (same logic as qca_extract)
-    sol_list <- sol$i.sol$C1P1$solution
-    if (is.null(sol_list) || length(sol_list) == 0) {
+    # IMPORTANT: Use sol$solution first - it contains the correct distinct solutions
+    sol_list <- NULL
+    
+    # Try sol$solution first (preferred)
+    if (!is.null(sol$solution) && length(sol$solution) > 0) {
       sol_list <- sol$solution
+    }
+    
+    # Fallback to i.sol only if sol$solution is empty
+    if (is.null(sol_list) || length(sol_list) == 0) {
+      if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+        all_sols <- list()
+        for (model_name in names(sol$i.sol)) {
+          model_sols <- sol$i.sol[[model_name]]$solution
+          if (!is.null(model_sols) && length(model_sols) > 0) {
+            for (s in model_sols) {
+              all_sols <- c(all_sols, list(s))
+            }
+          }
+        }
+        if (length(all_sols) > 0) {
+          sol_list <- all_sols
+        }
+      }
     }
     
     if (!is.null(sol_list) && length(sol_list) > 0) {
       writeLines(paste0("### ", label, "\n"), con)
       
       # Show solution formula
-      if (n_sol == 1) {
+      if (length(sol_list) == 1) {
         expr <- paste(sol_list[[1]], collapse = " + ")
         writeLines(paste0("**Solution**: ", expr, " -> Y\n"), con)
       } else {
-        writeLines(paste0("**Number of Solutions**: ", n_sol, "\n"), con)
+        writeLines(paste0("**Number of Solutions**: ", length(sol_list), "\n"), con)
         
         # Core conditions
         sol_terms <- lapply(sol_list, function(x) {
-          unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
+          if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
         })
         core_terms <- Reduce(intersect, sol_terms)
         
