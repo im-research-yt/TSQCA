@@ -4,15 +4,31 @@
 \alias{qca_extract}
 \title{Extract solution information from a QCA minimization result}
 \usage{
-qca_extract(sol)
+qca_extract(sol, extract_mode = c("first", "all", "core"))
 }
 \arguments{
 \item{sol}{A solution object returned by \code{QCA::minimize()}.}
+
+\item{extract_mode}{Character. How to handle multiple intermediate solutions:
+\itemize{
+\item \code{"first"} - return only the first solution (M1). Default.
+\item \code{"all"} - return all solutions concatenated.
+\item \code{"core"} - return core terms common to all solutions,
+plus peripheral terms and solution count.
+}}
 }
 \value{
-A list with elements \code{expression}, \code{inclS}, \code{covS}.
+A list with elements depending on \code{extract_mode}.
+
+For \code{"first"}: \code{expression}, \code{inclS}, \code{covS}.
+
+For \code{"all"}: adds \code{n_solutions}.
+
+For \code{"core"}: adds \code{peripheral_terms}, \code{unique_terms},
+\code{n_solutions}.
+
 If extraction fails, returns \code{"No solution"} and \code{NA_real_}
-for the numeric values.
+for numeric values.
 }
 \description{
 Internal helper to obtain the solution expression, consistency

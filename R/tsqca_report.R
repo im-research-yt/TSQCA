@@ -77,6 +77,43 @@ write_full_report <- function(result, con) {
   summary_df <- result$summary
   details <- result$details
   
+  # 0. Analysis Settings (if params available)
+  if (!is.null(result$params)) {
+    writeLines("## 0. Analysis Settings\n", con)
+    writeLines("| Parameter | Value |", con)
+    writeLines("|-----------|-------|", con)
+    
+    params <- result$params
+    
+    if (!is.null(params$Yvar)) {
+      writeLines(paste0("| Outcome Variable | ", params$Yvar, " |"), con)
+    }
+    if (!is.null(params$Xvars)) {
+      writeLines(paste0("| Condition Variables | ", paste(params$Xvars, collapse = ", "), " |"), con)
+    }
+    if (!is.null(params$thrX)) {
+      thrX_str <- paste(names(params$thrX), params$thrX, sep = "=", collapse = ", ")
+      writeLines(paste0("| X Thresholds | ", thrX_str, " |"), con)
+    }
+    if (!is.null(params$thrY)) {
+      writeLines(paste0("| Y Threshold | ", params$thrY, " |"), con)
+    }
+    if (!is.null(params$incl.cut)) {
+      writeLines(paste0("| Consistency Cutoff (incl.cut) | ", params$incl.cut, " |"), con)
+    }
+    if (!is.null(params$n.cut)) {
+      writeLines(paste0("| Frequency Cutoff (n.cut) | ", params$n.cut, " |"), con)
+    }
+    if (!is.null(params$pri.cut)) {
+      writeLines(paste0("| PRI Cutoff (pri.cut) | ", params$pri.cut, " |"), con)
+    }
+    if (!is.null(params$include)) {
+      writeLines(paste0("| Include | ", params$include, " |"), con)
+    }
+    
+    writeLines("\n---\n", con)
+  }
+  
   # 1. Summary Table
   writeLines("## 1. Summary Table\n", con)
   writeLines(df_to_md_table(summary_df), con)

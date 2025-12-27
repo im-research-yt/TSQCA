@@ -66,7 +66,7 @@ ctSweepS <- function(dat, Yvar, Xvars,
                      sweep_var, sweep_range,
                      thrY, thrX_default = 7,
                      dir.exp = NULL, include = "?",
-                     incl.cut = 0.8, n.cut = 2, pri.cut = 0.5,
+                     incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "core"),
                      return_details = TRUE) {
   
@@ -119,7 +119,7 @@ ctSweepS <- function(dat, Yvar, Xvars,
         outcome    = Yvar,
         conditions = Xvars,
         show.cases = FALSE,
-        incl.cut   = incl.cut,
+        incl.cut1  = incl.cut,
         n.cut      = n.cut,
         pri.cut    = pri.cut
       ),
@@ -260,7 +260,23 @@ ctSweepS <- function(dat, Yvar, Xvars,
   }
   
   if (return_details) {
-    return(list(summary = df_out, details = details_list))
+    return(list(
+      summary = df_out, 
+      details = details_list,
+      params = list(
+        Yvar = Yvar,
+        Xvars = Xvars,
+        sweep_var = sweep_var,
+        sweep_range = sweep_range,
+        thrY = thrY,
+        thrX_default = thrX_default,
+        incl.cut = incl.cut,
+        n.cut = n.cut,
+        pri.cut = pri.cut,
+        include = include,
+        dir.exp = local_dir.exp
+      )
+    ))
   }
   
   df_out
@@ -361,7 +377,7 @@ ctSweepS <- function(dat, Yvar, Xvars,
 ctSweepM <- function(dat, Yvar, Xvars,
                      sweep_list, thrY,
                      dir.exp = NULL, include = "?",
-                     incl.cut = 0.8, n.cut = 2, pri.cut = 0.5,
+                     incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "core"),
                      return_details = TRUE) {
   
@@ -418,7 +434,7 @@ ctSweepM <- function(dat, Yvar, Xvars,
         outcome    = Yvar,
         conditions = Xvars,
         show.cases = FALSE,
-        incl.cut   = incl.cut,
+        incl.cut1  = incl.cut,
         n.cut      = n.cut,
         pri.cut    = pri.cut
       ),
@@ -539,7 +555,21 @@ ctSweepM <- function(dat, Yvar, Xvars,
   }
   
   if (return_details) {
-    return(list(summary = df_out, details = details_list))
+    return(list(
+      summary = df_out, 
+      details = details_list,
+      params = list(
+        Yvar = Yvar,
+        Xvars = Xvars,
+        sweep_list = sweep_list,
+        thrY = thrY,
+        incl.cut = incl.cut,
+        n.cut = n.cut,
+        pri.cut = pri.cut,
+        include = include,
+        dir.exp = dir.exp
+      )
+    ))
   }
   
   df_out

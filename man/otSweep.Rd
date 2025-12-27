@@ -15,7 +15,8 @@ otSweep(
   incl.cut = 0.8,
   n.cut = 2,
   pri.cut = 0.5,
-  return_details = FALSE
+  extract_mode = c("first", "all", "core"),
+  return_details = TRUE
 )
 }
 \arguments{
@@ -41,8 +42,12 @@ If \code{NULL}, all set to 1.}
 
 \item{pri.cut}{PRI cutoff for \code{minimize}.}
 
-\item{return_details}{Logical. If \code{TRUE}, returns both summary
-and detailed objects.}
+\item{extract_mode}{Character. How to handle multiple solutions:
+\code{"first"} (default), \code{"all"}, or \code{"core"}.
+See \code{\link{qca_extract}} for details.}
+
+\item{return_details}{Logical. If \code{TRUE} (default), returns both
+summary and detailed objects for use with \code{generate_report()}.}
 }
 \value{
 If \code{return_details = FALSE}, a data frame with columns:
@@ -51,6 +56,7 @@ If \code{return_details = FALSE}, a data frame with columns:
 \item \code{expression} — minimized solution expression
 \item \code{inclS} — solution consistency
 \item \code{covS} — solution coverage
+\item (additional columns depending on \code{extract_mode})
 }
 
 If \code{return_details = TRUE}, a list with:
@@ -79,5 +85,5 @@ result <- otSweep(
   sweep_range = 6:9,
   thrX = thrX
 )
-head(result)
+head(result$summary)
 }
