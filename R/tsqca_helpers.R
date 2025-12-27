@@ -237,3 +237,178 @@ get_all_terms <- function(sol_list) {
     term_counts  = table(all_terms)
   )
 }
+
+
+###############################################
+# Solution formatting functions
+###############################################
+
+#' Format a single QCA term
+#'
+#' Inserts \code{*} between variables in a term where it may have been omitted.
+#'
+#' @param term Character. A single term (e.g., "KSPRVT" or "~KPR*PRD").
+#' @param var_names Character vector. Variable names used in the analysis.
+#' @param use_tilde Logical. If TRUE, negation is represented as \code{~VAR}.
+#'   If FALSE, negation is represented as lowercase (e.g., \code{var}).
+#'
+#' @return Character. The formatted term with \code{*} between all variables.
+#' @export
+#'
+#' @examples
+#' var_names <- c("KSP", "KPR", "PRD", "RVT", "RCM")
+#' format_qca_term("KSPRVTRCM", var_names)
+#' # Returns: "KSP*RVT*RCM"
+#' 
+#' format_qca_term("~KPRPRD", var_names)
+#' # Returns: "~KPR*PRD"
+format_qca_term <- function(term, var_names, use_tilde = TRUE) {
+  
+  if (is.null(term) || is.na(term) || term == "") {
+    return("")
+  }
+  
+  # If already contains *, assume it's formatted
+  if (grepl("\\*", term)) {
+    return(term)
+  }
+  
+  # Sort variable names by length (descending) to avoid partial matches
+  var_names_sorted <- var_names[order(nchar(var_names), decreasing = TRUE)]
+  
+  # Build pattern for matching
+  if (use_tilde) {
+    # Match ~VAR or VAR
+    patterns <- paste0("~?", var_names_sorted)
+  } else {
+    # Match VAR (uppercase) or var (lowercase for negation)
+    patterns <- c(var_names_sorted, tolower(var_names_sorted))
+  }
+  
+  pattern <- paste(patterns, collapse = "|")
+  
+  # Extract all matches
+  matches <- regmatches(term, gregexpr(pattern, term, ignore.case = FALSE))[[1]]
+  
+  if (length(matches) == 0) {
+    return(term)
+  }
+  
+  # Join with *
+  paste(matches, collapse = "*")
+}
+
+
+#' Format a QCA solution expression
+#'
+#' Formats a complete solution expression (multiple terms joined by +).
+#'
+#' @param solution Character. A solution expression (e.g., "KSPRVT + ~KPRPRD").
+#' @param var_names Character vector. Variable names used in the analysis.
+#' @param use_tilde Logical. If TRUE, negation is represented as \code{~VAR}.
+#'
+#' @return Character. The formatted solution expression.
+#' @export
+#'
+#' @examples
+#' var_names <- c("KSP", "KPR", "PRD", "RVT", "RCM")
+#' format_qca_solution("KSPRVT + ~KPRPRD + RCM", var_names)
+#' # Returns: "KSP*RVT + ~KPR*PRD + RCM"
+format_qca_solution <- function(solution, var_names, use_tilde = TRUE) {
+  
+  if (is.null(solution) || is.na(solution) || solution == "") {
+    return("")
+  }
+  
+  if (solution == "No solution" || solution == "No core terms") {
+    return(solution)
+  }
+  
+  # Split by " + "
+  terms <- trimws(unlist(strsplit(solution, " \\+ ")))
+  
+  # Format each term
+  formatted_terms <- sapply(terms, format_qca_term, 
+                            var_names = var_names, 
+                            use_tilde = use_tilde,
+                            USE.NAMES = FALSE)
+  
+  # Rejoin
+  paste(formatted_terms, collapse = " + ")
+}
+
+
+#' Format multiple QCA solutions
+#'
+#' Formats a vector of solution expressions.
+#'
+#' @param solutions Character vector. Solution expressions from \code{minimize()}.
+#' @param var_names Character vector. Variable names used in the analysis.
+#' @param use_tilde Logical. If TRUE, negation is represented as \code{~VAR}.
+#'
+#' @return Character vector. Formatted solution expressions.
+#' @export
+#'
+#' @examples
+#' var_names <- c("KSP", "KPR", "PRD", "RVT", "RCM")
+#' solutions <- c("KSPRVT + RCM", "~KPRPRD")
+#' format_qca_solutions(solutions, var_names)
+format_qca_solutions <- function(solutions, var_names, use_tilde = TRUE) {
+  sapply(solutions, format_qca_solution,
+         var_names = var_names,
+         use_tilde = use_tilde,
+         USE.NAMES = FALSE)
+}
+
+
+#' Extract and format terms from solutions
+#'
+#' Extracts individual terms from solution expressions and returns
+#' formatted unique terms.
+#'
+#' @param solutions Character vector. Solution expressions.
+#' @param var_names Character vector. Variable names used in the analysis.
+#' @param use_tilde Logical. If TRUE, negation is represented as \code{~VAR}.
+#'
+#' @return List with:
+#'   \itemize{
+#'     \item \code{all_terms} — all terms (with duplicates)
+#'     \item \code{unique_terms} — unique terms
+#'     \item \code{n_total} — total term count
+#'     \item \code{n_unique} — unique term count
+#'   }
+#' @export
+#'
+#' @examples
+#' var_names <- c("X1", "X2", "X3")
+#' solutions <- c("X1*X2 + X3", "X1*X2 + X1*X3")
+#' extract_terms(solutions, var_names)
+extract_terms <- function(solutions, var_names, use_tilde = TRUE) {
+  
+  if (is.null(solutions) || length(solutions) == 0) {
+    return(list(
+      all_terms    = character(0),
+      unique_terms = character(0),
+      n_total      = 0L,
+      n_unique     = 0L
+    ))
+  }
+  
+  # Format solutions first
+  formatted <- format_qca_solutions(solutions, var_names, use_tilde)
+  
+  # Split into terms
+  all_terms <- unlist(lapply(formatted, function(sol) {
+    if (sol == "" || sol == "No solution" || sol == "No core terms") {
+      return(character(0))
+    }
+    trimws(unlist(strsplit(sol, " \\+ ")))
+  }))
+  
+  list(
+    all_terms    = all_terms,
+    unique_terms = unique(all_terms),
+    n_total      = length(all_terms),
+    n_unique     = length(unique(all_terms))
+  )
+}
