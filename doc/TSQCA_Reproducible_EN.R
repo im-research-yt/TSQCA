@@ -50,14 +50,14 @@ res_cts <- ctSweepS(
   thrY           = 7,
   thrX_default   = 7,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_cts)
+head(res_cts$summary)
 })
 
 ## ----eval=FALSE---------------------------------------------------------------
-# write.csv(res_cts, file = "TSQCA_CTS_results.csv", row.names = FALSE)
+# write.csv(res_cts$summary, file = "TSQCA_CTS_results.csv", row.names = FALSE)
 
 ## ----error=TRUE---------------------------------------------------------------
 try({
@@ -70,14 +70,14 @@ res_mcts <- ctSweepM(
   thrY           = 7,
   thrX_default   = 7,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_mcts)
+head(res_mcts$summary)
 })
 
 ## ----eval=FALSE---------------------------------------------------------------
-# write.csv(res_mcts, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
+# write.csv(res_mcts$summary, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
 
 ## -----------------------------------------------------------------------------
 sweep_range_ots <- 6:9
@@ -89,14 +89,14 @@ res_ots <- otSweep(
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-res_ots
+res_ots$summary
 
 
 ## ----eval=FALSE---------------------------------------------------------------
-# write.csv(res_ots, file = "TSQCA_OTS_results.csv", row.names = FALSE)
+# write.csv(res_ots$summary, file = "TSQCA_OTS_results.csv", row.names = FALSE)
 
 ## -----------------------------------------------------------------------------
 sweep_list_dts_X <- list(
@@ -114,14 +114,69 @@ res_dts <- dtSweep(
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-res_dts
+head(res_dts$summary)
 
 
 ## ----eval=FALSE---------------------------------------------------------------
-# write.csv(res_dts, file = "TSQCA_DTS_results.csv", row.names = FALSE)
+# write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
+
+## ----eval=FALSE---------------------------------------------------------------
+# res_all <- otSweep(
+#   dat            = dat,
+#   Yvar           = "Y",
+#   Xvars          = c("X1", "X2", "X3"),
+#   sweep_range    = 6:9,
+#   thrX           = thrX_vec,
+#   dir.exp        = 1,
+#   extract_mode   = "all",
+#   return_details = TRUE
+# )
+# 
+# # View results with n_solutions column
+# head(res_all$summary)
+
+## ----eval=FALSE---------------------------------------------------------------
+# res_core <- otSweep(
+#   dat            = dat,
+#   Yvar           = "Y",
+#   Xvars          = c("X1", "X2", "X3"),
+#   sweep_range    = 6:9,
+#   thrX           = thrX_vec,
+#   dir.exp        = 1,
+#   extract_mode   = "core",
+#   return_details = TRUE
+# )
+# 
+# # View results with core conditions, peripheral terms, and unique terms
+# head(res_core$summary)
+
+## ----eval=FALSE---------------------------------------------------------------
+# generate_report(res_ots, "TSQCA_OTS_report_full.md", format = "full")
+
+## ----eval=FALSE---------------------------------------------------------------
+# generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
+
+## ----eval=FALSE---------------------------------------------------------------
+# # View stored parameters
+# res_ots$params
+# 
+# # Example output:
+# # $Yvar
+# # [1] "Y"
+# # $Xvars
+# # [1] "X1" "X2" "X3"
+# # $thrX
+# # X1 X2 X3
+# #  7  7  7
+# # $incl.cut
+# # [1] 0.8
+# # $n.cut
+# # [1] 1
+# # $pri.cut
+# # [1] 0
 
 ## -----------------------------------------------------------------------------
 sessionInfo()

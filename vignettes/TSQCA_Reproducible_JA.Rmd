@@ -80,15 +80,15 @@ res_cts <- ctSweepS(
   thrY           = 7,
   thrX_default   = 7,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_cts)
+head(res_cts$summary)
 ```
 
 必要に応じて、結果を CSV として保存：
 ```{r, eval=FALSE}
-write.csv(res_cts, file = "TSQCA_CTS_results.csv", row.names = FALSE)
+write.csv(res_cts$summary, file = "TSQCA_CTS_results.csv", row.names = FALSE)
 ```
 
 ---
@@ -106,13 +106,13 @@ res_mcts <- ctSweepM(
   thrY           = 7,
   thrX_default   = 7,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_mcts)
+head(res_mcts$summary)
 ```
 ```{r, eval=FALSE}
-write.csv(res_mcts, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
+write.csv(res_mcts$summary, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
 ```
 
 ---
@@ -130,13 +130,13 @@ res_ots <- otSweep(
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-res_ots
+res_ots$summary
 ```
 ```{r, eval=FALSE}
-write.csv(res_ots, file = "TSQCA_OTS_results.csv", row.names = FALSE)
+write.csv(res_ots$summary, file = "TSQCA_OTS_results.csv", row.names = FALSE)
 ```
 
 ---
@@ -160,16 +160,97 @@ res_dts <- dtSweep(
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-res_dts
+head(res_dts$summary)
 ```
 ```{r, eval=FALSE}
-write.csv(res_dts, file = "TSQCA_DTS_results.csv", row.names = FALSE)
+write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
 ```
 
+---
 
+# 8. extract_mode の使用（v0.2.0の新機能）
+
+ロバスト性分析のために全ての解またはコア条件を抽出する。
+
+## 全ての解を抽出
+```{r, eval=FALSE}
+res_all <- otSweep(
+  dat            = dat,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_range    = 6:9,
+  thrX           = thrX_vec,
+  dir.exp        = 1,
+  extract_mode   = "all",
+  return_details = TRUE
+)
+
+# n_solutions カラムを含む結果を確認
+head(res_all$summary)
+```
+
+## コア条件を抽出
+```{r, eval=FALSE}
+res_core <- otSweep(
+  dat            = dat,
+  Yvar           = "Y",
+  Xvars          = c("X1", "X2", "X3"),
+  sweep_range    = 6:9,
+  thrX           = thrX_vec,
+  dir.exp        = 1,
+  extract_mode   = "core",
+  return_details = TRUE
+)
+
+# コア条件、周辺条件、ユニーク項を含む結果を確認
+head(res_core$summary)
+```
+
+---
+
+# 9. レポート生成（v0.2.0の新機能）
+
+ドキュメント作成のための包括的なマークダウンレポートを作成する。
+
+## FULLレポート
+```{r, eval=FALSE}
+generate_report(res_ots, "TSQCA_OTS_report_full.md", format = "full")
+```
+
+## SIMPLEレポート（論文原稿用）
+```{r, eval=FALSE}
+generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
+```
+
+---
+
+# 10. 分析パラメータへのアクセス
+
+再現性のために全てのパラメータが保存されている。
+```{r, eval=FALSE}
+# 保存されたパラメータを確認
+res_ots$params
+
+# 出力例:
+# $Yvar
+# [1] "Y"
+# $Xvars
+# [1] "X1" "X2" "X3"
+# $thrX
+# X1 X2 X3 
+#  7  7  7 
+# $incl.cut
+# [1] 0.8
+# $n.cut
+# [1] 1
+# $pri.cut
+# [1] 0
+```
+
+---
 
 ## References
 
@@ -180,7 +261,7 @@ For more information on TS-QCA methodology, see:
 - Oana, I.-E., & Schneider, C. Q. (2024). A Robustness Test Protocol for Applied QCA: Theory and R Software Application. *Sociological Methods & Research*, 53(1), 57–88. DOI: [10.1177/00491241211036158](https://doi.org/10.1177/00491241211036158)
 
 
-# 8. セッション情報
+# 11. セッション情報
 ```{r}
 sessionInfo()
 ```

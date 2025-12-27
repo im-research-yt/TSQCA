@@ -173,10 +173,10 @@ res_cts <- ctSweepS(
   thrY           = thrY,
   thrX_default   = thrX_default,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_cts)
+head(res_cts$summary)
 ```
 
 ------------------------------------------------------------------------
@@ -196,10 +196,10 @@ res_mcts <- ctSweepM(
   thrY           = 7,
   thrX_default   = 7,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_mcts)
+head(res_mcts$summary)
 ```
 
 ------------------------------------------------------------------------
@@ -217,10 +217,10 @@ res_ots <- otSweep(
   sweep_range    = 6:9,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_ots)
+head(res_ots$summary)
 ```
 
 ------------------------------------------------------------------------
@@ -246,10 +246,10 @@ res_dts <- dtSweep(
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
-  return_details = FALSE
+  return_details = TRUE
 )
 
-head(res_dts)
+head(res_dts$summary)
 ```
 
 ------------------------------------------------------------------------
@@ -273,6 +273,285 @@ head(res_dts)
 
 ------------------------------------------------------------------------
 
+# 複数解の扱い（v0.2.0の新機能）
+
+## なぜ複数解が重要なのか
+
+QCAの最小化処理では、複数の等価な中間解が生成されることがあります。従来のアプローチでは最初の解（M1）のみが報告されることが多かったですが、これでは重要な因果的異質性を見逃す可能性があります。
+
+TSQCA v0.2.0では、以下の対応が可能になりました：
+
+1. 複数解の存在を**検出**
+2. 全ての解に共通する**コア条件**を抽出
+3. **周辺条件**と**ユニーク項**を特定
+
+## コア条件と周辺条件
+
+コア条件と周辺条件の違いを理解することは、頑健なQCA解釈のために不可欠です：
+
+| タイプ | 定義 | 解釈 |
+|--------|------|------|
+| **コア条件** | 全ての解に存在 | 頑健な知見；本質的な因果要因 |
+| **周辺条件** | 一部の解にのみ存在 | 文脈依存的；ケースによって異なる |
+| **ユニーク項** | 特定の1つの解にのみ存在 | 解固有；最も頑健性が低い |
+
+## `extract_mode` の使い方
+
+`extract_mode` パラメータで解の抽出方法を制御できます：
+
+### モード: "first"（デフォルト）
+```{r, eval=FALSE}
+# 最初の解（M1）のみを返す
+# v0.1.xと後方互換
+result <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "first"  # デフォルト
+)
+```
+
+### モード: "all"
+```{r, eval=FALSE}
+# 全ての解を連結して返す
+# 全ての等価解を確認したい場合に有用
+result_all <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "all"
+)
+
+# 出力には n_solutions カラムが含まれる
+head(result_all$summary)
+# expression カラムは: "M1: A*B + C; M2: A*B + D; M3: ..." のように表示
+```
+
+### モード: "core"
+```{r, eval=FALSE}
+# 全ての解に共通するコア条件を返す
+# 頑健な知見を特定するのに最適
+result_core <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "core"
+)
+
+# 出力に含まれる内容:
+# - expression: コア条件
+# - peripheral_terms: 一部の解に含まれる条件
+# - unique_terms: 解固有の条件
+# - n_solutions: 等価解の数
+```
+
+## 実践例
+
+QCAが3つの等価な解を生成した場合を考えます：
+
+- M1: `A*B + C → Y`
+- M2: `A*B + D → Y`
+- M3: `A*B + E → Y`
+
+分析結果：
+
+| 成分 | 項 | 解釈 |
+|------|-----|------|
+| コア | `A*B` | 3つの解全てに存在；頑健な知見 |
+| 周辺 | `C, D, E` | 各々1つの解に存在；文脈依存的 |
+| ユニーク（M1） | `C` | 解1のみ |
+| ユニーク（M2） | `D` | 解2のみ |
+| ユニーク（M3） | `E` | 解3のみ |
+
+**推奨**: コア条件（`A*B → Y`）を主要な知見として報告し、周辺条件は考察セクションで代替経路として議論してください。
+
+------------------------------------------------------------------------
+
+# レポート生成（v0.2.0の新機能）
+
+## 概要
+
+`generate_report()` 関数を使用して、分析結果から包括的なマークダウンレポートを作成できます。これによりドキュメント作成プロセスが自動化され、再現性が確保されます。
+
+## レポート形式
+
+### FULLレポート
+
+包括的な分析詳細を含みます：
+
+- 分析設定（再現性のため）
+- 全閾値のサマリーテーブル
+- 閾値ごとの詳細結果
+- 全ての解の式
+- コア条件と周辺条件
+- 適合度指標（整合性、被覆値、PRI）
+
+```{r, eval=FALSE}
+# FULLレポートを生成
+generate_report(res_ots, "my_analysis_full.md", format = "full")
+```
+
+### SIMPLEレポート
+
+論文原稿用に設計：
+
+- 簡潔な形式
+- 必要な情報のみ
+- 補足資料としてそのまま使用可能
+
+```{r, eval=FALSE}
+# SIMPLEレポートを生成
+generate_report(res_ots, "my_analysis_simple.md", format = "simple")
+```
+
+## レポートの効果的な使い方
+
+### 研究論文の場合
+
+1. `return_details = TRUE`（v0.2.0のデフォルト）で分析を実行
+2. 本文用に**SIMPLEレポート**を生成
+3. 補足資料用に**FULLレポート**を生成
+
+```{r, eval=FALSE}
+# 完全なワークフロー
+result <- otSweep(
+  dat = mydata,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+
+# 本文用
+generate_report(result, "manuscript_results.md", format = "simple")
+
+# 補足資料用
+generate_report(result, "supplementary_full.md", format = "full")
+```
+
+### 分析パラメータへのアクセス
+
+全ての分析パラメータは `result$params` に保存され、再現性が確保されます：
+
+```{r, eval=FALSE}
+# 保存されたパラメータを確認
+result$params
+
+# 含まれる内容:
+# - Yvar, Xvars: 変数名
+# - thrX, thrY: 閾値
+# - incl.cut, n.cut, pri.cut: QCAパラメータ
+# - dir.exp, include: 最小化設定
+```
+
+------------------------------------------------------------------------
+
+# ベストプラクティス
+
+## 小さく始めて、徐々に拡大する
+
+スイープ関数を使用する際、QCA分析の数は急速に増加します。体系的なアプローチで無駄な計算を防ぎましょう：
+
+### ステップ1: 単一値テスト
+```{r, eval=FALSE}
+# まず単一の閾値でテスト
+result <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 7,  # 単一値
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+```
+
+### ステップ2: 小範囲
+```{r, eval=FALSE}
+# 小さな範囲に拡大
+result <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:7,  # 小範囲
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+```
+
+### ステップ3: 完全な分析
+```{r, eval=FALSE}
+# 動作確認後、完全な分析を実行
+result <- otSweep(
+  dat = dat,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 5:9,  # 全範囲
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+```
+
+## 計算量
+
+計算量を理解することで、分析計画に役立ちます：
+
+| 関数 | 計算量 | 例 | 分析回数 |
+|------|--------|-----|----------|
+| `otSweep()` | O(n) | Y閾値5つ | 5 |
+| `ctSweepS()` | O(n) | X閾値5つ | 5 |
+| `ctSweepM()` | O(m^k) | 閾値3つ × 条件3つ | 27 |
+| `dtSweep()` | O(n × m^k) | Y3 × X3^3 | 81 |
+
+### 大規模スイープの管理
+
+`dtSweep()` と `ctSweepM()` では、まず条件を絞り込んでください：
+
+```{r, eval=FALSE}
+# 管理可能: 2 × 2 × 2 = 8 組み合わせ
+sweep_list <- list(X1 = 6:7, X2 = 6:7, X3 = 6:7)
+
+# 注意: 5 × 5 × 5 = 125 組み合わせ
+sweep_list <- list(X1 = 5:9, X2 = 5:9, X3 = 5:9)
+
+# 避ける: 5 × 5 × 5 × 5 × 5 = 3125 組み合わせ!
+sweep_list <- list(X1 = 5:9, X2 = 5:9, X3 = 5:9, X4 = 5:9, X5 = 5:9)
+```
+
+## 結果の解釈
+
+### 解が安定している場合
+
+同じ解が複数の閾値で出現する場合、知見は頑健です：
+
+```
+thrY | expression    | inclS | covS
+-----|---------------|-------|------
+6    | A*B + C → Y   | 0.85  | 0.72
+7    | A*B + C → Y   | 0.88  | 0.68
+8    | A*B + C → Y   | 0.91  | 0.65
+```
+
+**解釈**: 解 `A*B + C` は閾値の変化に対して頑健です。
+
+### 解が変化する場合
+
+解が大きく変化する場合、閾値感度を調査してください：
+
+```
+thrY | expression    | inclS | covS
+-----|---------------|-------|------
+6    | A*B + C → Y   | 0.82  | 0.75
+7    | A*B → Y       | 0.89  | 0.62
+8    | B*D → Y       | 0.93  | 0.45
+```
+
+**解釈**: 結果は閾値に敏感です。理論的に最も妥当な閾値を報告し、適切な注意書きを付けることを検討してください。
+
+------------------------------------------------------------------------
+
 # まとめ
 
 TSQCA を用いることで、QCA における閾値設定の影響を体系的に評価し、
@@ -285,6 +564,13 @@ CTS / MCTS / OTS / DTS の各手法により、研究者は：
 -   分析全体の信頼性向上
 
 を実現できます。
+
+**v0.2.0の新機能:**
+
+- 複数の等価解を検出・分析
+- 頑健な知見のためのコア条件を抽出
+- 包括的なレポートを自動生成
+- 再現性のためのパラメータ保存
 
 
 ## References

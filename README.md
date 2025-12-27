@@ -23,9 +23,83 @@ Implemented sweep types:
 - **OTS-QCA (otSweep)**: Sweep the threshold of Y only  
 - **DTS-QCA (dtSweep)**: Sweep X and Y thresholds simultaneously (2D sweep)
 
-> **Scope:** Version 0.1.0 focuses on **sufficiency analysis**. Necessity analysis is planned for future versions.
+> **Scope:** Version 0.2.0 focuses on **sufficiency analysis**. Necessity analysis is planned for future versions.
+
+---
+
+## New in v0.2.0
+
+### Multiple Solution Detection
+
+QCA minimization can produce multiple equivalent intermediate solutions. TSQCA now detects and reports these cases, allowing researchers to identify robust core conditions versus solution-specific peripheral conditions.
+
+Use the `extract_mode` parameter to control output:
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `"first"` | Returns only the first solution (M1) | Default, backward compatible |
+| `"all"` | Returns all solutions concatenated | See all equivalent solutions |
+| `"core"` | Returns core conditions common to all solutions | Identify robust findings |
+
+```r
+# Detect and show all solutions
+result <- otSweep(
+  dat = mydata,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "all"  # Show all solutions
+)
+
+# Extract core conditions only
+result_core <- otSweep(
+  dat = mydata,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "core"  # Show core conditions
+)
+```
+
+### Automatic Report Generation
+
+New `generate_report()` function creates comprehensive markdown reports:
+
+```r
+# Run analysis with return_details = TRUE (now the default)
+result <- otSweep(
+  dat = mydata,
+  Yvar = "Y",
+  Xvars = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+
+# Generate full report
+generate_report(result, "my_analysis.md", format = "full")
+
+# Generate simple report (for journal manuscripts)
+generate_report(result, "my_analysis_simple.md", format = "simple")
+```
+
+Reports include:
+- Analysis settings (for reproducibility)
+- Solution formulas with core/peripheral conditions
+- Fit measures (consistency, coverage, PRI)
+- Cross-threshold comparison tables
+
+### Updated Default Values
+
+To align with QCA package conventions:
+- `n.cut` default changed from 2 to **1**
+- `pri.cut` default changed from 0.5 to **0**
+
+---
 
 ## Installation
+
 ```r
 install.packages("devtools")
 devtools::install_github("im-research-yt/TSQCA")
@@ -61,8 +135,8 @@ result <- dtSweep(
   sweep_list_X = list(X1 = 6:7, X2 = 6:7),
   sweep_range_Y = 6:7,
   incl.cut = 0.8,   # QCA parameter
-  n.cut = 2,        # QCA parameter
-  pri.cut = 0.5     # QCA parameter
+  n.cut = 1,        # QCA parameter (default in v0.2.0)
+  pri.cut = 0       # QCA parameter (default in v0.2.0)
 )
 ```
 
@@ -147,10 +221,10 @@ res_cts <- ctSweepS(
   sweep_range    = sweep_range,    # Threshold candidates for X
   thrY           = thrY,           # Fixed Y threshold
   thrX_default   = thrX_default,   # Fixed thresholds for other X's
-  return_details = FALSE
+  return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_cts)
+head(res_cts$summary)
 ```
 
 # 2. MCTS-QCA: multi-condition X sweep (ctSweepM)
@@ -169,10 +243,10 @@ res_mcts <- ctSweepM(
   Xvars          = Xvars,
   sweep_list     = sweep_list,     # Threshold candidates for each X
   thrY           = 7,              # Fixed Y threshold
-  return_details = FALSE
+  return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_mcts)
+head(res_mcts$summary)
 ```
 
 # 3. OTS-QCA: outcome Y sweep (otSweep)
@@ -187,10 +261,13 @@ res_ots <- otSweep(
   Xvars          = Xvars,
   sweep_range    = sweep_range_Y,  # Y threshold candidates
   thrX           = thrX,           # Fixed X thresholds
-  return_details = FALSE
+  return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_ots)
+head(res_ots$summary)
+
+# Generate report for detailed analysis
+generate_report(res_ots, "ots_report.md", format = "full")
 ```
 
 # 4. DTS-QCA: 2D sweep of X and Y (dtSweep)
@@ -212,10 +289,10 @@ res_dts <- dtSweep(
   Xvars          = Xvars,
   sweep_list_X   = sweep_list_X,   # X threshold candidates
   sweep_range_Y  = sweep_range_Y,  # Y threshold candidates
-  return_details = FALSE
+  return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_dts)
+head(res_dts$summary)
 ```
 
 ## Sample Data

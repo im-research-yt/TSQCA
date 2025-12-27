@@ -13,8 +13,8 @@ dtSweep(
   dir.exp = NULL,
   include = "?",
   incl.cut = 0.8,
-  n.cut = 2,
-  pri.cut = 0.5,
+  n.cut = 1,
+  pri.cut = 0,
   extract_mode = c("first", "all", "core"),
   return_details = TRUE
 )
