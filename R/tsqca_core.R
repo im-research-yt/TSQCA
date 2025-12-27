@@ -87,16 +87,14 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
   # Base null response
   null_response <- function(mode) {
     base <- list(
-      expression = "No solution",
-      inclS      = NA_real_,
-      covS       = NA_real_
+      expression   = "No solution",
+      inclS        = NA_real_,
+      covS         = NA_real_,
+      n_solutions  = 0L
     )
-    if (mode == "all") {
-      base$n_solutions <- 0L
-    } else if (mode == "core") {
+    if (mode == "core") {
       base$peripheral_terms <- NA_character_
       base$unique_terms     <- NA_character_
-      base$n_solutions      <- 0L
     }
     base
   }
@@ -136,7 +134,7 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
   inclS <- NA_real_
   covS <- NA_real_
   
-  # Path 1: sol$IC$sol.incl.cov (for parsimonious solutions without dir.exp)
+  # Path 1: sol$IC$sol.incl.cov (for single solution without dir.exp)
   if (is.na(inclS)) {
     incl_val <- try(sol$IC$sol.incl.cov$inclS, silent = TRUE)
     if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
@@ -150,7 +148,21 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     }
   }
   
-  # Path 2: sol$i.sol$C1P1$IC$sol.incl.cov (for intermediate solutions with dir.exp)
+  # Path 2: sol$IC$overall (for multiple solutions - overall metrics)
+  if (is.na(inclS)) {
+    incl_val <- try(sol$IC$overall$sol.incl.cov$inclS, silent = TRUE)
+    if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
+      inclS <- incl_val
+    }
+  }
+  if (is.na(covS)) {
+    cov_val <- try(sol$IC$overall$sol.incl.cov$covS, silent = TRUE)
+    if (!inherits(cov_val, "try-error") && !is.null(cov_val)) {
+      covS <- cov_val
+    }
+  }
+  
+  # Path 3: sol$i.sol$C1P1$IC$sol.incl.cov (for intermediate solutions with dir.exp)
   if (is.na(inclS)) {
     incl_val <- try(sol$i.sol$C1P1$IC$sol.incl.cov$inclS, silent = TRUE)
     if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
@@ -164,7 +176,7 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     }
   }
   
-  # Path 3: First element of i.sol
+  # Path 4: First element of i.sol
   if (is.na(inclS) && !is.null(sol$i.sol) && length(sol$i.sol) > 0) {
     incl_val <- try(sol$i.sol[[1]]$IC$sol.incl.cov$inclS, silent = TRUE)
     if (!inherits(incl_val, "try-error") && !is.null(incl_val)) {
@@ -184,9 +196,10 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
   if (extract_mode == "first") {
     expression <- paste(sol_list[[1]], collapse = " + ")
     return(list(
-      expression = expression,
-      inclS      = inclS,
-      covS       = covS
+      expression  = expression,
+      inclS       = inclS,
+      covS        = covS,
+      n_solutions = n_solutions
     ))
   }
   
