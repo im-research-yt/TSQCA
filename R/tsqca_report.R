@@ -152,8 +152,13 @@ write_full_report <- function(result, con) {
       n_sol <- get_n_solutions(sol)
       writeLines(paste0("**Number of Solutions**: ", n_sol, "\n"), con)
       
+      # Try multiple paths to get solution list (same logic as qca_extract)
       sol_list <- sol$i.sol$C1P1$solution
-      if (!is.null(sol_list)) {
+      if (is.null(sol_list) || length(sol_list) == 0) {
+        sol_list <- sol$solution
+      }
+      
+      if (!is.null(sol_list) && length(sol_list) > 0) {
         writeLines("**Solutions**:\n", con)
         for (i in seq_along(sol_list)) {
           expr <- paste(sol_list[[i]], collapse = " + ")
@@ -261,7 +266,12 @@ write_simple_report <- function(result, con) {
     }
     
     n_sol <- get_n_solutions(sol)
+    
+    # Try multiple paths to get solution list (same logic as qca_extract)
     sol_list <- sol$i.sol$C1P1$solution
+    if (is.null(sol_list) || length(sol_list) == 0) {
+      sol_list <- sol$solution
+    }
     
     if (!is.null(sol_list) && length(sol_list) > 0) {
       writeLines(paste0("### ", label, "\n"), con)
