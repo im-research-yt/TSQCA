@@ -19,8 +19,11 @@
 #' @param incl.cut Consistency cutoff for \code{truthTable}.
 #' @param n.cut Frequency cutoff for \code{truthTable}.
 #' @param pri.cut PRI cutoff for \code{minimize}.
-#' @param return_details Logical. If \code{TRUE}, returns both summary
-#'   and detailed objects.
+#' @param extract_mode Character. How to handle multiple solutions:
+#'   \code{"first"} (default), \code{"all"}, or \code{"core"}.
+#'   See \code{\link{qca_extract}} for details.
+#' @param return_details Logical. If \code{TRUE} (default), returns both
+#'   summary and detailed objects for use with \code{generate_report()}.
 #'
 #' @return
 #' If \code{return_details = FALSE}, a data frame with columns:
@@ -29,6 +32,7 @@
 #'   \item \code{expression} — minimized solution expression
 #'   \item \code{inclS} — solution consistency
 #'   \item \code{covS} — solution coverage
+#'   \item (additional columns depending on \code{extract_mode})
 #' }
 #'
 #' If \code{return_details = TRUE}, a list with:
@@ -55,13 +59,17 @@
 #'   sweep_range = 6:9,
 #'   thrX = thrX
 #' )
-#' head(result)
+#' head(result$summary)
 otSweep <- function(dat, Yvar, Xvars,
                     sweep_range, thrX,
                     dir.exp = NULL, include = "?",
                     incl.cut = 0.8, n.cut = 2, pri.cut = 0.5,
-                    return_details = FALSE) {
+                    extract_mode = c("first", "all", "core"),
+                    return_details = TRUE) {
   
+  extract_mode <- match.arg(extract_mode)
+  
+  # Initialize output data frame based on extract_mode
   df_out <- data.frame(
     thrY       = numeric(0),
     expression = character(0),
@@ -70,7 +78,19 @@ otSweep <- function(dat, Yvar, Xvars,
     stringsAsFactors = FALSE
   )
   
+  # Add columns based on extract_mode
+  if (extract_mode == "all") {
+    df_out$n_solutions <- integer(0)
+  } else if (extract_mode == "core") {
+    df_out$peripheral_terms <- character(0)
+    df_out$unique_terms     <- character(0)
+    df_out$n_solutions      <- integer(0)
+  }
+  
   details_list <- list()
+  
+  # Track thresholds with multiple solutions (for warning in "first" mode)
+  multi_sol_thresholds <- c()
   
   for (thrY in sweep_range) {
     
@@ -93,13 +113,23 @@ otSweep <- function(dat, Yvar, Xvars,
     )
     
     if (inherits(tt, "try-error")) {
-      df_out <- rbind(df_out, data.frame(
+      new_row <- data.frame(
         thrY       = thrY,
         expression = "No solution",
         inclS      = NA_real_,
         covS       = NA_real_,
         stringsAsFactors = FALSE
-      ))
+      )
+      
+      if (extract_mode == "all") {
+        new_row$n_solutions <- 0L
+      } else if (extract_mode == "core") {
+        new_row$peripheral_terms <- NA_character_
+        new_row$unique_terms     <- NA_character_
+        new_row$n_solutions      <- 0L
+      }
+      
+      df_out <- rbind(df_out, new_row)
       
       if (return_details) {
         details_list[[as.character(thrY)]] <- list(
@@ -131,13 +161,23 @@ otSweep <- function(dat, Yvar, Xvars,
     )
     
     if (inherits(sol, "try-error")) {
-      df_out <- rbind(df_out, data.frame(
+      new_row <- data.frame(
         thrY       = thrY,
         expression = "No solution",
         inclS      = NA_real_,
         covS       = NA_real_,
         stringsAsFactors = FALSE
-      ))
+      )
+      
+      if (extract_mode == "all") {
+        new_row$n_solutions <- 0L
+      } else if (extract_mode == "core") {
+        new_row$peripheral_terms <- NA_character_
+        new_row$unique_terms     <- NA_character_
+        new_row$n_solutions      <- 0L
+      }
+      
+      df_out <- rbind(df_out, new_row)
       
       if (return_details) {
         details_list[[as.character(thrY)]] <- list(
@@ -150,15 +190,34 @@ otSweep <- function(dat, Yvar, Xvars,
       next
     }
     
-    info <- qca_extract(sol)
+    info <- qca_extract(sol, extract_mode = extract_mode)
     
-    df_out <- rbind(df_out, data.frame(
+    # Track multiple solutions (only in "first" mode)
+    if (extract_mode == "first") {
+      n_sol <- get_n_solutions(sol)
+      if (n_sol > 1) {
+        multi_sol_thresholds <- c(multi_sol_thresholds, thrY)
+      }
+    }
+    
+    # Build result row based on extract_mode
+    new_row <- data.frame(
       thrY       = thrY,
       expression = info$expression,
       inclS      = info$inclS,
       covS       = info$covS,
       stringsAsFactors = FALSE
-    ))
+    )
+    
+    if (extract_mode == "all") {
+      new_row$n_solutions <- info$n_solutions
+    } else if (extract_mode == "core") {
+      new_row$peripheral_terms <- info$peripheral_terms
+      new_row$unique_terms     <- info$unique_terms
+      new_row$n_solutions      <- info$n_solutions
+    }
+    
+    df_out <- rbind(df_out, new_row)
     
     if (return_details) {
       details_list[[as.character(thrY)]] <- list(
@@ -168,6 +227,18 @@ otSweep <- function(dat, Yvar, Xvars,
         solution    = sol
       )
     }
+  }
+  
+  # Issue warning for multiple solutions in "first" mode
+  if (length(multi_sol_thresholds) > 0) {
+    warning(
+      "Multiple intermediate solutions exist for thrY = ",
+      paste(multi_sol_thresholds, collapse = ", "), ". ",
+      "Only the first solution (M1) is shown. ",
+      "Use extract_mode = 'all' or 'core' for details, ",
+      "or generate_report() for full analysis.",
+      call. = FALSE
+    )
   }
   
   if (return_details) {
@@ -200,8 +271,11 @@ otSweep <- function(dat, Yvar, Xvars,
 #' @param incl.cut Consistency cutoff for \code{truthTable}.
 #' @param n.cut Frequency cutoff for \code{truthTable}.
 #' @param pri.cut PRI cutoff for \code{minimize}.
-#' @param return_details Logical. If \code{TRUE}, returns both summary and
-#'   detailed objects.
+#' @param extract_mode Character. How to handle multiple solutions:
+#'   \code{"first"} (default), \code{"all"}, or \code{"core"}.
+#'   See \code{\link{qca_extract}} for details.
+#' @param return_details Logical. If \code{TRUE} (default), returns both
+#'   summary and detailed objects for use with \code{generate_report()}.
 #'
 #' @return
 #' If \code{return_details = FALSE}, a data frame with columns:
@@ -212,6 +286,7 @@ otSweep <- function(dat, Yvar, Xvars,
 #'   \item \code{expression} — minimized solution expression
 #'   \item \code{inclS} — solution consistency
 #'   \item \code{covS} — solution coverage
+#'   \item (additional columns depending on \code{extract_mode})
 #' }
 #'
 #' If \code{return_details = TRUE}, a list with:
@@ -245,7 +320,7 @@ otSweep <- function(dat, Yvar, Xvars,
 #'   sweep_list_X = sweep_list_X,
 #'   sweep_range_Y = sweep_range_Y
 #' )
-#' head(result_quick)
+#' head(result_quick$summary)
 #' 
 #' \donttest{
 #' # Full analysis with all conditions and thresholds
@@ -267,14 +342,17 @@ otSweep <- function(dat, Yvar, Xvars,
 #' )
 #' 
 #' # Analyze threshold-dependent causal structures
-#' head(result_full)
+#' head(result_full$summary)
 #' }
 #' @export
 dtSweep <- function(dat, Yvar, Xvars,
                     sweep_list_X, sweep_range_Y,
                     dir.exp = NULL, include = "?",
                     incl.cut = 0.8, n.cut = 2, pri.cut = 0.5,
-                    return_details = FALSE) {
+                    extract_mode = c("first", "all", "core"),
+                    return_details = TRUE) {
+  
+  extract_mode <- match.arg(extract_mode)
   
   combo_X <- expand.grid(
     sweep_list_X,
@@ -282,6 +360,7 @@ dtSweep <- function(dat, Yvar, Xvars,
     stringsAsFactors = FALSE
   )
   
+  # Initialize output data frame based on extract_mode
   df_out <- data.frame(
     combo_id   = integer(0),
     thrY       = numeric(0),
@@ -292,12 +371,24 @@ dtSweep <- function(dat, Yvar, Xvars,
     stringsAsFactors = FALSE
   )
   
+  # Add columns based on extract_mode
+  if (extract_mode == "all") {
+    df_out$n_solutions <- integer(0)
+  } else if (extract_mode == "core") {
+    df_out$peripheral_terms <- character(0)
+    df_out$unique_terms     <- character(0)
+    df_out$n_solutions      <- integer(0)
+  }
+  
   details_list <- list()
   
   if (is.null(dir.exp)) {
     dir.exp <- rep(1, length(Xvars))
     names(dir.exp) <- Xvars
   }
+  
+  # Track combinations with multiple solutions (for warning in "first" mode)
+  multi_sol_combos <- c()
   
   combo_id <- 1L
   
@@ -329,7 +420,7 @@ dtSweep <- function(dat, Yvar, Xvars,
       )
       
       if (inherits(tt, "try-error")) {
-        df_out <- rbind(df_out, data.frame(
+        new_row <- data.frame(
           combo_id   = combo_id,
           thrY       = thrY,
           thrX       = thrX_label,
@@ -337,7 +428,17 @@ dtSweep <- function(dat, Yvar, Xvars,
           inclS      = NA_real_,
           covS       = NA_real_,
           stringsAsFactors = FALSE
-        ))
+        )
+        
+        if (extract_mode == "all") {
+          new_row$n_solutions <- 0L
+        } else if (extract_mode == "core") {
+          new_row$peripheral_terms <- NA_character_
+          new_row$unique_terms     <- NA_character_
+          new_row$n_solutions      <- 0L
+        }
+        
+        df_out <- rbind(df_out, new_row)
         
         if (return_details) {
           details_list[[length(details_list) + 1L]] <- list(
@@ -365,7 +466,7 @@ dtSweep <- function(dat, Yvar, Xvars,
       )
       
       if (inherits(sol, "try-error")) {
-        df_out <- rbind(df_out, data.frame(
+        new_row <- data.frame(
           combo_id   = combo_id,
           thrY       = thrY,
           thrX       = thrX_label,
@@ -373,7 +474,17 @@ dtSweep <- function(dat, Yvar, Xvars,
           inclS      = NA_real_,
           covS       = NA_real_,
           stringsAsFactors = FALSE
-        ))
+        )
+        
+        if (extract_mode == "all") {
+          new_row$n_solutions <- 0L
+        } else if (extract_mode == "core") {
+          new_row$peripheral_terms <- NA_character_
+          new_row$unique_terms     <- NA_character_
+          new_row$n_solutions      <- 0L
+        }
+        
+        df_out <- rbind(df_out, new_row)
         
         if (return_details) {
           details_list[[length(details_list) + 1L]] <- list(
@@ -388,9 +499,19 @@ dtSweep <- function(dat, Yvar, Xvars,
         next
       }
       
-      info <- qca_extract(sol)
+      info <- qca_extract(sol, extract_mode = extract_mode)
       
-      df_out <- rbind(df_out, data.frame(
+      # Track multiple solutions (only in "first" mode)
+      if (extract_mode == "first") {
+        n_sol <- get_n_solutions(sol)
+        if (n_sol > 1) {
+          multi_sol_combos <- c(multi_sol_combos, 
+                                paste0("combo_id=", combo_id, ", thrY=", thrY))
+        }
+      }
+      
+      # Build result row based on extract_mode
+      new_row <- data.frame(
         combo_id   = combo_id,
         thrY       = thrY,
         thrX       = thrX_label,
@@ -398,7 +519,17 @@ dtSweep <- function(dat, Yvar, Xvars,
         inclS      = info$inclS,
         covS       = info$covS,
         stringsAsFactors = FALSE
-      ))
+      )
+      
+      if (extract_mode == "all") {
+        new_row$n_solutions <- info$n_solutions
+      } else if (extract_mode == "core") {
+        new_row$peripheral_terms <- info$peripheral_terms
+        new_row$unique_terms     <- info$unique_terms
+        new_row$n_solutions      <- info$n_solutions
+      }
+      
+      df_out <- rbind(df_out, new_row)
       
       if (return_details) {
         details_list[[length(details_list) + 1L]] <- list(
@@ -414,10 +545,21 @@ dtSweep <- function(dat, Yvar, Xvars,
     combo_id <- combo_id + 1L
   }
   
+  # Issue warning for multiple solutions in "first" mode
+  if (length(multi_sol_combos) > 0) {
+    n_multi <- length(multi_sol_combos)
+    warning(
+      "Multiple intermediate solutions exist for ", n_multi, " combination(s). ",
+      "Only the first solution (M1) is shown. ",
+      "Use extract_mode = 'all' or 'core' for details, ",
+      "or generate_report() for full analysis.",
+      call. = FALSE
+    )
+  }
+  
   if (return_details) {
     return(list(summary = df_out, details = details_list))
   }
   
   df_out
 }
-
