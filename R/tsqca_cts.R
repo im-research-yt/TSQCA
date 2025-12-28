@@ -309,7 +309,7 @@ ctSweepS <- function(dat,
   }
   
   if (return_details) {
-    return(list(
+    result <- list(
       summary = df_out, 
       details = details_list,
       params = list(
@@ -326,7 +326,9 @@ ctSweepS <- function(dat,
         include = include,
         dir.exp = local_dir.exp
       )
-    ))
+    )
+    class(result) <- c("ctSweepS_result", "tsqca_result", "list")
+    return(result)
   }
   
   df_out
@@ -653,7 +655,7 @@ ctSweepM <- function(dat,
   }
   
   if (return_details) {
-    return(list(
+    result <- list(
       summary = df_out, 
       details = details_list,
       params = list(
@@ -668,7 +670,9 @@ ctSweepM <- function(dat,
         include = include,
         dir.exp = local_dir.exp
       )
-    ))
+    )
+    class(result) <- c("ctSweepM_result", "tsqca_result", "list")
+    return(result)
   }
   
   df_out
