@@ -36,14 +36,14 @@ Creates a markdown report from QCA analysis results.
 Supports two formats: "full" (comprehensive) and "simple" (for manuscripts).
 }
 \examples{
-\donttest{
+\dontrun{
 data(sample_data)
 thrX <- c(X1 = 7, X2 = 7, X3 = 7)
 
 result <- otSweep(
   dat = sample_data,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:8,
   thrX = thrX,
   return_details = TRUE
