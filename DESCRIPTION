@@ -1,7 +1,7 @@
 Package: TSQCA
 Type: Package
 Title: Threshold Sweep Extensions for Qualitative Comparative Analysis
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person("Yuki", "Toyoda", role = c("aut", "cre"),
            email = "yuki.toyoda.ds@hosei.ac.jp"),
@@ -24,7 +24,7 @@ Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 License: MIT + file LICENSE
 URL: https://github.com/im-research-yt/TSQCA,
-    https://doi.org/10.5281/zenodo.17899391
+        https://doi.org/10.5281/zenodo.17899391
 BugReports: https://github.com/im-research-yt/TSQCA/issues
 Encoding: UTF-8
 LazyData: true
@@ -32,3 +32,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 NeedsCompilation: no
+Packaged: 2025-12-28 10:03:58 UTC; yukit
+Author: Yuki Toyoda [aut, cre],
+  Japan Society for the Promotion of Science [fnd] (KAKENHI Grant Number
+    JP20K01998)
+Maintainer: Yuki Toyoda <yuki.toyoda.ds@hosei.ac.jp>

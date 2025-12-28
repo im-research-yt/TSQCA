@@ -98,11 +98,21 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   }
   
   if (!is.null(params)) {
-    if (!is.null(params$Yvar)) {
-      writeLines(paste0("| Outcome Variable | ", params$Yvar, " |"), con)
+    # Support both old (Yvar/Xvars) and new (outcome/conditions) parameter names
+    outcome_var <- params$outcome
+    if (is.null(outcome_var)) outcome_var <- params$Yvar
+    conditions_var <- params$conditions
+    if (is.null(conditions_var)) conditions_var <- params$Xvars
+    
+    if (!is.null(outcome_var)) {
+      outcome_display <- outcome_var
+      if (isTRUE(params$negate_outcome)) {
+        outcome_display <- paste0(outcome_var, " (negated)")
+      }
+      writeLines(paste0("| Outcome Variable | ", outcome_display, " |"), con)
     }
-    if (!is.null(params$Xvars)) {
-      writeLines(paste0("| Condition Variables | ", paste(params$Xvars, collapse = ", "), " |"), con)
+    if (!is.null(conditions_var)) {
+      writeLines(paste0("| Condition Variables | ", paste(conditions_var, collapse = ", "), " |"), con)
     }
     if (!is.null(params$thrX)) {
       thrX_str <- paste(names(params$thrX), params$thrX, sep = "=", collapse = ", ")
@@ -137,9 +147,20 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   if (!is.null(dat)) {
     writeLines("## 1. Descriptive Statistics\n", con)
     
-    # Determine variables
+    # Determine variables (support both old and new parameter names)
     if (is.null(desc_vars) && !is.null(params)) {
-      desc_vars <- c(params$Yvar, params$Xvars)
+      outcome_var <- params$outcome
+      if (is.null(outcome_var)) outcome_var <- params$Yvar
+      conditions_var <- params$conditions
+      if (is.null(conditions_var)) conditions_var <- params$Xvars
+      
+      # For negated outcome, use the cleaned variable name
+      if (!is.null(outcome_var)) {
+        outcome_clean <- sub("^~", "", outcome_var)
+        desc_vars <- c(outcome_clean, conditions_var)
+      } else {
+        desc_vars <- conditions_var
+      }
     }
     
     if (!is.null(desc_vars)) {
@@ -301,7 +322,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
         writeLines("**Full Solutions**:\n", con)
         for (i in seq_along(sol_list)) {
           expr <- paste(sol_list[[i]], collapse = " + ")
-          writeLines(paste0("- M", i, ": ", expr, " -> Y\n"), con)
+          writeLines(paste0("- M", i, ": ", escape_md(expr), " -> Y\n"), con)
         }
         writeLines("\n", con)
         
@@ -316,14 +337,14 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
           
           if (length(core_terms) > 0) {
             writeLines(paste0("**Core Conditions**: ", 
-                              paste(core_terms, collapse = " + "), "\n"), con)
+                              escape_md(paste(core_terms, collapse = " + ")), "\n"), con)
           } else {
             writeLines("**Core Conditions**: (none - solutions are disjoint)\n", con)
           }
           
           if (length(peripheral_terms) > 0) {
             writeLines(paste0("**Peripheral Terms**: ", 
-                              paste(peripheral_terms, collapse = " + "), "\n"), con)
+                              escape_md(paste(peripheral_terms, collapse = " + ")), "\n"), con)
           }
           
           # Unique Terms
@@ -333,7 +354,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
           })
           unique_terms_formatted <- sapply(seq_along(unique_terms_list), function(i) {
             if (length(unique_terms_list[[i]]) > 0) {
-              paste0("M", i, ": ", paste(unique_terms_list[[i]], collapse = " + "))
+              paste0("M", i, ": ", escape_md(paste(unique_terms_list[[i]], collapse = " + ")))
             } else {
               NULL
             }
@@ -550,7 +571,7 @@ write_simple_report <- function(result, con) {
       # Show solution formula
       if (length(sol_list) == 1) {
         expr <- paste(sol_list[[1]], collapse = " + ")
-        writeLines(paste0("**Solution**: ", expr, " -> Y\n"), con)
+        writeLines(paste0("**Solution**: ", escape_md(expr), " -> Y\n"), con)
       } else {
         writeLines(paste0("**Number of Solutions**: ", length(sol_list), "\n"), con)
         
@@ -561,13 +582,13 @@ write_simple_report <- function(result, con) {
         core_terms <- Reduce(intersect, sol_terms)
         
         if (length(core_terms) > 0) {
-          writeLines(paste0("**Core**: ", paste(core_terms, collapse = " + "), "\n"), con)
+          writeLines(paste0("**Core**: ", escape_md(paste(core_terms, collapse = " + ")), "\n"), con)
         }
         
         # List all solutions briefly
         for (i in seq_along(sol_list)) {
           expr <- paste(sol_list[[i]], collapse = " + ")
-          writeLines(paste0("- M", i, ": ", expr, "\n"), con)
+          writeLines(paste0("- M", i, ": ", escape_md(expr), "\n"), con)
         }
       }
       

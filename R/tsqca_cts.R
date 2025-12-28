@@ -1,5 +1,6 @@
 ###############################################
 # CTS–QCA (single X) and MCTS–QCA (multiple X)
+# v0.3.0: QCA-compatible argument names + negated outcome support
 ###############################################
 
 #' CTS–QCA: Single-condition threshold sweep
@@ -9,10 +10,11 @@
 #' using user-specified thresholds, and a crisp-set QCA is executed.
 #'
 #' @param dat Data frame containing the outcome and condition variables.
-#' @param Yvar Character. Outcome variable name.
-#' @param Xvars Character vector. Names of condition variables.
+#' @param outcome Character. Outcome variable name. Supports negation with
+#'   tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.
+#' @param conditions Character vector. Names of condition variables.
 #' @param sweep_var Character. Name of the condition to be swept.
-#'   Must be one of \code{Xvars}.
+#'   Must be one of \code{conditions}.
 #' @param sweep_range Numeric vector. Candidate thresholds for \code{sweep_var}.
 #' @param thrY Numeric. Threshold for Y (fixed).
 #' @param thrX_default Numeric. Default threshold for non-swept X variables.
@@ -27,6 +29,8 @@
 #'   See \code{\link{qca_extract}} for details.
 #' @param return_details Logical. If \code{TRUE} (default), returns both
 #'   summary and detailed objects for use with \code{generate_report()}.
+#' @param Yvar Deprecated. Use \code{outcome} instead.
+#' @param Xvars Deprecated. Use \code{conditions} instead.
 #'
 #' @return
 #' If \code{return_details = FALSE}, a data frame with columns:
@@ -51,29 +55,79 @@
 #' # Load sample data
 #' data(sample_data)
 #' 
-#' # Run single condition threshold sweep on X3
+#' # Run single condition threshold sweep on X3 (standard)
 #' result <- ctSweepS(
 #'   dat = sample_data,
-#'   Yvar = "Y",
-#'   Xvars = c("X1", "X2", "X3"),
+#'   outcome = "Y",
+#'   conditions = c("X1", "X2", "X3"),
 #'   sweep_var = "X3",
 #'   sweep_range = 6:8,
 #'   thrY = 7,
 #'   thrX_default = 7
 #' )
 #' head(result$summary)
-ctSweepS <- function(dat, Yvar, Xvars,
+#' 
+#' # Run with negated outcome (~Y)
+#' result_neg <- ctSweepS(
+#'   dat = sample_data,
+#'   outcome = "~Y",
+#'   conditions = c("X1", "X2", "X3"),
+#'   sweep_var = "X3",
+#'   sweep_range = 6:8,
+#'   thrY = 7,
+#'   thrX_default = 7
+#' )
+#' head(result_neg$summary)
+ctSweepS <- function(dat, 
+                     outcome = NULL, conditions = NULL,
                      sweep_var, sweep_range,
                      thrY, thrX_default = 7,
                      dir.exp = NULL, include = "?",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "core"),
-                     return_details = TRUE) {
+                     return_details = TRUE,
+                     Yvar = NULL, Xvars = NULL) {
+  
+  # === Backward compatibility for deprecated arguments ===
+  if (!is.null(Yvar) && is.null(outcome)) {
+    outcome <- Yvar
+    warning("Argument 'Yvar' is deprecated. Use 'outcome' instead.",
+            call. = FALSE)
+  }
+  if (!is.null(Xvars) && is.null(conditions)) {
+    conditions <- Xvars
+    warning("Argument 'Xvars' is deprecated. Use 'conditions' instead.",
+            call. = FALSE)
+  }
+  
+  # === Validate required arguments ===
+  if (is.null(outcome)) {
+    stop("Argument 'outcome' is required.")
+  }
+  if (is.null(conditions)) {
+    stop("Argument 'conditions' is required.")
+  }
+  
+  # === Handle negated outcome ===
+  negate_outcome <- grepl("^~", outcome)
+  outcome_clean <- sub("^~", "", outcome)
+  
+  # Validate outcome variable exists
+  if (!outcome_clean %in% names(dat)) {
+    stop("Variable '", outcome_clean, "' not found in data.")
+  }
+  
+  # Validate condition variables exist
+  missing_conds <- setdiff(conditions, names(dat))
+  if (length(missing_conds) > 0) {
+    stop("Condition variable(s) not found in data: ", 
+         paste(missing_conds, collapse = ", "))
+  }
   
   extract_mode <- match.arg(extract_mode)
   
-  if (!sweep_var %in% Xvars) {
-    stop("sweep_var must be one of Xvars.")
+  if (!sweep_var %in% conditions) {
+    stop("sweep_var must be one of conditions.")
   }
   
   # Initialize output data frame based on extract_mode
@@ -100,29 +154,32 @@ ctSweepS <- function(dat, Yvar, Xvars,
   # Handle dir.exp: NULL or scalar -> expand to vector (before loop)
   local_dir.exp <- dir.exp
   if (is.null(local_dir.exp) || length(local_dir.exp) == 1) {
-    local_dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(Xvars))
-    names(local_dir.exp) <- Xvars
+    local_dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(conditions))
+    names(local_dir.exp) <- conditions
   }
   
   for (thr in sweep_range) {
     
     # vector of thresholds for all X
-    thrX_vec <- rep(thrX_default, length(Xvars))
-    names(thrX_vec) <- Xvars
+    thrX_vec <- rep(thrX_default, length(conditions))
+    names(thrX_vec) <- conditions
     thrX_vec[sweep_var] <- thr
     
-    # binarize Y and X
-    dat_bin <- data.frame(Y = qca_bin(dat[[Yvar]], thrY))
-    for (x in Xvars) {
+    # Binarize Y and X (use cleaned outcome name)
+    dat_bin <- data.frame(Y = qca_bin(dat[[outcome_clean]], thrY))
+    for (x in conditions) {
       dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
     }
+    
+    # Determine outcome string for truthTable (with ~ if negated)
+    outcome_tt <- if (negate_outcome) "~Y" else "Y"
     
     # Truth table (wrapped in try to handle errors)
     tt <- try(
       QCA::truthTable(
         dat_bin,
-        outcome    = "Y",
-        conditions = Xvars,
+        outcome    = outcome_tt,
+        conditions = conditions,
         show.cases = FALSE,
         incl.cut1  = incl.cut,
         n.cut      = n.cut,
@@ -256,8 +313,9 @@ ctSweepS <- function(dat, Yvar, Xvars,
       summary = df_out, 
       details = details_list,
       params = list(
-        Yvar = Yvar,
-        Xvars = Xvars,
+        outcome = outcome,
+        conditions = conditions,
+        negate_outcome = negate_outcome,
         sweep_var = sweep_var,
         sweep_range = sweep_range,
         thrY = thrY,
@@ -286,11 +344,12 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #' and all X variables are binarized, and a crisp-set QCA is executed.
 #'
 #' @param dat Data frame containing the outcome and condition variables.
-#' @param Yvar Character. Outcome variable name.
-#' @param Xvars Character vector. Names of condition variables.
+#' @param outcome Character. Outcome variable name. Supports negation with
+#'   tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.
+#' @param conditions Character vector. Names of condition variables.
 #' @param sweep_list Named list. Each element is a numeric vector of
 #'   candidate thresholds for the corresponding X. Names must match
-#'   \code{Xvars}.
+#'   \code{conditions}.
 #' @param thrY Numeric. Threshold for Y (fixed).
 #' @param dir.exp Directional expectations for \code{minimize}.
 #'   If \code{NULL}, all set to 1.
@@ -303,6 +362,8 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #'   See \code{\link{qca_extract}} for details.
 #' @param return_details Logical. If \code{TRUE} (default), returns both
 #'   summary and detailed objects for use with \code{generate_report()}.
+#' @param Yvar Deprecated. Use \code{outcome} instead.
+#' @param Xvars Deprecated. Use \code{conditions} instead.
 #'
 #' @return
 #' If \code{return_details = FALSE}, a data frame with columns:
@@ -336,15 +397,25 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #'   X2 = 6:7   # Reduced from 6:8 to 6:7
 #' )
 #' 
-#' # Run multiple condition threshold sweep with reduced parameters
+#' # Run multiple condition threshold sweep with reduced parameters (standard)
 #' result_quick <- ctSweepM(
 #'   dat = sample_data,
-#'   Yvar = "Y",
-#'   Xvars = c("X1", "X2"),  # Reduced from 3 to 2 conditions
+#'   outcome = "Y",
+#'   conditions = c("X1", "X2"),  # Reduced from 3 to 2 conditions
 #'   sweep_list = sweep_list,
 #'   thrY = 7
 #' )
 #' head(result_quick$summary)
+#' 
+#' # Run with negated outcome (~Y)
+#' result_neg <- ctSweepM(
+#'   dat = sample_data,
+#'   outcome = "~Y",
+#'   conditions = c("X1", "X2"),
+#'   sweep_list = sweep_list,
+#'   thrY = 7
+#' )
+#' head(result_neg$summary)
 #' 
 #' \donttest{
 #' # Full multi-condition analysis with 3 conditions
@@ -357,8 +428,8 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #' 
 #' result_full <- ctSweepM(
 #'   dat = sample_data,
-#'   Yvar = "Y",
-#'   Xvars = c("X1", "X2", "X3"),
+#'   outcome = "Y",
+#'   conditions = c("X1", "X2", "X3"),
 #'   sweep_list = sweep_list_full,
 #'   thrY = 7
 #' )
@@ -366,12 +437,50 @@ ctSweepS <- function(dat, Yvar, Xvars,
 #' # Visualize threshold-dependent solution paths
 #' head(result_full$summary)
 #' }
-ctSweepM <- function(dat, Yvar, Xvars,
+ctSweepM <- function(dat, 
+                     outcome = NULL, conditions = NULL,
                      sweep_list, thrY,
                      dir.exp = NULL, include = "?",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "core"),
-                     return_details = TRUE) {
+                     return_details = TRUE,
+                     Yvar = NULL, Xvars = NULL) {
+  
+  # === Backward compatibility for deprecated arguments ===
+  if (!is.null(Yvar) && is.null(outcome)) {
+    outcome <- Yvar
+    warning("Argument 'Yvar' is deprecated. Use 'outcome' instead.",
+            call. = FALSE)
+  }
+  if (!is.null(Xvars) && is.null(conditions)) {
+    conditions <- Xvars
+    warning("Argument 'Xvars' is deprecated. Use 'conditions' instead.",
+            call. = FALSE)
+  }
+  
+  # === Validate required arguments ===
+  if (is.null(outcome)) {
+    stop("Argument 'outcome' is required.")
+  }
+  if (is.null(conditions)) {
+    stop("Argument 'conditions' is required.")
+  }
+  
+  # === Handle negated outcome ===
+  negate_outcome <- grepl("^~", outcome)
+  outcome_clean <- sub("^~", "", outcome)
+  
+  # Validate outcome variable exists
+  if (!outcome_clean %in% names(dat)) {
+    stop("Variable '", outcome_clean, "' not found in data.")
+  }
+  
+  # Validate condition variables exist
+  missing_conds <- setdiff(conditions, names(dat))
+  if (length(missing_conds) > 0) {
+    stop("Condition variable(s) not found in data: ", 
+         paste(missing_conds, collapse = ", "))
+  }
   
   extract_mode <- match.arg(extract_mode)
   
@@ -408,8 +517,8 @@ ctSweepM <- function(dat, Yvar, Xvars,
   # Handle dir.exp: NULL or scalar -> expand to vector (before loop)
   local_dir.exp <- dir.exp
   if (is.null(local_dir.exp) || length(local_dir.exp) == 1) {
-    local_dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(Xvars))
-    names(local_dir.exp) <- Xvars
+    local_dir.exp <- rep(if (is.null(dir.exp)) 1 else dir.exp[1], length(conditions))
+    names(local_dir.exp) <- conditions
   }
   
   for (i in seq_len(n_combos)) {
@@ -420,16 +529,20 @@ ctSweepM <- function(dat, Yvar, Xvars,
     thrX_label <- paste(names(thrX_vec), thrX_vec,
                         sep = "=", collapse = ", ")
     
-    dat_bin <- data.frame(Y = qca_bin(dat[[Yvar]], thrY))
+    # Binarize outcome (use cleaned name)
+    dat_bin <- data.frame(Y = qca_bin(dat[[outcome_clean]], thrY))
     for (x in names(thrX_vec)) {
       dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
     }
     
+    # Determine outcome string for truthTable (with ~ if negated)
+    outcome_tt <- if (negate_outcome) "~Y" else "Y"
+    
     tt <- try(
       QCA::truthTable(
         dat_bin,
-        outcome    = "Y",
-        conditions = Xvars,
+        outcome    = outcome_tt,
+        conditions = conditions,
         show.cases = FALSE,
         incl.cut1  = incl.cut,
         n.cut      = n.cut,
@@ -544,15 +657,16 @@ ctSweepM <- function(dat, Yvar, Xvars,
       summary = df_out, 
       details = details_list,
       params = list(
-        Yvar = Yvar,
-        Xvars = Xvars,
+        outcome = outcome,
+        conditions = conditions,
+        negate_outcome = negate_outcome,
         sweep_list = sweep_list,
         thrY = thrY,
         incl.cut = incl.cut,
         n.cut = n.cut,
         pri.cut = pri.cut,
         include = include,
-        dir.exp = dir.exp
+        dir.exp = local_dir.exp
       )
     ))
   }

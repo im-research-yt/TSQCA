@@ -1,3 +1,50 @@
+# TSQCA 0.3.0
+
+## New Features
+
+### QCA-Compatible Argument Names
+* Renamed `Yvar` to `outcome` and `Xvars` to `conditions` in all sweep functions
+  - Follows QCA package naming conventions for consistency
+  - Old argument names (`Yvar`, `Xvars`) are still supported with deprecation warnings
+
+### Negated Outcome Support
+* Added support for negated outcomes using tilde prefix (e.g., `outcome = "~Y"`)
+  - Analyzes conditions sufficient for the absence of the outcome (Y < threshold)
+  - Follows QCA package's `truthTable()` convention for negation
+  - Works with all sweep functions: `otSweep()`, `dtSweep()`, `ctSweepS()`, `ctSweepM()`
+
+### Enhanced Report Generation
+* `generate_report()` now displays "(negated)" indicator when analyzing negated outcomes
+* Supports both old and new parameter names for backward compatibility
+
+## Changes
+
+### Argument Names (Backward Compatible)
+* `Yvar` → `outcome` (recommended)
+* `Xvars` → `conditions` (recommended)
+* Using old argument names will trigger a deprecation warning but will continue to work
+
+### Parameter Storage
+* `$params` now includes:
+  - `outcome`: New argument name (also stores `~Y` notation if negated)
+  - `conditions`: New argument name
+  - `negate_outcome`: Boolean indicating if outcome was negated
+
+## Migration Guide
+
+```r
+# Old syntax (still works, but shows deprecation warning)
+result <- otSweep(dat, Yvar = "Y", Xvars = c("X1", "X2"), ...)
+
+# New syntax (recommended)
+result <- otSweep(dat, outcome = "Y", conditions = c("X1", "X2"), ...)
+
+# Negated outcome (new feature)
+result <- otSweep(dat, outcome = "~Y", conditions = c("X1", "X2"), ...)
+```
+
+---
+
 # TSQCA 0.2.0
 
 ## New Features

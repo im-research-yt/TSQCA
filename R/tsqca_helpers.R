@@ -2,6 +2,23 @@
 # Helper functions for TSQCA
 ###############################################
 
+#' Escape special characters for Markdown
+#'
+#' Escapes asterisks and other special characters that have special
+#' meaning in Markdown syntax.
+#'
+#' @param text Character. Text to escape.
+#'
+#' @return Character. Text with special characters escaped.
+#' @keywords internal
+escape_md <- function(text) {
+  if (is.null(text) || length(text) == 0) return(text)
+  # Escape * to \* for Markdown
+
+  gsub("\\*", "\\\\*", text)
+}
+
+
 #' Extract all metrics from QCA solution object
 #'
 #' Safely extracts solution-level and term-level metrics from
@@ -196,6 +213,9 @@ df_to_md_table <- function(df, digits = 3) {
   
   # Convert all to character for consistent output
   df <- as.data.frame(lapply(df, as.character), stringsAsFactors = FALSE)
+  
+  # Escape special Markdown characters (especially * in QCA expressions)
+  df <- as.data.frame(lapply(df, escape_md), stringsAsFactors = FALSE)
   
   # Build header
   header <- paste0("| ", paste(names(df), collapse = " | "), " |")
