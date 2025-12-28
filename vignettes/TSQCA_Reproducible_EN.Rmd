@@ -36,8 +36,8 @@ data("sample_data")
 dat <- sample_data
 
 # Outcome and conditions
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome  <- "Y"
+conditions <- c("X1", "X2", "X3")
 
 # Quick inspection
 str(dat)
@@ -73,8 +73,8 @@ thrX_default <- 7     # Threshold for other X conditions (fixed)
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_var      = "X3",
   sweep_range    = 6:9,
   thrY           = 7,
@@ -99,8 +99,8 @@ Sweep **multiple X thresholds simultaneously**.
 ```{r, error=TRUE}
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_vars     = c("X2", "X3"),
   sweep_range    = 6:9,
   thrY           = 7,
@@ -127,8 +127,8 @@ sweep_range_ots <- 6:9
 
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -160,8 +160,8 @@ sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
@@ -187,8 +187,8 @@ Extract all solutions or core conditions for robustness analysis.
 ```{r, eval=FALSE}
 res_all <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -204,8 +204,8 @@ head(res_all$summary)
 ```{r, eval=FALSE}
 res_core <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -235,7 +235,44 @@ generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
 
 ---
 
-# 10. Accessing Analysis Parameters
+# 10. Negated Outcome Analysis (New in v0.3.0)
+
+Analyze conditions sufficient for the **absence** of the outcome.
+
+## Standard vs Negated Outcome
+```{r, eval=FALSE}
+# Standard: conditions for Y >= threshold
+res_Y <- otSweep(
+  dat            = dat,
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
+  sweep_range    = 6:8,
+  thrX           = thrX_vec,
+  dir.exp        = 1
+)
+
+# Negated: conditions for Y < threshold
+res_negY <- otSweep(
+  dat            = dat,
+  outcome        = "~Y",
+  conditions     = c("X1", "X2", "X3"),
+  sweep_range    = 6:8,
+  thrX           = thrX_vec,
+  dir.exp        = 1
+)
+
+# Compare results
+res_Y$summary
+res_negY$summary
+
+# Check negation flag
+res_negY$params$negate_outcome
+# [1] TRUE
+```
+
+---
+
+# 11. Accessing Analysis Parameters
 
 All parameters are stored for reproducibility.
 ```{r, eval=FALSE}
@@ -243,9 +280,9 @@ All parameters are stored for reproducibility.
 res_ots$params
 
 # Example output:
-# $Yvar
+# $outcome
 # [1] "Y"
-# $Xvars
+# $conditions
 # [1] "X1" "X2" "X3"
 # $thrX
 # X1 X2 X3 
@@ -270,7 +307,7 @@ For more information on TS-QCA methodology, see:
 
 
 
-# 11. Session Information
+# 12. Session Information
 ```{r}
 sessionInfo()
 ```

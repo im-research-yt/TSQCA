@@ -59,8 +59,8 @@ data("sample_data")
 dat <- sample_data
 str(dat)
 
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome  <- "Y"
+conditions <- c("X1", "X2", "X3")
 ```
 
 ※ 欠損値（NA）が含まれている場合、スイープ実行前に除去または補完を行ってください。
@@ -108,8 +108,8 @@ sweep_list <- list(
 
 res_mixed <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list     = sweep_list,
   thrY           = 7,
   dir.exp        = 1
@@ -166,8 +166,8 @@ thrX_default <- 7     # その他 X の閾値（固定）
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_var      = sweep_var,
   sweep_range    = sweep_range,
   thrY           = thrY,
@@ -189,8 +189,8 @@ MCTS--QCA は、**複数の X 条件の閾値を同時に変化させ**、
 ```{r, error=TRUE}
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_vars     = c("X2", "X3"),
   sweep_range    = 6:9,
   thrY           = 7,
@@ -212,8 +212,8 @@ OTS--QCA は、**アウトカム Y の閾値だけを変化させる**手法で�
 ```{r}
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
   dir.exp        = 1,
@@ -241,8 +241,8 @@ sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
@@ -305,8 +305,8 @@ TSQCA v0.2.0では、以下の対応が可能になりました：
 # v0.1.xと後方互換
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "first"  # デフォルト
@@ -319,8 +319,8 @@ result <- otSweep(
 # 全ての等価解を確認したい場合に有用
 result_all <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "all"
@@ -337,8 +337,8 @@ head(result_all$summary)
 # 頑健な知見を特定するのに最適
 result_core <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "core"
@@ -422,8 +422,8 @@ generate_report(res_ots, "my_analysis_simple.md", format = "simple")
 # 完全なワークフロー
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -444,7 +444,7 @@ generate_report(result, "supplementary_full.md", format = "full")
 result$params
 
 # 含まれる内容:
-# - Yvar, Xvars: 変数名
+# - outcome, conditions: 変数名
 # - thrX, thrY: 閾値
 # - incl.cut, n.cut, pri.cut: QCAパラメータ
 # - dir.exp, include: 最小化設定
@@ -463,8 +463,8 @@ result$params
 # まず単一の閾値でテスト
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 7,  # 単一値
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -475,8 +475,8 @@ result <- otSweep(
 # 小さな範囲に拡大
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:7,  # 小範囲
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -487,8 +487,8 @@ result <- otSweep(
 # 動作確認後、完全な分析を実行
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 5:9,  # 全範囲
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -552,6 +552,101 @@ thrY | expression    | inclS | covS
 
 ------------------------------------------------------------------------
 
+# 否定型アウトカムの分析（v0.3.0新機能）
+
+## なぜ否定型アウトカムを分析するのか？
+
+QCAでは通常、アウトカムの**存在**（Y = 1）に十分な条件を分析します。しかし、アウトカムの**不在**（~Y）に対する条件を理解することも、同様に価値のある知見を提供します：
+
+- プロジェクト**失敗**（成功ではなく）につながる条件は？
+- 顧客**不満足**（満足ではなく）に寄与する要因は？
+- 政策の**非採用**（採用ではなく）を説明するものは？
+
+## `~` 記法の使用
+
+TSQCA v0.3.0はQCAパッケージのチルダ（`~`）記法による否定型アウトカムをサポートしています：
+
+```{r, eval=FALSE}
+# Y >= 閾値 の条件を分析（標準）
+result_Y <- otSweep(
+  dat = dat,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+
+# Y < 閾値 の条件を分析（否定型）
+result_negY <- otSweep(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+```
+
+## 否定型結果の解釈
+
+`~Y`を使用した場合、解はアウトカムの**不在**に十分な条件を示します：
+
+| 分析 | 解の例 | 解釈 |
+|------|--------|------|
+| `outcome = "Y"` | `X1*X2 + X3` | X1とX2が高い、またはX3が高い → Yが高い |
+| `outcome = "~Y"` | `~X1*~X3 + ~X2*~X3` | X1とX3が低い、またはX2とX3が低い → Yが低い |
+
+**注意**: 解の中の否定条件（`~X1`）は、その条件の**不在**（閾値未満）を意味します。
+
+## 全てのSweep関数が否定型をサポート
+
+```{r, eval=FALSE}
+# ctSweepS（否定型アウトカム）
+result <- ctSweepS(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_var = "X3",
+  sweep_range = 6:8,
+  thrY = 7,
+  thrX_default = 7
+)
+
+# ctSweepM（否定型アウトカム）
+result <- ctSweepM(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2"),
+  sweep_list = list(X1 = 6:7, X2 = 6:7),
+  thrY = 7
+)
+
+# dtSweep（否定型アウトカム）
+result <- dtSweep(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2"),
+  sweep_list_X = list(X1 = 6:7, X2 = 7),
+  sweep_range_Y = 6:8
+)
+```
+
+## 結果での否定型の確認
+
+`params`オブジェクトに否定が使用されたかどうかが保存されています：
+
+```{r, eval=FALSE}
+result <- otSweep(dat = dat, outcome = "~Y", ...)
+
+# 否定型かどうかを確認
+result$params$negate_outcome
+# [1] TRUE
+
+result$params$outcome
+# [1] "~Y"
+```
+
+------------------------------------------------------------------------
+
 # まとめ
 
 TSQCA を用いることで、QCA における閾値設定の影響を体系的に評価し、
@@ -564,6 +659,12 @@ CTS / MCTS / OTS / DTS の各手法により、研究者は：
 -   分析全体の信頼性向上
 
 を実現できます。
+
+**v0.3.0の新機能:**
+
+- QCAパッケージ準拠の引数名（`outcome`, `conditions`）
+- 否定型アウトカムのサポート（`~Y` 記法）
+- 旧引数名の後方互換性（非推奨警告付き）
 
 **v0.2.0の新機能:**
 

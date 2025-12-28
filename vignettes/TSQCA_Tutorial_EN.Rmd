@@ -60,8 +60,8 @@ str(dat)
 
 Define outcome and conditions:
 ```{r}
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome  <- "Y"
+conditions <- c("X1", "X2", "X3")
 ```
 
 ---
@@ -107,8 +107,8 @@ sweep_list <- list(
 
 res_mixed <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list     = sweep_list,
   thrY           = 7,
   dir.exp        = 1
@@ -163,8 +163,8 @@ thrX_default <- 7     # Threshold for other X conditions (fixed)
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_var      = sweep_var,
   sweep_range    = sweep_range,
   thrY           = thrY,
@@ -184,8 +184,8 @@ MCTS–QCA evaluates all combinations of thresholds for multiple X conditions.
 ```{r, error=TRUE}
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_vars     = c("X2", "X3"),
   sweep_range    = 6:9,
   thrY           = 7,
@@ -205,8 +205,8 @@ OTS–QCA varies only the threshold of **Y**, keeping X thresholds fixed.
 ```{r}
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
   dir.exp        = 1,
@@ -232,8 +232,8 @@ sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
@@ -294,8 +294,8 @@ The `extract_mode` parameter controls how solutions are extracted:
 # Backward compatible with v0.1.x
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "first"  # Default
@@ -308,8 +308,8 @@ result <- otSweep(
 # Useful for seeing all equivalent solutions
 result_all <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "all"
@@ -326,8 +326,8 @@ head(result_all$summary)
 # Best for identifying robust findings
 result_core <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "core"
@@ -411,8 +411,8 @@ generate_report(res_ots, "my_analysis_simple.md", format = "simple")
 # Complete workflow
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -433,7 +433,7 @@ All analysis parameters are stored in `result$params` for reproducibility:
 result$params
 
 # Includes:
-# - Yvar, Xvars: variable names
+# - outcome, conditions: variable names
 # - thrX, thrY: threshold values
 # - incl.cut, n.cut, pri.cut: QCA parameters
 # - dir.exp, include: minimization settings
@@ -452,8 +452,8 @@ When using sweep functions, the number of QCA analyses grows quickly. A systemat
 # Test with a single threshold first
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 7,  # Single value
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -464,8 +464,8 @@ result <- otSweep(
 # Expand to a small range
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:7,  # Small range
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -476,8 +476,8 @@ result <- otSweep(
 # Run full analysis only after confirming it works
 result <- otSweep(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 5:9,  # Full range
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
@@ -541,6 +541,101 @@ thrY | expression    | inclS | covS
 
 ---
 
+# Negated Outcome Analysis (New in v0.3.0)
+
+## Why Analyze Negated Outcomes?
+
+In QCA, researchers typically analyze conditions sufficient for the **presence** of an outcome (Y = 1). However, understanding conditions for the **absence** of an outcome (~Y) can provide equally valuable insights:
+
+- What conditions lead to project **failure** (not success)?
+- What factors contribute to customer **dissatisfaction** (not satisfaction)?
+- What explains policy **non-adoption** (not adoption)?
+
+## Using the `~` Notation
+
+TSQCA v0.3.0 supports the QCA package's tilde (`~`) notation for negated outcomes:
+
+```{r, eval=FALSE}
+# Analyze conditions for Y >= threshold (standard)
+result_Y <- otSweep(
+  dat = dat,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+
+# Analyze conditions for Y < threshold (negated)
+result_negY <- otSweep(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+```
+
+## Interpreting Negated Results
+
+When using `~Y`, the solution shows conditions sufficient for the **absence** of the outcome:
+
+| Analysis | Solution Example | Interpretation |
+|----------|------------------|----------------|
+| `outcome = "Y"` | `X1*X2 + X3` | High X1 AND X2, OR high X3 → High Y |
+| `outcome = "~Y"` | `~X1*~X3 + ~X2*~X3` | Low X1 AND X3, OR low X2 AND X3 → Low Y |
+
+**Note**: Negated conditions (`~X1`) in the solution mean the **absence** of that condition (below threshold).
+
+## All Sweep Functions Support Negation
+
+```{r, eval=FALSE}
+# ctSweepS with negated outcome
+result <- ctSweepS(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_var = "X3",
+  sweep_range = 6:8,
+  thrY = 7,
+  thrX_default = 7
+)
+
+# ctSweepM with negated outcome
+result <- ctSweepM(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2"),
+  sweep_list = list(X1 = 6:7, X2 = 6:7),
+  thrY = 7
+)
+
+# dtSweep with negated outcome
+result <- dtSweep(
+  dat = dat,
+  outcome = "~Y",
+  conditions = c("X1", "X2"),
+  sweep_list_X = list(X1 = 6:7, X2 = 7),
+  sweep_range_Y = 6:8
+)
+```
+
+## Checking Negation in Results
+
+The `params` object stores whether negation was used:
+
+```{r, eval=FALSE}
+result <- otSweep(dat = dat, outcome = "~Y", ...)
+
+# Check if negated
+result$params$negate_outcome
+# [1] TRUE
+
+result$params$outcome
+# [1] "~Y"
+```
+
+---
+
 # Conclusion
 
 TSQCA provides a structured and reproducible way to evaluate  
@@ -552,6 +647,12 @@ Using CTS, MCTS, OTS, and DTS sweeps, researchers can:
 - identify stable causal patterns,
 - detect threshold-sensitive relationships,
 - and strengthen QCA validity.
+
+**New in v0.3.0:**
+
+- QCA-compatible argument names (`outcome`, `conditions`)
+- Negated outcome support (`~Y` notation)
+- Backward compatibility with deprecation warnings
 
 **New in v0.2.0:**
 

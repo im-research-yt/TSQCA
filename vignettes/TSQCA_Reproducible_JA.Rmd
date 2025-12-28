@@ -35,8 +35,8 @@ data("sample_data")
 dat <- sample_data
 
 # アウトカムと条件名
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome  <- "Y"
+conditions <- c("X1", "X2", "X3")
 
 # 確認
 str(dat)
@@ -73,8 +73,8 @@ thrX_default <- 7     # その他 X の閾値（固定）
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_var      = "X3",
   sweep_range    = 6:9,
   thrY           = 7,
@@ -99,8 +99,8 @@ write.csv(res_cts$summary, file = "TSQCA_CTS_results.csv", row.names = FALSE)
 ```{r, error=TRUE}
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_vars     = c("X2", "X3"),
   sweep_range    = 6:9,
   thrY           = 7,
@@ -125,8 +125,8 @@ sweep_range_ots <- 6:9
 
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -155,8 +155,8 @@ sweep_range_dts_Y <- 6:8
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
   dir.exp        = 1,
@@ -179,8 +179,8 @@ write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
 ```{r, eval=FALSE}
 res_all <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -196,8 +196,8 @@ head(res_all$summary)
 ```{r, eval=FALSE}
 res_core <- otSweep(
   dat            = dat,
-  Yvar           = "Y",
-  Xvars          = c("X1", "X2", "X3"),
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = 1,
@@ -227,7 +227,44 @@ generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
 
 ---
 
-# 10. 分析パラメータへのアクセス
+# 10. 否定型アウトカムの分析（v0.3.0の新機能）
+
+アウトカムの**不在**に十分な条件を分析する。
+
+## 標準 vs 否定型アウトカム
+```{r, eval=FALSE}
+# 標準: Y >= 閾値 の条件
+res_Y <- otSweep(
+  dat            = dat,
+  outcome        = "Y",
+  conditions     = c("X1", "X2", "X3"),
+  sweep_range    = 6:8,
+  thrX           = thrX_vec,
+  dir.exp        = 1
+)
+
+# 否定型: Y < 閾値 の条件
+res_negY <- otSweep(
+  dat            = dat,
+  outcome        = "~Y",
+  conditions     = c("X1", "X2", "X3"),
+  sweep_range    = 6:8,
+  thrX           = thrX_vec,
+  dir.exp        = 1
+)
+
+# 結果を比較
+res_Y$summary
+res_negY$summary
+
+# 否定型フラグを確認
+res_negY$params$negate_outcome
+# [1] TRUE
+```
+
+---
+
+# 11. 分析パラメータへのアクセス
 
 再現性のために全てのパラメータが保存されている。
 ```{r, eval=FALSE}
@@ -235,9 +272,9 @@ generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
 res_ots$params
 
 # 出力例:
-# $Yvar
+# $outcome
 # [1] "Y"
-# $Xvars
+# $conditions
 # [1] "X1" "X2" "X3"
 # $thrX
 # X1 X2 X3 
@@ -261,7 +298,7 @@ For more information on TS-QCA methodology, see:
 - Oana, I.-E., & Schneider, C. Q. (2024). A Robustness Test Protocol for Applied QCA: Theory and R Software Application. *Sociological Methods & Research*, 53(1), 57–88. DOI: [10.1177/00491241211036158](https://doi.org/10.1177/00491241211036158)
 
 
-# 11. セッション情報
+# 12. セッション情報
 ```{r}
 sessionInfo()
 ```
