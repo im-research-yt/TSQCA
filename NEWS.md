@@ -1,23 +1,36 @@
+# TSQCA 0.4.1
+
+## Bug Fixes
+
+### Report Generation Improvements
+* Fixed empty "Detailed Results" and "Cross-Threshold Comparison" sections for large threshold sweeps
+* Added threshold limit (27 combinations) for detailed output in reports
+  - When threshold combinations exceed 27, detailed per-threshold results are omitted with explanatory message
+  - Users are directed to access details programmatically via `result$details`
+* Affected functions: `generate_report()` for dtSweep and ctSweepM results
+
+---
+
 # TSQCA 0.4.0
 
 ## New Features
 
-### S3 Methods Support
-* All sweep functions now return S3 objects with proper class attributes when `return_details = TRUE`
-* Added `print()` methods for all result types - displays analysis overview
-* Added `summary()` methods for all result types - shows detailed results table
+### S3 Methods
+* Added S3 class system for all sweep function results
+  - Class hierarchy: `otSweep_result`, `dtSweep_result`, `ctSweepS_result`, `ctSweepM_result` inherit from `tsqca_result`
+* Added `print()` methods for all result types
+  - Displays analysis overview: outcome, conditions, thresholds swept
+  - Shows summary statistics: valid solutions, no solution, multiple solutions
+* Added `summary()` methods for all result types
+  - Displays analysis parameters and full results table
+  - Notes when multiple solutions exist
 
-### Class Structure
-* `otSweep()` returns class `otSweep_result`
-* `dtSweep()` returns class `dtSweep_result`
-* `ctSweepS()` returns class `ctSweepS_result`
-* `ctSweepM()` returns class `ctSweepM_result`
-* All inherit from base class `tsqca_result`
+## Changes
 
 ### Backward Compatibility
-* All existing code continues to work unchanged
-* `result$summary`, `result$details`, `result$params` access is fully preserved
-* When `return_details = FALSE`, a plain data.frame is returned (no S3 class)
+* All existing workflows continue to work unchanged
+* Direct access to `$summary`, `$details`, and `$params` components still works
+* When `return_details = FALSE`, returns plain data.frame without S3 class
 
 ---
 

@@ -233,6 +233,34 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   section_num <- section_num + 1
   writeLines(paste0("## ", section_num, ". Detailed Results\n"), con)
   
+  # Limit detailed output to avoid extremely long reports
+  n_combinations <- length(details)
+  MAX_DETAILS <- 27
+  
+  if (n_combinations > MAX_DETAILS) {
+    writeLines(paste0("Due to the large number of threshold combinations (", 
+                      n_combinations, "), detailed per-threshold results ",
+                      "(necessity analysis, truth tables, per-term metrics) ",
+                      "are omitted from this report.\n"), con)
+    writeLines("", con)
+    writeLines("To access details for specific threshold combinations, use:\n", con)
+    writeLines("```r", con)
+    writeLines("# List all threshold combinations", con)
+    writeLines("names(result$details)", con)
+    writeLines("", con)
+    writeLines("# Access a specific combination (e.g., first one)", con)
+    writeLines("key <- names(result$details)[1]", con)
+    writeLines("det <- result$details[[key]]", con)
+    writeLines("", con)
+    writeLines("# Available components:", con)
+    writeLines("det$truth_table$tt   # Truth table", con)
+    writeLines("det$solution         # QCA solution object", con)
+    writeLines("det$dat_bin          # Binarized data (for necessity analysis with QCA::pofind)", con)
+    writeLines("det$thrX_vec         # X thresholds used", con)
+    writeLines("det$thrY             # Y threshold used", con)
+    writeLines("```\n", con)
+  } else {
+  
   for (key in names(details)) {
     det <- details[[key]]
     
@@ -416,11 +444,21 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
     writeLines("---\n", con)
   }
   
+  }  # End of if (n_combinations <= MAX_DETAILS)
+  
   # ============================================
   # 4. Cross-Threshold Comparison
   # ============================================
   section_num <- section_num + 1
   writeLines(paste0("## ", section_num, ". Cross-Threshold Comparison\n"), con)
+  
+  if (n_combinations > MAX_DETAILS) {
+    writeLines("Cross-threshold comparison table is designed for single-dimension sweeps ", con)
+    writeLines("(otSweep, ctSweepS) with a smaller number of thresholds.\n", con)
+    writeLines("", con)
+    writeLines("For multi-dimensional sweeps with many combinations, ", con)
+    writeLines("please refer to the Summary Table above to compare results across threshold settings.\n", con)
+  } else {
   
   # Build comparison table
   comp_df <- data.frame(
@@ -486,6 +524,9 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   }
   
   writeLines(df_to_md_table(comp_df), con)
+  
+  }  # End of if (n_combinations <= MAX_DETAILS) for Section 4
+  
   writeLines("\n---\n", con)
   
   # ============================================

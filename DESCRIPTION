@@ -1,7 +1,7 @@
 Package: TSQCA
 Type: Package
 Title: Threshold Sweep Extensions for Qualitative Comparative Analysis
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
     person("Yuki", "Toyoda", role = c("aut", "cre"),
            email = "yuki.toyoda.ds@hosei.ac.jp"),
