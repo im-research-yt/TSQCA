@@ -6,8 +6,8 @@
 \usage{
 ctSweepS(
   dat,
-  Yvar,
-  Xvars,
+  outcome = NULL,
+  conditions = NULL,
   sweep_var,
   sweep_range,
   thrY,
@@ -18,18 +18,21 @@ ctSweepS(
   n.cut = 1,
   pri.cut = 0,
   extract_mode = c("first", "all", "core"),
-  return_details = TRUE
+  return_details = TRUE,
+  Yvar = NULL,
+  Xvars = NULL
 )
 }
 \arguments{
 \item{dat}{Data frame containing the outcome and condition variables.}
 
-\item{Yvar}{Character. Outcome variable name.}
+\item{outcome}{Character. Outcome variable name. Supports negation with
+tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.}
 
-\item{Xvars}{Character vector. Names of condition variables.}
+\item{conditions}{Character vector. Names of condition variables.}
 
 \item{sweep_var}{Character. Name of the condition to be swept.
-Must be one of \code{Xvars}.}
+Must be one of \code{conditions}.}
 
 \item{sweep_range}{Numeric vector. Candidate thresholds for \code{sweep_var}.}
 
@@ -54,6 +57,10 @@ See \code{\link{qca_extract}} for details.}
 
 \item{return_details}{Logical. If \code{TRUE} (default), returns both
 summary and detailed objects for use with \code{generate_report()}.}
+
+\item{Yvar}{Deprecated. Use \code{outcome} instead.}
+
+\item{Xvars}{Deprecated. Use \code{conditions} instead.}
 }
 \value{
 If \code{return_details = FALSE}, a data frame with columns:
@@ -81,15 +88,27 @@ using user-specified thresholds, and a crisp-set QCA is executed.
 # Load sample data
 data(sample_data)
 
-# Run single condition threshold sweep on X3
+# Run single condition threshold sweep on X3 (standard)
 result <- ctSweepS(
   dat = sample_data,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_var = "X3",
   sweep_range = 6:8,
   thrY = 7,
   thrX_default = 7
 )
 head(result$summary)
+
+# Run with negated outcome (~Y)
+result_neg <- ctSweepS(
+  dat = sample_data,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_var = "X3",
+  sweep_range = 6:8,
+  thrY = 7,
+  thrX_default = 7
+)
+head(result_neg$summary)
 }

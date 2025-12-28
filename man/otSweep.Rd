@@ -6,8 +6,8 @@
 \usage{
 otSweep(
   dat,
-  Yvar,
-  Xvars,
+  outcome = NULL,
+  conditions = NULL,
   sweep_range,
   thrX,
   dir.exp = NULL,
@@ -16,20 +16,23 @@ otSweep(
   n.cut = 1,
   pri.cut = 0,
   extract_mode = c("first", "all", "core"),
-  return_details = TRUE
+  return_details = TRUE,
+  Yvar = NULL,
+  Xvars = NULL
 )
 }
 \arguments{
 \item{dat}{Data frame containing the outcome and condition variables.}
 
-\item{Yvar}{Character. Outcome variable name.}
+\item{outcome}{Character. Outcome variable name. Supports negation with
+tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.}
 
-\item{Xvars}{Character vector. Names of condition variables.}
+\item{conditions}{Character vector. Names of condition variables.}
 
 \item{sweep_range}{Numeric vector. Candidate thresholds for Y.}
 
 \item{thrX}{Named numeric vector. Fixed thresholds for X variables,
-with names matching \code{Xvars}.}
+with names matching \code{conditions}.}
 
 \item{dir.exp}{Directional expectations for \code{minimize}.
 If \code{NULL}, all set to 1.}
@@ -48,6 +51,10 @@ See \code{\link{qca_extract}} for details.}
 
 \item{return_details}{Logical. If \code{TRUE} (default), returns both
 summary and detailed objects for use with \code{generate_report()}.}
+
+\item{Yvar}{Deprecated. Use \code{outcome} instead.}
+
+\item{Xvars}{Deprecated. Use \code{conditions} instead.}
 }
 \value{
 If \code{return_details = FALSE}, a data frame with columns:
@@ -77,13 +84,24 @@ data(sample_data)
 # Set fixed thresholds for conditions
 thrX <- c(X1 = 7, X2 = 7, X3 = 7)
 
-# Run outcome threshold sweep
+# Run outcome threshold sweep (standard)
 result <- otSweep(
   dat = sample_data,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = thrX
 )
 head(result$summary)
+
+# Run with negated outcome (~Y)
+# Analyzes conditions for Y < threshold
+result_neg <- otSweep(
+  dat = sample_data,
+  outcome = "~Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:9,
+  thrX = thrX
+)
+head(result_neg$summary)
 }
