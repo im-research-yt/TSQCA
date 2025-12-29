@@ -79,7 +79,7 @@ res_cts <- ctSweepS(
   sweep_range    = 6:9,
   thrY           = 7,
   thrX_default   = 7,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -105,7 +105,7 @@ res_mcts <- ctSweepM(
   sweep_range    = 6:9,
   thrY           = 7,
   thrX_default   = 7,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -131,7 +131,7 @@ res_ots <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = sweep_range_ots,
   thrX           = thrX_vec,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -164,7 +164,7 @@ res_dts <- dtSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -191,7 +191,7 @@ res_all <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   extract_mode   = "all",
   return_details = TRUE
 )
@@ -208,7 +208,7 @@ res_core <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   extract_mode   = "core",
   return_details = TRUE
 )
@@ -248,7 +248,7 @@ res_Y <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:8,
   thrX           = thrX_vec,
-  dir.exp        = 1
+  dir.exp        = c(1, 1, 1)
 )
 
 # Negated: conditions for Y < threshold
@@ -258,7 +258,7 @@ res_negY <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:8,
   thrX           = thrX_vec,
-  dir.exp        = 1
+  dir.exp        = c(1, 1, 1)
 )
 
 # Compare results

@@ -50,8 +50,10 @@ TSQCA パッケージでは、TS-QCA の4つのスイープ手法を実装して
 
 # データ準備
 
-TS-QCA は、キャリブレーション済みデータ（例：0〜10 スケール）を想定しています。
-閾値は数値（整数・実数）であれば構いません。
+- TS-QCA は、数値データ（連続変数、間隔尺度、順序尺度）を扱えます。キャリブレーション済みである必要はなく、元データ（例：1〜85のスケール）を閾値で直接0/1に二値化するためです。
+- 順序データも直接分析可能で、これはfsQCA（連続的なメンバーシップ値を必要とする）では難しかった分析を可能にします。
+- 閾値は数値（整数・実数）であれば構いません。
+- ただし、欠損値は事前に処理してください。
 
 ```{r}
 library(TSQCA)
@@ -112,7 +114,7 @@ res_mixed <- ctSweepM(
   conditions     = c("X1", "X2", "X3"),
   sweep_list     = sweep_list,
   thrY           = 7,
-  dir.exp        = 1
+  dir.exp        = c(1, 1, 1)
 )
 ```
 
@@ -172,7 +174,7 @@ res_cts <- ctSweepS(
   sweep_range    = sweep_range,
   thrY           = thrY,
   thrX_default   = thrX_default,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -195,7 +197,7 @@ res_mcts <- ctSweepM(
   sweep_range    = 6:9,
   thrY           = 7,
   thrX_default   = 7,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -216,7 +218,7 @@ res_ots <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -245,7 +247,7 @@ res_dts <- dtSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 

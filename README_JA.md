@@ -2,7 +2,6 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
 
-[English README](https://github.com/im-research-yt/TSQCA/blob/master/README.md)
 
 TSQCA は、Qualitative Comparative Analysis（QCA）に対して  
 **閾値スイープ型の分析（TS-QCA）**を実行する R パッケージです。

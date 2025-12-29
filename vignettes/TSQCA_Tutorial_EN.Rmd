@@ -46,8 +46,12 @@ The `TSQCA` package implements four sweep methods:
 
 TS-QCA assumes:
 
-- Data are calibrated (e.g., 0–10 scale or fuzzy-set values).
-- Thresholds are numeric (integer or real).
+- TS-QCA handles any numeric data (continuous, interval, or ordinal scales). 
+  Pre-calibration is NOT required because raw scores (e.g., 1–85 scale) are 
+  binarized directly at specified thresholds.
+- Ordinal data can be analyzed directly, enabling analyses that are difficult 
+  with fsQCA (which requires continuous membership values).
+- Thresholds can be any numeric value (integer or real).
 - Missing values should be handled before running sweeps.
 
 Example dataset structure:
@@ -111,7 +115,7 @@ res_mixed <- ctSweepM(
   conditions     = c("X1", "X2", "X3"),
   sweep_list     = sweep_list,
   thrY           = 7,
-  dir.exp        = 1
+  dir.exp        = c(1, 1, 1)
 )
 ```
 
@@ -169,7 +173,7 @@ res_cts <- ctSweepS(
   sweep_range    = sweep_range,
   thrY           = thrY,
   thrX_default   = thrX_default,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -190,7 +194,7 @@ res_mcts <- ctSweepM(
   sweep_range    = 6:9,
   thrY           = 7,
   thrX_default   = 7,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -209,7 +213,7 @@ res_ots <- otSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
@@ -236,7 +240,7 @@ res_dts <- dtSweep(
   conditions     = c("X1", "X2", "X3"),
   sweep_list_X   = sweep_list_dts_X,
   sweep_range_Y  = sweep_range_dts_Y,
-  dir.exp        = 1,
+  dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
