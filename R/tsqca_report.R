@@ -266,7 +266,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
     
     # Determine threshold label
     if (!is.null(det$thrY)) {
-      writeLines(paste0("### CPY = ", det$thrY, "\n"), con)
+      writeLines(paste0("### thrY = ", det$thrY, "\n"), con)
     } else if (!is.null(det$threshold)) {
       writeLines(paste0("### Threshold = ", det$threshold, "\n"), con)
     } else if (!is.null(det$combo_id)) {
@@ -428,10 +428,10 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
     writeLines("#### Settings (for reproducibility)\n", con)
     writeLines("```", con)
     if (!is.null(det$thrX_vec)) {
-      writeLines(paste0("CPX: ", paste(det$thrX_vec, collapse = ", ")), con)
+      writeLines(paste0("thrX: ", paste(det$thrX_vec, collapse = ", ")), con)
     }
     if (!is.null(det$thrY)) {
-      writeLines(paste0("CPY: ", det$thrY), con)
+      writeLines(paste0("thrY: ", det$thrY), con)
     }
     if (!is.null(params$incl.cut)) {
       writeLines(paste0("incl.cut: ", params$incl.cut), con)
@@ -477,7 +477,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
     
     # Threshold label
     thr_label <- if (!is.null(det$thrY)) {
-      paste0("CPY=", det$thrY)
+      paste0("thrY=", det$thrY)
     } else if (!is.null(det$threshold)) {
       as.character(det$threshold)
     } else {
