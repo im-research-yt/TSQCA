@@ -8,7 +8,10 @@ write_simple_report(
   result,
   con,
   include_chart = TRUE,
-  chart_symbol_set = "unicode"
+  chart_symbol_set = "unicode",
+  solution_note = TRUE,
+  solution_note_style = "simple",
+  solution_note_lang = "en"
 )
 }
 \description{

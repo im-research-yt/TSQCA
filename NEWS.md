@@ -1,3 +1,51 @@
+# TSQCA 0.5.1
+
+*Release date: 2025-01-01*
+
+## New Features
+
+### Multiple Solutions Note in Configuration Charts
+
+When multiple logically equivalent solutions (M1, M2, M3...) exist, configuration charts now automatically include a note explaining that M1 is displayed.
+
+**New parameters for `generate_report()`:**
+
+* `solution_note` — Logical. If TRUE (default), adds note when multiple solutions exist
+* `solution_note_style` — `"simple"` (default) or `"detailed"` (includes EPIs)
+* `solution_note_lang` — `"en"` (default) or `"ja"` for Japanese
+
+**New parameters for `config_chart_from_paths()`:**
+
+* `n_sol` — Number of equivalent solutions (triggers note if > 1)
+* `solution_note` — Logical. Whether to add solution note
+* `solution_note_style` — `"simple"` or `"detailed"`
+* `epi_list` — Character vector of EPIs for detailed notes
+
+**New exported functions:**
+
+* `generate_solution_note()` — Generate solution note text
+* `identify_epi()` — Identify Essential Prime Implicants from multiple solutions
+
+**Example output (simple):**
+
+```
+*Note: 2 logically equivalent solutions were identified. This table presents configurations based on M1.*
+```
+
+**Example output (detailed with EPIs):**
+
+```
+*Note: 3 logically equivalent solutions were identified (M1-M3). This table presents configurations based on M1. All solutions share the essential prime implicants: A·B and C.*
+```
+
+**Example (Japanese):**
+
+```
+*注: 論理的に等価な2つの解が得られた。本表はM1に基づく構成を示す。*
+```
+
+---
+
 # TSQCA 0.5.0
 
 *Release date: 2025-12-31*

@@ -10,7 +10,10 @@ write_full_report(
   dat = NULL,
   desc_vars = NULL,
   include_chart = TRUE,
-  chart_symbol_set = "unicode"
+  chart_symbol_set = "unicode",
+  solution_note = TRUE,
+  solution_note_style = "simple",
+  solution_note_lang = "en"
 )
 }
 \description{

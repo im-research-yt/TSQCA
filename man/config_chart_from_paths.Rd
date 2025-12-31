@@ -8,7 +8,11 @@ config_chart_from_paths(
   paths,
   symbol_set = c("unicode", "ascii", "latex"),
   language = c("en", "ja"),
-  condition_order = NULL
+  condition_order = NULL,
+  n_sol = 1L,
+  solution_note = TRUE,
+  solution_note_style = c("simple", "detailed"),
+  epi_list = NULL
 )
 }
 \arguments{
@@ -20,6 +24,18 @@ or \code{"latex"}.}
 \item{language}{Character. \code{"en"} for English, \code{"ja"} for Japanese.}
 
 \item{condition_order}{Character vector. Optional ordering of conditions.}
+
+\item{n_sol}{Integer. Number of equivalent solutions. If > 1, a note is added
+explaining that multiple solutions exist and M1 is shown. Default is 1.}
+
+\item{solution_note}{Logical. Whether to add solution note when n_sol > 1.
+Default is TRUE.}
+
+\item{solution_note_style}{Character. \code{"simple"} or \code{"detailed"}.
+Default is \code{"simple"}.}
+
+\item{epi_list}{Character vector. Essential prime implicants for detailed notes.
+Only used when \code{solution_note_style = "detailed"}.}
 }
 \value{
 Character string containing Markdown-formatted table.
@@ -36,5 +52,17 @@ cat(chart)
 
 # With ASCII symbols
 chart <- config_chart_from_paths(paths, symbol_set = "ascii")
+cat(chart)
+
+# With multiple solution note
+chart <- config_chart_from_paths(paths, n_sol = 2)
+cat(chart)
+
+# With detailed note including EPIs
+chart <- config_chart_from_paths(
+  paths, n_sol = 2,
+  solution_note_style = "detailed",
+  epi_list = c("A*B")
+)
 cat(chart)
 }

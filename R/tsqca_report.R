@@ -19,6 +19,12 @@
 #'   (Fiss-style tables) in the report for each threshold.
 #' @param chart_symbol_set Character. Symbol set for configuration charts:
 #'   \code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.
+#' @param solution_note Logical. If TRUE (default), adds a note when multiple
+#'   equivalent solutions exist explaining that M1 is shown.
+#' @param solution_note_style Character. Style of solution note:
+#'   \code{"simple"} (default) or \code{"detailed"} (includes EPIs).
+#' @param solution_note_lang Character. Language for solution notes:
+#'   \code{"en"} (default) or \code{"ja"}.
 #'
 #' @return Invisibly returns the path to the generated report.
 #' @export
@@ -44,6 +50,10 @@
 #' # Without configuration charts
 #' generate_report(result, "my_report.md", format = "simple",
 #'                 include_chart = FALSE)
+#' 
+#' # With detailed solution notes (including EPIs)
+#' generate_report(result, "my_report.md", format = "full",
+#'                 solution_note_style = "detailed")
 #' }
 generate_report <- function(result,
                             output_file = "qca_report.md",
@@ -52,10 +62,15 @@ generate_report <- function(result,
                             dat = NULL,
                             desc_vars = NULL,
                             include_chart = TRUE,
-                            chart_symbol_set = c("unicode", "ascii", "latex")) {
+                            chart_symbol_set = c("unicode", "ascii", "latex"),
+                            solution_note = TRUE,
+                            solution_note_style = c("simple", "detailed"),
+                            solution_note_lang = c("en", "ja")) {
   
   format <- match.arg(format)
   chart_symbol_set <- match.arg(chart_symbol_set)
+  solution_note_style <- match.arg(solution_note_style)
+  solution_note_lang <- match.arg(solution_note_lang)
   
   # Validate input
   if (!is.list(result)) {
@@ -78,9 +93,11 @@ generate_report <- function(result,
   
   # Dispatch to appropriate format
   if (format == "full") {
-    write_full_report(result, con, dat, desc_vars, include_chart, chart_symbol_set)
+    write_full_report(result, con, dat, desc_vars, include_chart, chart_symbol_set,
+                      solution_note, solution_note_style, solution_note_lang)
   } else {
-    write_simple_report(result, con, include_chart, chart_symbol_set)
+    write_simple_report(result, con, include_chart, chart_symbol_set,
+                        solution_note, solution_note_style, solution_note_lang)
   }
   
   message("Report generated: ", output_file)
@@ -91,7 +108,9 @@ generate_report <- function(result,
 #' Write full report content
 #' @keywords internal
 write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
-                              include_chart = TRUE, chart_symbol_set = "unicode") {
+                              include_chart = TRUE, chart_symbol_set = "unicode",
+                              solution_note = TRUE, solution_note_style = "simple",
+                              solution_note_lang = "en") {
   
   summary_df <- result$summary
   details <- result$details
@@ -439,25 +458,29 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
       if (include_chart && !is.null(sol_list) && length(sol_list) > 0) {
         writeLines("#### Configuration Chart\n", con)
         
-        if (length(sol_list) == 1) {
-          # Single solution: use config_chart_from_paths with the terms
-          paths <- sol_list[[1]]
-          if (!is.character(paths)) {
-            paths <- as.character(paths)
+        # Always show M1 with note if multiple solutions exist
+        paths <- sol_list[[1]]
+        if (!is.character(paths)) {
+          paths <- as.character(paths)
+        }
+        
+        if (length(paths) > 0) {
+          # Get EPIs if using detailed style
+          epi_list <- NULL
+          if (solution_note_style == "detailed" && length(sol_list) > 1) {
+            epi_info <- identify_epi(sol_list)
+            epi_list <- epi_info$epi
           }
           
-          if (length(paths) > 0) {
-            chart <- config_chart_from_paths(paths, 
-                                             symbol_set = chart_symbol_set,
-                                             language = "en")
-            writeLines(chart, con)
-            writeLines("\n", con)
-          }
-        } else {
-          # Multiple solutions: use config_chart_multi_solutions
-          chart <- config_chart_multi_solutions(sol_list, 
-                                                symbol_set = chart_symbol_set,
-                                                language = "en")
+          chart <- config_chart_from_paths(
+            paths, 
+            symbol_set = chart_symbol_set,
+            language = solution_note_lang,
+            n_sol = length(sol_list),
+            solution_note = solution_note,
+            solution_note_style = solution_note_style,
+            epi_list = epi_list
+          )
           writeLines(chart, con)
           writeLines("\n", con)
         }
@@ -590,7 +613,9 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
 #' Write simple report content
 #' @keywords internal
 write_simple_report <- function(result, con, include_chart = TRUE, 
-                                chart_symbol_set = "unicode") {
+                                chart_symbol_set = "unicode",
+                                solution_note = TRUE, solution_note_style = "simple",
+                                solution_note_lang = "en") {
   
   summary_df <- result$summary
   details <- result$details
@@ -686,24 +711,29 @@ write_simple_report <- function(result, con, include_chart = TRUE,
       if (include_chart) {
         writeLines("\n**Configuration Chart:**\n", con)
         
-        if (length(sol_list) == 1) {
-          # Single solution: use config_chart_from_paths with the terms
-          paths <- sol_list[[1]]
-          if (!is.character(paths)) {
-            paths <- as.character(paths)
+        # Always show M1 with note if multiple solutions exist
+        paths <- sol_list[[1]]
+        if (!is.character(paths)) {
+          paths <- as.character(paths)
+        }
+        
+        if (length(paths) > 0) {
+          # Get EPIs if using detailed style
+          epi_list <- NULL
+          if (solution_note_style == "detailed" && length(sol_list) > 1) {
+            epi_info <- identify_epi(sol_list)
+            epi_list <- epi_info$epi
           }
           
-          if (length(paths) > 0) {
-            chart <- config_chart_from_paths(paths, 
-                                             symbol_set = chart_symbol_set,
-                                             language = "en")
-            writeLines(chart, con)
-          }
-        } else {
-          # Multiple solutions: use config_chart_multi_solutions
-          chart <- config_chart_multi_solutions(sol_list, 
-                                                symbol_set = chart_symbol_set,
-                                                language = "en")
+          chart <- config_chart_from_paths(
+            paths, 
+            symbol_set = chart_symbol_set,
+            language = solution_note_lang,
+            n_sol = length(sol_list),
+            solution_note = solution_note,
+            solution_note_style = solution_note_style,
+            epi_list = epi_list
+          )
           writeLines(chart, con)
         }
       }

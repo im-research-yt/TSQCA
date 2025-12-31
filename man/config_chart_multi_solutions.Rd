@@ -8,7 +8,8 @@ config_chart_multi_solutions(
   solutions,
   symbol_set = c("unicode", "ascii", "latex"),
   language = c("en", "ja"),
-  condition_order = NULL
+  condition_order = NULL,
+  show_epi = FALSE
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ or \code{"latex"}.}
 \item{language}{Character. \code{"en"} for English, \code{"ja"} for Japanese.}
 
 \item{condition_order}{Character vector. Optional ordering of conditions.}
+
+\item{show_epi}{Logical. Whether to identify and display Essential Prime
+Implicants (EPIs) in the note. Default is FALSE.}
 }
 \value{
 Character string containing Markdown-formatted tables.
@@ -36,5 +40,9 @@ solutions <- list(
   c("A*C")
 )
 chart <- config_chart_multi_solutions(solutions)
+cat(chart)
+
+# With EPI identification
+chart <- config_chart_multi_solutions(solutions, show_epi = TRUE)
 cat(chart)
 }

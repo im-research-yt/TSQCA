@@ -27,6 +27,175 @@ SYMBOL_SETS <- list(
 )
 
 
+#' Generate solution note for multiple solutions
+#'
+#' Creates a note explaining that multiple equivalent solutions exist
+#' and that the displayed configuration is based on M1.
+#'
+#' @param n_sol Integer. Number of solutions.
+#' @param epi_list Character vector. Essential prime implicants (NULL to omit).
+#' @param style Character. \code{"simple"} or \code{"detailed"}.
+#' @param language Character. \code{"en"} or \code{"ja"}.
+#' @param format Character. \code{"markdown"} or \code{"latex"}.
+#'
+#' @return Character string of the note, or empty string if n_sol <= 1.
+#'
+#' @examples
+#' # Simple note
+#' generate_solution_note(2, style = "simple")
+#' 
+#' # Detailed note with EPIs
+#' generate_solution_note(3, epi_list = c("A*B", "C"), style = "detailed")
+#' 
+#' # Japanese
+#' generate_solution_note(2, style = "simple", language = "ja")
+#'
+#' @export
+generate_solution_note <- function(n_sol,
+                                    epi_list = NULL,
+                                    style = c("simple", "detailed"),
+                                    language = c("en", "ja"),
+                                    format = c("markdown", "latex")) {
+  
+  # Return empty string for single solution
+  if (is.null(n_sol) || n_sol <= 1) {
+    return("")
+  }
+
+  
+  style <- match.arg(style)
+  language <- match.arg(language)
+  format <- match.arg(format)
+  
+  labels <- get_config_labels(language)
+  
+  # Build note text
+  if (language == "ja") {
+    # Japanese version
+    n_sol_text <- gsub("\\{n\\}", as.character(n_sol), labels$n_equiv_solutions)
+    base_note <- paste0(n_sol_text, labels$table_based_on_m1)
+    
+    if (style == "detailed" && !is.null(epi_list) && length(epi_list) > 0) {
+      # Format EPIs with appropriate connector
+      if (format == "latex") {
+        epi_str <- paste(epi_list, collapse = ", ")
+        epi_str <- gsub("\\*", "$\\\\cdot$", epi_str)
+      } else {
+        epi_str <- paste(epi_list, collapse = ", ")
+        epi_str <- gsub("\\*", "\u00B7", epi_str)  # middle dot
+      }
+      
+      if (length(epi_list) == 1) {
+        epi_text <- gsub("\\{epi\\}", epi_str, labels$all_share_epi_single)
+      } else {
+        epi_text <- gsub("\\{epi\\}", epi_str, labels$all_share_epi)
+      }
+      base_note <- paste0(base_note, epi_text)
+    } else if (style == "detailed" && (is.null(epi_list) || length(epi_list) == 0)) {
+      base_note <- paste0(base_note, labels$no_epi)
+    }
+    
+  } else {
+    # English version
+    if (style == "detailed") {
+      n_sol_text <- gsub("\\{n\\}", as.character(n_sol), labels$n_equiv_solutions_range)
+    } else {
+      n_sol_text <- gsub("\\{n\\}", as.character(n_sol), labels$n_equiv_solutions)
+    }
+    base_note <- paste0(n_sol_text, " ", labels$table_based_on_m1)
+    
+    if (style == "detailed" && !is.null(epi_list) && length(epi_list) > 0) {
+      # Format EPIs with appropriate connector
+      if (format == "latex") {
+        epi_str <- paste(epi_list, collapse = " and ")
+        epi_str <- gsub("\\*", "$\\\\cdot$", epi_str)
+      } else {
+        epi_str <- paste(epi_list, collapse = " and ")
+        epi_str <- gsub("\\*", "\u00B7", epi_str)  # middle dot
+      }
+      
+      if (length(epi_list) == 1) {
+        epi_text <- gsub("\\{epi\\}", epi_str, labels$all_share_epi_single)
+      } else {
+        epi_text <- gsub("\\{epi\\}", epi_str, labels$all_share_epi)
+      }
+      base_note <- paste0(base_note, " ", epi_text)
+    } else if (style == "detailed" && (is.null(epi_list) || length(epi_list) == 0)) {
+      base_note <- paste0(base_note, " ", labels$no_epi)
+    }
+  }
+  
+  # Format output
+  if (format == "latex") {
+    note <- paste0("\\footnotesize{\\textit{", labels$note_prefix, "}: ", base_note, "}")
+  } else {
+    note <- paste0("*", labels$note_prefix, ": ", base_note, "*")
+  }
+  
+  return(note)
+}
+
+
+#' Identify Essential Prime Implicants from multiple solutions
+#'
+#' Finds terms that appear in ALL solutions (EPIs) versus terms that
+#' appear in only some solutions (SPIs).
+#'
+#' @param solutions List of solution vectors. Each element is a character
+#'   vector of terms for one solution.
+#'
+#' @return List with:
+#'   \itemize{
+#'     \item \code{epi} — Essential prime implicants (in all solutions)
+#'     \item \code{spi} — Selective prime implicants (in some solutions)
+#'     \item \code{n_solutions} — Number of solutions
+#'   }
+#'
+#' @examples
+#' solutions <- list(
+#'   c("A*B", "C", "D"),
+#'   c("A*B", "C", "E"),
+#'   c("A*B", "C", "F")
+#' )
+#' result <- identify_epi(solutions)
+#' # result$epi = c("A*B", "C")
+#' # result$spi = c("D", "E", "F")
+#'
+#' @export
+identify_epi <- function(solutions) {
+  
+  if (is.null(solutions) || length(solutions) == 0) {
+    return(list(epi = character(0), spi = character(0), n_solutions = 0L))
+  }
+  
+  n_solutions <- length(solutions)
+  
+  if (n_solutions == 1) {
+    # Single solution: all terms are "essential" by definition
+    return(list(
+      epi = solutions[[1]],
+      spi = character(0),
+      n_solutions = 1L
+    ))
+  }
+  
+  # Find intersection of all solutions (EPIs)
+  epi <- Reduce(intersect, solutions)
+  
+  # Find union of all solutions
+  all_terms <- Reduce(union, solutions)
+  
+  # SPIs are terms not in all solutions
+spi <- setdiff(all_terms, epi)
+  
+  list(
+    epi = epi,
+    spi = spi,
+    n_solutions = n_solutions
+  )
+}
+
+
 #' Parse a single path/term into conditions
 #'
 #' @param path Character. A single path like "A*B*~C"
@@ -258,7 +427,14 @@ get_config_labels <- function(language) {
       note = "\u6ce8\u610f",
       equiv_solutions = "\u500b\u306e\u7b49\u4fa1\u306a\u89e3\u304c\u5b58\u5728\u3057\u307e\u3059\u3002",
       separate_tables = "\u4ee5\u4e0b\u306b\u5225\u3005\u306e\u8868\u3092\u793a\u3057\u307e\u3059\u3002",
-      no_solution = "\u89e3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f"
+      no_solution = "\u89e3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f",
+      # Solution note labels (Japanese)
+      note_prefix = "\u6ce8",
+      n_equiv_solutions = "\u8ad6\u7406\u7684\u306b\u7b49\u4fa1\u306a{n}\u3064\u306e\u89e3\u304c\u5f97\u3089\u308c\u305f\u3002",
+      table_based_on_m1 = "\u672c\u8868\u306fM1\u306b\u57fa\u3065\u304f\u69cb\u6210\u3092\u793a\u3059\u3002",
+      all_share_epi = "\u5168\u89e3\u306b\u5171\u901a\u3059\u308bEssential Prime Implicants: {epi}",
+      all_share_epi_single = "\u5168\u89e3\u306b\u5171\u901a\u3059\u308bEssential Prime Implicant: {epi}",
+      no_epi = "\u5168\u3066\u306e\u9805\u304cSelective Prime Implicants\u3067\u3042\u308b\u3002"
     )
   } else {
     list(
@@ -272,7 +448,15 @@ get_config_labels <- function(language) {
       note = "Note",
       equiv_solutions = "equivalent solutions exist.",
       separate_tables = "Tables are shown separately below.",
-      no_solution = "No solution found"
+      no_solution = "No solution found",
+      # Solution note labels (English)
+      note_prefix = "Note",
+      n_equiv_solutions = "{n} logically equivalent solutions were identified.",
+      n_equiv_solutions_range = "{n} logically equivalent solutions were identified (M1-M{n}).",
+      table_based_on_m1 = "This table presents configurations based on M1.",
+      all_share_epi = "All solutions share the essential prime implicants: {epi}.",
+      all_share_epi_single = "All solutions share the essential prime implicant: {epi}.",
+      no_epi = "Solutions differ in all prime implicants (no essential prime implicants)."
     )
   }
 }
@@ -503,6 +687,14 @@ add_metrics_rows <- function(table_str, metrics, labels) {
 #'   or \code{"latex"}.
 #' @param language Character. \code{"en"} for English, \code{"ja"} for Japanese.
 #' @param condition_order Character vector. Optional ordering of conditions.
+#' @param n_sol Integer. Number of equivalent solutions. If > 1, a note is added
+#'   explaining that multiple solutions exist and M1 is shown. Default is 1.
+#' @param solution_note Logical. Whether to add solution note when n_sol > 1.
+#'   Default is TRUE.
+#' @param solution_note_style Character. \code{"simple"} or \code{"detailed"}.
+#'   Default is \code{"simple"}.
+#' @param epi_list Character vector. Essential prime implicants for detailed notes.
+#'   Only used when \code{solution_note_style = "detailed"}.
 #'
 #' @return Character string containing Markdown-formatted table.
 #'
@@ -517,18 +709,38 @@ add_metrics_rows <- function(table_str, metrics, labels) {
 #' # With ASCII symbols
 #' chart <- config_chart_from_paths(paths, symbol_set = "ascii")
 #' cat(chart)
+#'
+#' # With multiple solution note
+#' chart <- config_chart_from_paths(paths, n_sol = 2)
+#' cat(chart)
+#'
+#' # With detailed note including EPIs
+#' chart <- config_chart_from_paths(
+#'   paths, n_sol = 2,
+#'   solution_note_style = "detailed",
+#'   epi_list = c("A*B")
+#' )
+#' cat(chart)
 config_chart_from_paths <- function(paths,
                                      symbol_set = c("unicode", "ascii", "latex"),
                                      language = c("en", "ja"),
-                                     condition_order = NULL) {
+                                     condition_order = NULL,
+                                     n_sol = 1L,
+                                     solution_note = TRUE,
+                                     solution_note_style = c("simple", "detailed"),
+                                     epi_list = NULL) {
   
   symbol_set <- match.arg(symbol_set)
   language <- match.arg(language)
+  solution_note_style <- match.arg(solution_note_style)
   symbols <- SYMBOL_SETS[[symbol_set]]
   labels <- get_config_labels(language)
   
   # Get symbol note
-  note <- if (language == "ja") symbols$note_ja else symbols$note_en
+  legend_note <- if (language == "ja") symbols$note_ja else symbols$note_en
+  
+  # Determine format for solution note
+  format_type <- if (symbol_set == "latex") "latex" else "markdown"
   
   # Determine conditions
   if (is.null(condition_order)) {
@@ -542,7 +754,21 @@ config_chart_from_paths <- function(paths,
   table_str <- config_matrix_to_md(mat, labels$condition)
   
   # Add legend
-  paste0(table_str, "\n\n*", note, "*\n")
+  result <- paste0(table_str, "\n\n*", legend_note, "*")
+  
+  # Add solution note if multiple solutions exist
+  if (solution_note && !is.null(n_sol) && n_sol > 1) {
+    sol_note <- generate_solution_note(
+      n_sol = n_sol,
+      epi_list = epi_list,
+      style = solution_note_style,
+      language = language,
+      format = format_type
+    )
+    result <- paste0(result, "\n\n", sol_note)
+  }
+  
+  paste0(result, "\n")
 }
 
 
@@ -556,6 +782,8 @@ config_chart_from_paths <- function(paths,
 #'   or \code{"latex"}.
 #' @param language Character. \code{"en"} for English, \code{"ja"} for Japanese.
 #' @param condition_order Character vector. Optional ordering of conditions.
+#' @param show_epi Logical. Whether to identify and display Essential Prime
+#'   Implicants (EPIs) in the note. Default is FALSE.
 #'
 #' @return Character string containing Markdown-formatted tables.
 #'
@@ -570,10 +798,15 @@ config_chart_from_paths <- function(paths,
 #' )
 #' chart <- config_chart_multi_solutions(solutions)
 #' cat(chart)
+#'
+#' # With EPI identification
+#' chart <- config_chart_multi_solutions(solutions, show_epi = TRUE)
+#' cat(chart)
 config_chart_multi_solutions <- function(solutions,
                                           symbol_set = c("unicode", "ascii", "latex"),
                                           language = c("en", "ja"),
-                                          condition_order = NULL) {
+                                          condition_order = NULL,
+                                          show_epi = FALSE) {
   
   symbol_set <- match.arg(symbol_set)
   language <- match.arg(language)
@@ -581,15 +814,57 @@ config_chart_multi_solutions <- function(solutions,
   labels <- get_config_labels(language)
   
   # Get symbol note
-  note <- if (language == "ja") symbols$note_ja else symbols$note_en
+  legend_note <- if (language == "ja") symbols$note_ja else symbols$note_en
   
   n_solutions <- length(solutions)
   
-  # Warning message
-  warning_msg <- paste0(
-    "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
-    labels$separate_tables, "\n\n"
-  )
+  # Identify EPIs if requested
+  epi_info <- NULL
+  if (show_epi && n_solutions > 1) {
+    epi_info <- identify_epi(solutions)
+  }
+  
+  # Build note message
+  if (show_epi && !is.null(epi_info) && length(epi_info$epi) > 0) {
+    # Format EPIs
+    epi_str <- paste(epi_info$epi, collapse = ", ")
+    epi_str <- gsub("\\*", "\u00B7", epi_str)  # middle dot for markdown
+    
+    if (language == "ja") {
+      note_msg <- paste0(
+        "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
+        labels$separate_tables, "\n\n",
+        "**Essential Prime Implicants (EPI):** ", epi_str, "\n\n"
+      )
+    } else {
+      note_msg <- paste0(
+        "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
+        labels$separate_tables, "\n\n",
+        "**Essential Prime Implicants (EPI):** ", epi_str, "\n\n"
+      )
+    }
+  } else if (show_epi && !is.null(epi_info) && length(epi_info$epi) == 0) {
+    # No EPIs - all terms are SPIs
+    if (language == "ja") {
+      note_msg <- paste0(
+        "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
+        labels$separate_tables, "\n\n",
+        "*", labels$no_epi, "*\n\n"
+      )
+    } else {
+      note_msg <- paste0(
+        "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
+        labels$separate_tables, "\n\n",
+        "*", labels$no_epi, "*\n\n"
+      )
+    }
+  } else {
+    # Simple note
+    note_msg <- paste0(
+      "**", labels$note, ":** ", n_solutions, " ", labels$equiv_solutions, " ",
+      labels$separate_tables, "\n\n"
+    )
+  }
   
   # Generate chart for each solution
   charts <- lapply(seq_along(solutions), function(i) {
@@ -609,7 +884,7 @@ config_chart_multi_solutions <- function(solutions,
   })
   
   # Combine
-  paste0(warning_msg, 
+  paste0(note_msg, 
          paste(charts, collapse = "\n\n---\n\n"),
-         "\n\n*", note, "*\n")
+         "\n\n*", legend_note, "*\n")
 }

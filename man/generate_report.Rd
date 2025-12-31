@@ -12,7 +12,10 @@ generate_report(
   dat = NULL,
   desc_vars = NULL,
   include_chart = TRUE,
-  chart_symbol_set = c("unicode", "ascii", "latex")
+  chart_symbol_set = c("unicode", "ascii", "latex"),
+  solution_note = TRUE,
+  solution_note_style = c("simple", "detailed"),
+  solution_note_lang = c("en", "ja")
 )
 }
 \arguments{
@@ -35,6 +38,15 @@ If NULL and dat is provided, uses Yvar and Xvars from params.}
 
 \item{chart_symbol_set}{Character. Symbol set for configuration charts:
 \code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.}
+
+\item{solution_note}{Logical. If TRUE (default), adds a note when multiple
+equivalent solutions exist explaining that M1 is shown.}
+
+\item{solution_note_style}{Character. Style of solution note:
+\code{"simple"} (default) or \code{"detailed"} (includes EPIs).}
+
+\item{solution_note_lang}{Character. Language for solution notes:
+\code{"en"} (default) or \code{"ja"}.}
 }
 \value{
 Invisibly returns the path to the generated report.
@@ -64,5 +76,9 @@ generate_report(result, "my_report.md", format = "full",
 # Without configuration charts
 generate_report(result, "my_report.md", format = "simple",
                 include_chart = FALSE)
+
+# With detailed solution notes (including EPIs)
+generate_report(result, "my_report.md", format = "full",
+                solution_note_style = "detailed")
 }
 }
