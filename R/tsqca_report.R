@@ -439,25 +439,25 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
       if (include_chart && !is.null(sol_list) && length(sol_list) > 0) {
         writeLines("#### Configuration Chart\n", con)
         
-        # Extract paths from sol_list
-        paths <- sapply(sol_list, function(s) {
-          if (is.character(s)) {
-            paste(s, collapse = " + ")
-          } else {
-            paste(as.character(s), collapse = " + ")
+        if (length(sol_list) == 1) {
+          # Single solution: use config_chart_from_paths with the terms
+          paths <- sol_list[[1]]
+          if (!is.character(paths)) {
+            paths <- as.character(paths)
           }
-        })
-        
-        # Split paths into individual terms
-        all_paths <- unlist(strsplit(paths, " \\+ "))
-        all_paths <- trimws(all_paths)
-        all_paths <- unique(all_paths)
-        
-        if (length(all_paths) > 0) {
-          # Generate chart
-          chart <- config_chart_from_paths(all_paths, 
-                                           symbol_set = chart_symbol_set,
-                                           language = "en")
+          
+          if (length(paths) > 0) {
+            chart <- config_chart_from_paths(paths, 
+                                             symbol_set = chart_symbol_set,
+                                             language = "en")
+            writeLines(chart, con)
+            writeLines("\n", con)
+          }
+        } else {
+          # Multiple solutions: use config_chart_multi_solutions
+          chart <- config_chart_multi_solutions(sol_list, 
+                                                symbol_set = chart_symbol_set,
+                                                language = "en")
           writeLines(chart, con)
           writeLines("\n", con)
         }
@@ -686,24 +686,24 @@ write_simple_report <- function(result, con, include_chart = TRUE,
       if (include_chart) {
         writeLines("\n**Configuration Chart:**\n", con)
         
-        # Extract paths from sol_list
-        paths <- sapply(sol_list, function(s) {
-          if (is.character(s)) {
-            paste(s, collapse = " + ")
-          } else {
-            paste(as.character(s), collapse = " + ")
+        if (length(sol_list) == 1) {
+          # Single solution: use config_chart_from_paths with the terms
+          paths <- sol_list[[1]]
+          if (!is.character(paths)) {
+            paths <- as.character(paths)
           }
-        })
-        
-        # Split paths into individual terms
-        all_paths <- unlist(strsplit(paths, " \\+ "))
-        all_paths <- trimws(all_paths)
-        all_paths <- unique(all_paths)
-        
-        if (length(all_paths) > 0) {
-          chart <- config_chart_from_paths(all_paths, 
-                                           symbol_set = chart_symbol_set,
-                                           language = "en")
+          
+          if (length(paths) > 0) {
+            chart <- config_chart_from_paths(paths, 
+                                             symbol_set = chart_symbol_set,
+                                             language = "en")
+            writeLines(chart, con)
+          }
+        } else {
+          # Multiple solutions: use config_chart_multi_solutions
+          chart <- config_chart_multi_solutions(sol_list, 
+                                                symbol_set = chart_symbol_set,
+                                                language = "en")
           writeLines(chart, con)
         }
       }
