@@ -2,7 +2,6 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
 
-
 TSQCA は、Qualitative Comparative Analysis（QCA）に対して  
 **閾値スイープ型の分析（TS-QCA）**を実行する R パッケージです。
 
@@ -18,18 +17,18 @@ TS-QCA は、多数の閾値候補を体系的に試しながら以下を自動�
 
 実装されている手法：
 
-- **CTS–QCA（ctSweepS）**：1つの X の閾値を変化  
-- **MCTS–QCA（ctSweepM）**：複数の X の閾値を同時に変化  
-- **OTS–QCA（otSweep）**：Y の閾値だけを変化  
-- **DTS–QCA（dtSweep）**：X と Y の閾値を同時に変化（2次元スイープ）
+- **CTS–QCA（ctSweepS）**：1つの条件の閾値を変化  
+- **MCTS–QCA（ctSweepM）**：複数の条件の閾値を同時に変化  
+- **OTS–QCA（otSweep）**：アウトカムの閾値だけを変化  
+- **DTS–QCA（dtSweep）**：条件とアウトカムの閾値を同時に変化（2次元スイープ）
 
-> **対象範囲:** バージョン 0.2.0 は**十分条件分析**に特化しています。必要条件分析は将来のバージョンで対応予定です。
+> **対象範囲:** バージョン 0.4.1 は**十分条件分析**に特化しています。必要条件分析は将来のバージョンで対応予定です。
 
 ---
 
-## v0.2.0 の新機能
+## 機能一覧 (v0.4.1)
 
-### 複数解の検出
+### 複数解の検出 (v0.2.0+)
 
 QCAの最小化処理では、複数の等価な中間解が生成されることがあります。TSQCAはこれを検出・報告し、研究者が頑健なコア条件と解固有の周辺条件を識別できるようにしました。
 
@@ -41,46 +40,62 @@ QCAの最小化処理では、複数の等価な中間解が生成されるこ�
 | `"all"` | 全ての解を連結して返す | 全ての等価解を確認 |
 | `"core"` | 全ての解に共通するコア条件を返す | 頑健な知見の特定 |
 
+### S3メソッド (v0.4.0+)
+
+全てのsweep関数はS3クラスをサポートするオブジェクトを返します：
+
+- `print()`: 解の統計情報を含む分析概要を表示
+- `summary()`: パラメータと共に完全な結果表を表示
+
 ```r
-# 全ての解を表示
+result <- otSweep(...)
+print(result)    # クイック概要
+summary(result)  # 完全な詳細
+```
+
+### QCA互換の引数名 (v0.3.0+)
+
+QCAパッケージの規約に合わせて引数名を変更：
+
+| 旧名称 | 新名称 | 説明 |
+|--------|--------|------|
+| `Yvar` | `outcome` | アウトカム変数名 |
+| `Xvars` | `conditions` | 条件変数名 |
+
+旧引数名は非推奨警告付きで引き続き使用可能です。
+
+### 否定アウトカムのサポート (v0.3.0+)
+
+アウトカムの**不在**に対する十分条件を分析：
+
+```r
+# Y が低い（閾値未満）場合を分析
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "~Y",  # チルダ接頭辞で否定
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
-  thrX = c(X1 = 7, X2 = 7, X3 = 7),
-  extract_mode = "all"  # 全ての解を表示
-)
-
-# コア条件のみを抽出
-result_core <- otSweep(
-  dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
-  thrX = c(X1 = 7, X2 = 7, X3 = 7),
-  extract_mode = "core"  # コア条件を表示
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
 ```
 
-### レポート自動生成
+### レポート自動生成 (v0.2.0+)
 
-新しい `generate_report()` 関数で包括的なマークダウンレポートを作成できます：
+包括的なマークダウンレポートを生成：
 
 ```r
-# return_details = TRUE（v0.2.0のデフォルト）で分析を実行
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_range = 6:9,
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
 
-# 詳細レポートを生成
+# 全ての詳細を含む完全レポート
 generate_report(result, "my_analysis.md", format = "full")
 
-# 簡易レポートを生成（論文原稿用）
+# 論文原稿用の簡易レポート
 generate_report(result, "my_analysis_simple.md", format = "simple")
 ```
 
@@ -89,12 +104,6 @@ generate_report(result, "my_analysis_simple.md", format = "simple")
 - コア/周辺条件を含む解の式
 - 適合度指標（整合性、被覆値、PRI）
 - 閾値間比較表
-
-### デフォルト値の更新
-
-QCAパッケージの慣例に合わせて：
-- `n.cut` のデフォルトを 2 から **1** に変更
-- `pri.cut` のデフォルトを 0.5 から **0** に変更
 
 ---
 
@@ -130,13 +139,13 @@ TSQCAは[QCAパッケージ](https://cran.r-project.org/package=QCA)（Duşa, 20
 # TSQCAは同じパラメータを使用
 result <- dtSweep(
   dat = sample_data,
-  Yvar = "Y",
-  Xvars = c("X1", "X2"),
+  outcome = "Y",
+  conditions = c("X1", "X2"),
   sweep_list_X = list(X1 = 6:7, X2 = 6:7),
   sweep_range_Y = 6:7,
   incl.cut = 0.8,   # QCAパラメータ
-  n.cut = 1,        # QCAパラメータ（v0.2.0のデフォルト）
-  pri.cut = 0       # QCAパラメータ（v0.2.0のデフォルト）
+  n.cut = 1,        # QCAパラメータ
+  pri.cut = 0       # QCAパラメータ
 )
 ```
 
@@ -148,8 +157,8 @@ library(TSQCA)
 
 dat <- read.csv("sample_data.csv", fileEncoding = "UTF-8")
 
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome    <- "Y"
+conditions <- c("X1", "X2", "X3")
 
 str(dat)
 ```
@@ -182,8 +191,8 @@ sweep_list <- list(
 
 res_mcts <- ctSweepM(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_list = sweep_list,
   thrY = 7
 )
@@ -204,33 +213,34 @@ sweep_list <- list(
 
 **推奨方法**：各変数のデータタイプに基づいて、常に閾値を明示的に指定してください。
 
-# 1. CTS–QCA：単一条件 X スイープ（ctSweepS）
+## 使用例
+
+### 1. CTS–QCA：単一条件スイープ（ctSweepS）
 
 ```r
-sweep_var <- "X3"      # 閾値を変化させる対象の条件（X）
+sweep_var <- "X3"      # 閾値を変化させる対象の条件
 sweep_range <- 6:9     # 試す閾値候補
 
-thrY <- 7              # Y の閾値（固定）
-thrX_default <- 7      # その他 X の閾値（固定）
+thrY <- 7              # アウトカムの閾値（固定）
+thrX_default <- 7      # その他条件の閾値（固定）
 
 res_cts <- ctSweepS(
-  dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_var      = sweep_var,      # スイープ対象の X
-  sweep_range    = sweep_range,    # スイープする閾値
-  thrY           = thrY,           # Y の閾値
-  thrX_default   = thrX_default,   # その他 X の閾値
-  return_details = TRUE            # v0.2.0のデフォルト
+  dat          = dat,
+  outcome      = "Y",
+  conditions   = c("X1", "X2", "X3"),
+  sweep_var    = sweep_var,
+  sweep_range  = sweep_range,
+  thrY         = thrY,
+  thrX_default = thrX_default
 )
 
-head(res_cts$summary)
+print(res_cts)
 ```
 
-# 2. MCTS–QCA：複数条件 X スイープ（ctSweepM）
+### 2. MCTS–QCA：複数条件スイープ（ctSweepM）
 
 ```r
-# X の各条件に対する閾値候補の指定
+# 各条件に対する閾値候補の指定
 sweep_list <- list(
   X1 = 6:8,
   X2 = 6:8,
@@ -238,68 +248,82 @@ sweep_list <- list(
 )
 
 res_mcts <- ctSweepM(
-  dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list     = sweep_list,     # 各 X の閾値候補
-  thrY           = 7,              # Y の閾値（固定）
-  return_details = TRUE            # v0.2.0のデフォルト
+  dat        = dat,
+  outcome    = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_list = sweep_list,
+  thrY       = 7
 )
 
-head(res_mcts$summary)
+print(res_mcts)
 ```
 
-# 3. OTS–QCA：Y の閾値スイープ（otSweep）
+### 3. OTS–QCA：アウトカムスイープ（otSweep）
 
 ```r
-thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # X の閾値（固定）
-sweep_range_Y <- 6:9               # Y の閾値候補
+thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # 条件の閾値（固定）
+sweep_range_Y <- 6:9               # アウトカムの閾値候補
 
 res_ots <- otSweep(
-  dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_range    = sweep_range_Y,  # Y の閾値候補
-  thrX           = thrX,           # 固定する X の閾値
-  return_details = TRUE            # v0.2.0のデフォルト
+  dat         = dat,
+  outcome     = "Y",
+  conditions  = c("X1", "X2", "X3"),
+  sweep_range = sweep_range_Y,
+  thrX        = thrX
 )
 
-head(res_ots$summary)
+print(res_ots)
 
 # 詳細分析用のレポートを生成
 generate_report(res_ots, "ots_report.md", format = "full")
 ```
 
-# 4. DTS–QCA：X×Y 二次元スイープ（dtSweep）
+### 4. DTS–QCA：2次元スイープ（dtSweep）
 
 ```r
-# X 側の閾値候補（複数条件）
+# 条件側の閾値候補
 sweep_list_X <- list(
   X1 = 6:8,
   X2 = 6:8,
   X3 = 6:8
 )
 
-# Y 側の閾値候補
+# アウトカム側の閾値候補
 sweep_range_Y <- 6:8
 
 res_dts <- dtSweep(
-  dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
-  sweep_list_X   = sweep_list_X,   # X 側の閾値候補
-  sweep_range_Y  = sweep_range_Y,  # Y 側の閾値候補
-  return_details = TRUE            # v0.2.0のデフォルト
+  dat           = dat,
+  outcome       = "Y",
+  conditions    = c("X1", "X2", "X3"),
+  sweep_list_X  = sweep_list_X,
+  sweep_range_Y = sweep_range_Y
 )
 
-head(res_dts$summary)
+print(res_dts)
 ```
 
-## サンプルデータ（rda 形式として同梱）
+### 5. extract_mode の使用
 
 ```r
-d <- read.csv("sample_data.csv", fileEncoding = "UTF-8")
-save(d, file = "data/sample_data.rda")
+# 全ての等価解を表示
+result_all <- otSweep(
+  dat          = dat,
+  outcome      = "Y",
+  conditions   = c("X1", "X2", "X3"),
+  sweep_range  = 6:9,
+  thrX         = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "all"
+)
+
+# コア条件のみを抽出（全ての解に共通）
+result_core <- otSweep(
+  dat          = dat,
+  outcome      = "Y",
+  conditions   = c("X1", "X2", "X3"),
+  sweep_range  = 6:9,
+  thrX         = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "core"
+)
 ```
 
 ## 参考文献
