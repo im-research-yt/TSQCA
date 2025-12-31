@@ -4,7 +4,12 @@
 \alias{write_simple_report}
 \title{Write simple report content}
 \usage{
-write_simple_report(result, con)
+write_simple_report(
+  result,
+  con,
+  include_chart = TRUE,
+  chart_symbol_set = "unicode"
+)
 }
 \description{
 Write simple report content

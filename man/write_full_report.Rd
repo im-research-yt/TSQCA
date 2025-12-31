@@ -4,7 +4,14 @@
 \alias{write_full_report}
 \title{Write full report content}
 \usage{
-write_full_report(result, con, dat = NULL, desc_vars = NULL)
+write_full_report(
+  result,
+  con,
+  dat = NULL,
+  desc_vars = NULL,
+  include_chart = TRUE,
+  chart_symbol_set = "unicode"
+)
 }
 \description{
 Write full report content

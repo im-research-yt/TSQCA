@@ -4,7 +4,7 @@
 \alias{qca_extract}
 \title{Extract solution information from a QCA minimization result}
 \usage{
-qca_extract(sol, extract_mode = c("first", "all", "core"))
+qca_extract(sol, extract_mode = c("first", "all", "essential"))
 }
 \arguments{
 \item{sol}{A solution object returned by \code{QCA::minimize()}.}
@@ -13,8 +13,9 @@ qca_extract(sol, extract_mode = c("first", "all", "core"))
 \itemize{
 \item \code{"first"} - return only the first solution (M1). Default.
 \item \code{"all"} - return all solutions concatenated.
-\item \code{"core"} - return core terms common to all solutions,
-plus peripheral terms and solution count.
+\item \code{"essential"} - return essential prime implicants (terms
+common to all solutions), plus selective prime implicants and
+solution count.
 }}
 }
 \value{
@@ -24,7 +25,7 @@ For \code{"first"}: \code{expression}, \code{inclS}, \code{covS}.
 
 For \code{"all"}: adds \code{n_solutions}.
 
-For \code{"core"}: adds \code{peripheral_terms}, \code{unique_terms},
+For \code{"essential"}: adds \code{selective_terms}, \code{unique_terms},
 \code{n_solutions}.
 
 If extraction fails, returns \code{"No solution"} and \code{NA_real_}

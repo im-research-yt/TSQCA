@@ -15,7 +15,7 @@ dtSweep(
   incl.cut = 0.8,
   n.cut = 1,
   pri.cut = 0,
-  extract_mode = c("first", "all", "core"),
+  extract_mode = c("first", "all", "essential"),
   return_details = TRUE,
   Yvar = NULL,
   Xvars = NULL
@@ -46,7 +46,7 @@ If \code{NULL}, all set to 1.}
 \item{pri.cut}{PRI cutoff for \code{minimize}.}
 
 \item{extract_mode}{Character. How to handle multiple solutions:
-\code{"first"} (default), \code{"all"}, or \code{"core"}.
+\code{"first"} (default), \code{"all"}, or \code{"essential"}.
 See \code{\link{qca_extract}} for details.}
 
 \item{return_details}{Logical. If \code{TRUE} (default), returns both

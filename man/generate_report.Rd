@@ -10,7 +10,9 @@ generate_report(
   format = c("full", "simple"),
   title = "QCA Analysis Report",
   dat = NULL,
-  desc_vars = NULL
+  desc_vars = NULL,
+  include_chart = TRUE,
+  chart_symbol_set = c("unicode", "ascii", "latex")
 )
 }
 \arguments{
@@ -27,6 +29,12 @@ generate_report(
 
 \item{desc_vars}{Optional character vector. Variables for descriptive statistics.
 If NULL and dat is provided, uses Yvar and Xvars from params.}
+
+\item{include_chart}{Logical. If TRUE (default), includes configuration charts
+(Fiss-style tables) in the report for each threshold.}
+
+\item{chart_symbol_set}{Character. Symbol set for configuration charts:
+\code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.}
 }
 \value{
 Invisibly returns the path to the generated report.
@@ -49,8 +57,12 @@ result <- otSweep(
   return_details = TRUE
 )
 
-# With descriptive statistics
+# With descriptive statistics and configuration charts
 generate_report(result, "my_report.md", format = "full", 
-                dat = sample_data)
+                dat = sample_data, include_chart = TRUE)
+
+# Without configuration charts
+generate_report(result, "my_report.md", format = "simple",
+                include_chart = FALSE)
 }
 }

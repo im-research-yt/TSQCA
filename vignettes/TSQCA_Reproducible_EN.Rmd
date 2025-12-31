@@ -181,7 +181,7 @@ write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
 
 # 8. Using extract_mode (New in v0.2.0)
 
-Extract all solutions or core conditions for robustness analysis.
+Extract all solutions or essential prime implicants for robustness analysis.
 
 ## Extract All Solutions
 ```{r, eval=FALSE}
@@ -200,21 +200,21 @@ res_all <- otSweep(
 head(res_all$summary)
 ```
 
-## Extract Core Conditions
+## Extract Essential Prime Implicants
 ```{r, eval=FALSE}
-res_core <- otSweep(
+res_essential <- otSweep(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = c(1, 1, 1),
-  extract_mode   = "core",
+  extract_mode   = "essential",
   return_details = TRUE
 )
 
-# View results with core conditions, peripheral terms, and unique terms
-head(res_core$summary)
+# View results with essential prime implicants, selective terms, and unique terms
+head(res_essential$summary)
 ```
 
 ---
@@ -293,6 +293,28 @@ res_ots$params
 # [1] 1
 # $pri.cut
 # [1] 0
+```
+
+---
+
+## Configuration Charts (New in v0.5.0)
+
+Configuration charts are now automatically included in reports. You can also generate them separately:
+
+```{r}
+# From path strings
+paths <- c("A*B*~C", "A*D")
+chart <- config_chart_from_paths(paths)
+cat(chart)
+```
+
+For reports:
+```{r, eval=FALSE}
+# Charts are included by default
+generate_report(result, "report.md", format = "full")
+
+# Use LaTeX symbols for academic papers
+generate_report(result, "report.md", chart_symbol_set = "latex")
 ```
 
 ---

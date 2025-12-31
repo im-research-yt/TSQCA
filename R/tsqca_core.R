@@ -58,8 +58,9 @@ get_n_solutions <- function(sol) {
 #'   \itemize{
 #'     \item \code{"first"} - return only the first solution (M1). Default.
 #'     \item \code{"all"} - return all solutions concatenated.
-#'     \item \code{"core"} - return core terms common to all solutions,
-#'       plus peripheral terms and solution count.
+#'     \item \code{"essential"} - return essential prime implicants (terms 
+#'       common to all solutions), plus selective prime implicants and 
+#'       solution count.
 #'   }
 #'
 #' @return A list with elements depending on \code{extract_mode}.
@@ -68,13 +69,13 @@ get_n_solutions <- function(sol) {
 #'
 #'   For \code{"all"}: adds \code{n_solutions}.
 #'
-#'   For \code{"core"}: adds \code{peripheral_terms}, \code{unique_terms},
+#'   For \code{"essential"}: adds \code{selective_terms}, \code{unique_terms},
 #'   \code{n_solutions}.
 #'
 #'   If extraction fails, returns \code{"No solution"} and \code{NA_real_}
 #'   for numeric values.
 #' @keywords internal
-qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
+qca_extract <- function(sol, extract_mode = c("first", "all", "essential")) {
   
   extract_mode <- match.arg(extract_mode)
   
@@ -86,8 +87,8 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
       covS         = NA_real_,
       n_solutions  = 0L
     )
-    if (mode == "core") {
-      base$peripheral_terms <- NA_character_
+    if (mode == "essential") {
+      base$selective_terms <- NA_character_
       base$unique_terms     <- NA_character_
     }
     base
@@ -208,20 +209,20 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
     ))
   }
   
-  if (extract_mode == "core") {
+  if (extract_mode == "essential") {
     # Split each solution into terms
     sol_terms <- lapply(sol_list, function(x) {
       unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
     })
     
-    # Core terms: intersection of all solutions
-    core_terms <- Reduce(intersect, sol_terms)
+    # Essential prime implicants: intersection of all solutions
+    essential_terms <- Reduce(intersect, sol_terms)
     
     # All terms: union of all solutions
     all_terms <- Reduce(union, sol_terms)
     
-    # Peripheral terms: in some but not all solutions
-    peripheral_terms <- setdiff(all_terms, core_terms)
+    # Selective prime implicants: in some but not all solutions
+    selective_terms <- setdiff(all_terms, essential_terms)
     
     # Unique terms: only in specific solution
     if (n_solutions > 1) {
@@ -243,16 +244,16 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
       unique_terms_str <- NA_character_
     }
     
-    # Core expression
-    expression <- if (length(core_terms) > 0) {
-      paste(core_terms, collapse = " + ")
+    # Essential expression
+    expression <- if (length(essential_terms) > 0) {
+      paste(essential_terms, collapse = " + ")
     } else {
-      "No core terms"
+      "No essential prime implicants"
     }
     
-    # Peripheral expression
-    peripheral_str <- if (length(peripheral_terms) > 0) {
-      paste(peripheral_terms, collapse = " + ")
+    # Selective expression
+    selective_str <- if (length(selective_terms) > 0) {
+      paste(selective_terms, collapse = " + ")
     } else {
       NA_character_
     }
@@ -261,7 +262,7 @@ qca_extract <- function(sol, extract_mode = c("first", "all", "core")) {
       expression       = expression,
       inclS            = inclS,
       covS             = covS,
-      peripheral_terms = peripheral_str,
+      selective_terms  = selective_str,
       unique_terms     = unique_terms_str,
       n_solutions      = n_solutions
     ))

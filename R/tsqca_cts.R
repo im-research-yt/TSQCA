@@ -25,7 +25,7 @@
 #' @param n.cut Frequency cutoff for \code{truthTable}.
 #' @param pri.cut PRI cutoff for \code{minimize}.
 #' @param extract_mode Character. How to handle multiple solutions:
-#'   \code{"first"} (default), \code{"all"}, or \code{"core"}.
+#'   \code{"first"} (default), \code{"all"}, or \code{"essential"}.
 #'   See \code{\link{qca_extract}} for details.
 #' @param return_details Logical. If \code{TRUE} (default), returns both
 #'   summary and detailed objects for use with \code{generate_report()}.
@@ -84,7 +84,7 @@ ctSweepS <- function(dat,
                      thrY, thrX_default = 7,
                      dir.exp = NULL, include = "?",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
-                     extract_mode = c("first", "all", "core"),
+                     extract_mode = c("first", "all", "essential"),
                      return_details = TRUE,
                      Yvar = NULL, Xvars = NULL) {
   
@@ -141,8 +141,8 @@ ctSweepS <- function(dat,
   )
   
   # Add columns based on extract_mode
-  if (extract_mode == "core") {
-    df_out$peripheral_terms <- character(0)
+  if (extract_mode == "essential") {
+    df_out$selective_terms <- character(0)
     df_out$unique_terms     <- character(0)
   }
   
@@ -198,8 +198,8 @@ ctSweepS <- function(dat,
         stringsAsFactors = FALSE
       )
       
-      if (extract_mode == "core") {
-        new_row$peripheral_terms <- NA_character_
+      if (extract_mode == "essential") {
+        new_row$selective_terms <- NA_character_
         new_row$unique_terms     <- NA_character_
       }
       
@@ -240,8 +240,8 @@ ctSweepS <- function(dat,
         stringsAsFactors = FALSE
       )
       
-      if (extract_mode == "core") {
-        new_row$peripheral_terms <- NA_character_
+      if (extract_mode == "essential") {
+        new_row$selective_terms <- NA_character_
         new_row$unique_terms     <- NA_character_
       }
       
@@ -276,8 +276,8 @@ ctSweepS <- function(dat,
       stringsAsFactors = FALSE
     )
     
-    if (extract_mode == "core") {
-      new_row$peripheral_terms <- sol_info$peripheral_terms
+    if (extract_mode == "essential") {
+      new_row$selective_terms <- sol_info$selective_terms
       new_row$unique_terms     <- sol_info$unique_terms
     }
     
@@ -360,7 +360,7 @@ ctSweepS <- function(dat,
 #' @param n.cut Frequency cutoff for \code{truthTable}.
 #' @param pri.cut PRI cutoff for \code{minimize}.
 #' @param extract_mode Character. How to handle multiple solutions:
-#'   \code{"first"} (default), \code{"all"}, or \code{"core"}.
+#'   \code{"first"} (default), \code{"all"}, or \code{"essential"}.
 #'   See \code{\link{qca_extract}} for details.
 #' @param return_details Logical. If \code{TRUE} (default), returns both
 #'   summary and detailed objects for use with \code{generate_report()}.
@@ -444,7 +444,7 @@ ctSweepM <- function(dat,
                      sweep_list, thrY,
                      dir.exp = NULL, include = "?",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
-                     extract_mode = c("first", "all", "core"),
+                     extract_mode = c("first", "all", "essential"),
                      return_details = TRUE,
                      Yvar = NULL, Xvars = NULL) {
   
@@ -506,8 +506,8 @@ ctSweepM <- function(dat,
   )
   
   # Add columns based on extract_mode
-  if (extract_mode == "core") {
-    df_out$peripheral_terms <- NA_character_
+  if (extract_mode == "essential") {
+    df_out$selective_terms <- NA_character_
     df_out$unique_terms     <- NA_character_
   }
   
@@ -560,8 +560,8 @@ ctSweepM <- function(dat,
       df_out$covS[i]        <- NA_real_
       df_out$n_solutions[i] <- 0L
       
-      if (extract_mode == "core") {
-        df_out$peripheral_terms[i] <- NA_character_
+      if (extract_mode == "essential") {
+        df_out$selective_terms[i] <- NA_character_
         df_out$unique_terms[i]     <- NA_character_
       }
       
@@ -596,8 +596,8 @@ ctSweepM <- function(dat,
       df_out$covS[i]        <- NA_real_
       df_out$n_solutions[i] <- 0L
       
-      if (extract_mode == "core") {
-        df_out$peripheral_terms[i] <- NA_character_
+      if (extract_mode == "essential") {
+        df_out$selective_terms[i] <- NA_character_
         df_out$unique_terms[i]     <- NA_character_
       }
       
@@ -626,8 +626,8 @@ ctSweepM <- function(dat,
     df_out$covS[i]        <- sol_info$covS
     df_out$n_solutions[i] <- sol_info$n_solutions
     
-    if (extract_mode == "core") {
-      df_out$peripheral_terms[i] <- sol_info$peripheral_terms
+    if (extract_mode == "essential") {
+      df_out$selective_terms[i] <- sol_info$selective_terms
       df_out$unique_terms[i]     <- sol_info$unique_terms
     }
     

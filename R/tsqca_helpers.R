@@ -238,7 +238,7 @@ df_to_md_table <- function(df, digits = 3) {
 #' @keywords internal
 split_solution_terms <- function(solution) {
   if (is.null(solution) || is.na(solution) || solution == "" || 
-      solution == "No solution" || solution == "No core terms") {
+      solution == "No solution" || solution == "No essential prime implicants") {
     return(character(0))
   }
   trimws(unlist(strsplit(solution, " \\+ ")))
@@ -359,7 +359,7 @@ format_qca_solution <- function(solution, var_names, use_tilde = TRUE) {
     return("")
   }
   
-  if (solution == "No solution" || solution == "No core terms") {
+  if (solution == "No solution" || solution == "No essential prime implicants") {
     return(solution)
   }
   
@@ -438,7 +438,7 @@ extract_terms <- function(solutions, var_names, use_tilde = TRUE) {
   
   # Split into terms
   all_terms <- unlist(lapply(formatted, function(sol) {
-    if (sol == "" || sol == "No solution" || sol == "No core terms") {
+    if (sol == "" || sol == "No solution" || sol == "No essential prime implicants") {
       return(character(0))
     }
     trimws(unlist(strsplit(sol, " \\+ ")))

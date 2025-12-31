@@ -15,6 +15,10 @@
 #' @param dat Optional data frame. Original data for descriptive statistics.
 #' @param desc_vars Optional character vector. Variables for descriptive statistics.
 #'   If NULL and dat is provided, uses Yvar and Xvars from params.
+#' @param include_chart Logical. If TRUE (default), includes configuration charts
+#'   (Fiss-style tables) in the report for each threshold.
+#' @param chart_symbol_set Character. Symbol set for configuration charts:
+#'   \code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.
 #'
 #' @return Invisibly returns the path to the generated report.
 #' @export
@@ -33,18 +37,25 @@
 #'   return_details = TRUE
 #' )
 #' 
-#' # With descriptive statistics
+#' # With descriptive statistics and configuration charts
 #' generate_report(result, "my_report.md", format = "full", 
-#'                 dat = sample_data)
+#'                 dat = sample_data, include_chart = TRUE)
+#' 
+#' # Without configuration charts
+#' generate_report(result, "my_report.md", format = "simple",
+#'                 include_chart = FALSE)
 #' }
 generate_report <- function(result,
                             output_file = "qca_report.md",
                             format = c("full", "simple"),
                             title = "QCA Analysis Report",
                             dat = NULL,
-                            desc_vars = NULL) {
+                            desc_vars = NULL,
+                            include_chart = TRUE,
+                            chart_symbol_set = c("unicode", "ascii", "latex")) {
   
   format <- match.arg(format)
+  chart_symbol_set <- match.arg(chart_symbol_set)
   
   # Validate input
   if (!is.list(result)) {
@@ -67,9 +78,9 @@ generate_report <- function(result,
   
   # Dispatch to appropriate format
   if (format == "full") {
-    write_full_report(result, con, dat, desc_vars)
+    write_full_report(result, con, dat, desc_vars, include_chart, chart_symbol_set)
   } else {
-    write_simple_report(result, con)
+    write_simple_report(result, con, include_chart, chart_symbol_set)
   }
   
   message("Report generated: ", output_file)
@@ -79,7 +90,8 @@ generate_report <- function(result,
 
 #' Write full report content
 #' @keywords internal
-write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
+write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
+                              include_chart = TRUE, chart_symbol_set = "unicode") {
   
   summary_df <- result$summary
   details <- result$details
@@ -354,25 +366,25 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
         }
         writeLines("\n", con)
         
-        # Core/Peripheral/Unique (if multiple solutions)
+        # Essential/Selective Prime Implicants (if multiple solutions)
         if (length(sol_list) > 1) {
           sol_terms <- lapply(sol_list, function(x) {
             if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
           })
-          core_terms <- Reduce(intersect, sol_terms)
+          essential_terms <- Reduce(intersect, sol_terms)
           all_terms <- Reduce(union, sol_terms)
-          peripheral_terms <- setdiff(all_terms, core_terms)
+          selective_terms <- setdiff(all_terms, essential_terms)
           
-          if (length(core_terms) > 0) {
-            writeLines(paste0("**Core Conditions**: ", 
-                              escape_md(paste(core_terms, collapse = " + ")), "\n"), con)
+          if (length(essential_terms) > 0) {
+            writeLines(paste0("**Essential Prime Implicants**: ", 
+                              escape_md(paste(essential_terms, collapse = " + ")), "\n"), con)
           } else {
-            writeLines("**Core Conditions**: (none - solutions are disjoint)\n", con)
+            writeLines("**Essential Prime Implicants**: (none - solutions are disjoint)\n", con)
           }
           
-          if (length(peripheral_terms) > 0) {
-            writeLines(paste0("**Peripheral Terms**: ", 
-                              escape_md(paste(peripheral_terms, collapse = " + ")), "\n"), con)
+          if (length(selective_terms) > 0) {
+            writeLines(paste0("**Selective Prime Implicants**: ", 
+                              escape_md(paste(selective_terms, collapse = " + ")), "\n"), con)
           }
           
           # Unique Terms
@@ -422,6 +434,34 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
         writeLines(df_to_md_table(term_df), con)
         writeLines("\n", con)
       }
+      
+      # ---- Configuration Chart ----
+      if (include_chart && !is.null(sol_list) && length(sol_list) > 0) {
+        writeLines("#### Configuration Chart\n", con)
+        
+        # Extract paths from sol_list
+        paths <- sapply(sol_list, function(s) {
+          if (is.character(s)) {
+            paste(s, collapse = " + ")
+          } else {
+            paste(as.character(s), collapse = " + ")
+          }
+        })
+        
+        # Split paths into individual terms
+        all_paths <- unlist(strsplit(paths, " \\+ "))
+        all_paths <- trimws(all_paths)
+        all_paths <- unique(all_paths)
+        
+        if (length(all_paths) > 0) {
+          # Generate chart
+          chart <- config_chart_from_paths(all_paths, 
+                                           symbol_set = chart_symbol_set,
+                                           language = "en")
+          writeLines(chart, con)
+          writeLines("\n", con)
+        }
+      }
     }
     
     # ---- Settings for Reproducibility ----
@@ -467,7 +507,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
     PRI = numeric(0),
     covS = numeric(0),
     n_solutions = integer(0),
-    N_Core = integer(0),
+    N_Essential = integer(0),
     stringsAsFactors = FALSE
   )
   
@@ -491,24 +531,24 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
         PRI = NA,
         covS = NA,
         n_solutions = 0,
-        N_Core = 0,
+        N_Essential = 0,
         stringsAsFactors = FALSE
       ))
     } else {
       metrics <- extract_all_metrics(sol$IC, sol)
       n_sol <- get_n_solutions(sol)
       
-      # Count core terms
-      n_core <- 0
+      # Count essential prime implicants
+      n_essential <- 0
       sol_list <- sol$solution
       if (!is.null(sol_list) && length(sol_list) > 1) {
         sol_terms <- lapply(sol_list, function(x) {
           if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
         })
-        core_terms <- Reduce(intersect, sol_terms)
-        n_core <- length(core_terms)
+        essential_terms <- Reduce(intersect, sol_terms)
+        n_essential <- length(essential_terms)
       } else if (!is.null(sol_list) && length(sol_list) == 1) {
-        n_core <- length(sol_list[[1]])
+        n_essential <- length(sol_list[[1]])
       }
       
       comp_df <- rbind(comp_df, data.frame(
@@ -517,7 +557,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
         PRI = round(metrics$sol_PRI, 3),
         covS = round(metrics$sol_covS, 3),
         n_solutions = n_sol,
-        N_Core = n_core,
+        N_Essential = n_essential,
         stringsAsFactors = FALSE
       ))
     }
@@ -534,8 +574,8 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
   # ============================================
   section_num <- section_num + 1
   writeLines(paste0("## ", section_num, ". Notes\n"), con)
-  writeLines("- **Core Conditions**: Terms shared across all intermediate solutions.", con)
-  writeLines("- **Peripheral Terms**: Terms that appear in some but not all solutions.", con)
+  writeLines("- **Essential Prime Implicants (EPI)**: Terms that appear in ALL equivalent solutions (M1, M2, M3...).", con)
+  writeLines("- **Selective Prime Implicants (SPI)**: Terms that appear in some but not all solutions.", con)
   writeLines("- **Unique Terms**: Terms that appear only in one specific solution.", con)
   writeLines("- **inclS**: Solution consistency (sufficiency).", con)
   writeLines("- **covS**: Solution coverage.", con)
@@ -549,7 +589,8 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL) {
 
 #' Write simple report content
 #' @keywords internal
-write_simple_report <- function(result, con) {
+write_simple_report <- function(result, con, include_chart = TRUE, 
+                                chart_symbol_set = "unicode") {
   
   summary_df <- result$summary
   details <- result$details
@@ -616,14 +657,14 @@ write_simple_report <- function(result, con) {
       } else {
         writeLines(paste0("**Number of Solutions**: ", length(sol_list), "\n"), con)
         
-        # Core conditions
+        # Essential prime implicants
         sol_terms <- lapply(sol_list, function(x) {
           if (is.character(x)) x else unlist(strsplit(paste(x, collapse = " + "), " \\+ "))
         })
-        core_terms <- Reduce(intersect, sol_terms)
+        essential_terms <- Reduce(intersect, sol_terms)
         
-        if (length(core_terms) > 0) {
-          writeLines(paste0("**Core**: ", escape_md(paste(core_terms, collapse = " + ")), "\n"), con)
+        if (length(essential_terms) > 0) {
+          writeLines(paste0("**Essential (EPI)**: ", escape_md(paste(essential_terms, collapse = " + ")), "\n"), con)
         }
         
         # List all solutions briefly
@@ -640,6 +681,33 @@ write_simple_report <- function(result, con) {
                         ", covS = ",
                         ifelse(is.na(metrics$sol_covS), "N/A", round(metrics$sol_covS, 3)),
                         "*\n"), con)
+      
+      # ---- Configuration Chart ----
+      if (include_chart) {
+        writeLines("\n**Configuration Chart:**\n", con)
+        
+        # Extract paths from sol_list
+        paths <- sapply(sol_list, function(s) {
+          if (is.character(s)) {
+            paste(s, collapse = " + ")
+          } else {
+            paste(as.character(s), collapse = " + ")
+          }
+        })
+        
+        # Split paths into individual terms
+        all_paths <- unlist(strsplit(paths, " \\+ "))
+        all_paths <- trimws(all_paths)
+        all_paths <- unique(all_paths)
+        
+        if (length(all_paths) > 0) {
+          chart <- config_chart_from_paths(all_paths, 
+                                           symbol_set = chart_symbol_set,
+                                           language = "en")
+          writeLines(chart, con)
+        }
+      }
+      
       writeLines("\n", con)
     }
   }

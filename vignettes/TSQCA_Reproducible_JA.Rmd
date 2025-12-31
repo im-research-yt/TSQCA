@@ -173,7 +173,7 @@ write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
 
 # 8. extract_mode の使用（v0.2.0の新機能）
 
-ロバスト性分析のために全ての解またはコア条件を抽出する。
+ロバスト性分析のために全ての解または必須主項を抽出する。
 
 ## 全ての解を抽出
 ```{r, eval=FALSE}
@@ -192,21 +192,21 @@ res_all <- otSweep(
 head(res_all$summary)
 ```
 
-## コア条件を抽出
+## 必須主項を抽出
 ```{r, eval=FALSE}
-res_core <- otSweep(
+res_essential <- otSweep(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
   sweep_range    = 6:9,
   thrX           = thrX_vec,
   dir.exp        = c(1, 1, 1),
-  extract_mode   = "core",
+  extract_mode   = "essential",
   return_details = TRUE
 )
 
-# コア条件、周辺条件、ユニーク項を含む結果を確認
-head(res_core$summary)
+# 必須主項、選択的主項、ユニーク項を含む結果を確認
+head(res_essential$summary)
 ```
 
 ---
@@ -285,6 +285,28 @@ res_ots$params
 # [1] 1
 # $pri.cut
 # [1] 0
+```
+
+---
+
+## 構成チャート（v0.5.0新機能）
+
+構成チャートがレポートに自動的に含まれるようになりました。別途生成することもできます：
+
+```{r}
+# パス文字列から
+paths <- c("A*B*~C", "A*D")
+chart <- config_chart_from_paths(paths, language = "ja")
+cat(chart)
+```
+
+レポート生成時：
+```{r, eval=FALSE}
+# 構成チャートはデフォルトで含まれます
+generate_report(result, "report.md", format = "full")
+
+# 学術論文用にLaTeXシンボルを使用
+generate_report(result, "report.md", chart_symbol_set = "latex")
 ```
 
 ---
