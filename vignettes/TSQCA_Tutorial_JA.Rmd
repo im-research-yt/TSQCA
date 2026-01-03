@@ -178,7 +178,7 @@ res_cts <- ctSweepS(
   return_details = TRUE
 )
 
-head(res_cts$summary)
+summary(res_cts)
 ```
 
 ------------------------------------------------------------------------
@@ -189,19 +189,24 @@ MCTS--QCA は、**複数の X 条件の閾値を同時に変化させ**、
 すべての組合せに対して QCA を実行する手法です。
 
 ```{r, error=TRUE}
+# 各条件の閾値を指定するsweep_listを作成
+sweep_list <- list(
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
+)
+
 res_mcts <- ctSweepM(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
-  sweep_vars     = c("X2", "X3"),
-  sweep_range    = 6:9,
+  sweep_list     = sweep_list,
   thrY           = 7,
-  thrX_default   = 7,
   dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
-head(res_mcts$summary)
+summary(res_mcts)
 ```
 
 ------------------------------------------------------------------------
@@ -216,13 +221,13 @@ res_ots <- otSweep(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
-  sweep_range    = 6:9,
+  sweep_range    = 6:8,
   thrX           = c(X1 = 7, X2 = 7, X3 = 7),
   dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
-head(res_ots$summary)
+summary(res_ots)
 ```
 
 ------------------------------------------------------------------------
@@ -234,12 +239,12 @@ DTS--QCA は、**X の閾値（複数条件）と Y の閾値を同時に変化�
 
 ```{r}
 sweep_list_dts_X <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
-sweep_range_dts_Y <- 6:8
+sweep_range_dts_Y <- 6:7
 
 res_dts <- dtSweep(
   dat            = dat,
@@ -251,7 +256,7 @@ res_dts <- dtSweep(
   return_details = TRUE
 )
 
-head(res_dts$summary)
+summary(res_dts)
 ```
 
 ------------------------------------------------------------------------
@@ -309,7 +314,7 @@ result <- otSweep(
   dat = dat,
   outcome = "Y",
   conditions = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "first"  # デフォルト
 )
@@ -323,7 +328,7 @@ result_all <- otSweep(
   dat = dat,
   outcome = "Y",
   conditions = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "all"
 )
@@ -341,7 +346,7 @@ result_essential <- otSweep(
   dat = dat,
   outcome = "Y",
   conditions = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "essential"
 )
@@ -397,7 +402,7 @@ QCAが3つの等価な解を生成した場合を考えます：
 
 ```{r, eval=FALSE}
 # FULLレポートを生成
-generate_report(res_ots, "my_analysis_full.md", format = "full")
+generate_report(res_ots, "my_analysis_full.md", dat = dat, format = "full")
 ```
 
 ### SIMPLEレポート
@@ -410,7 +415,7 @@ generate_report(res_ots, "my_analysis_full.md", format = "full")
 
 ```{r, eval=FALSE}
 # SIMPLEレポートを生成
-generate_report(res_ots, "my_analysis_simple.md", format = "simple")
+generate_report(res_ots, "my_analysis_simple.md", dat = dat, format = "simple")
 ```
 
 ## レポートの効果的な使い方
@@ -427,15 +432,15 @@ result <- otSweep(
   dat = mydata,
   outcome = "Y",
   conditions = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
 
 # 本文用
-generate_report(result, "manuscript_results.md", format = "simple")
+generate_report(result, "manuscript_results.md", dat = mydata, format = "simple")
 
 # 補足資料用
-generate_report(result, "supplementary_full.md", format = "full")
+generate_report(result, "supplementary_full.md", dat = mydata, format = "full")
 ```
 
 ### 分析パラメータへのアクセス
@@ -660,13 +665,13 @@ TSQCAは、QCA論文でよく使用されるFissスタイルの構成チャー�
 
 ```{r eval=FALSE}
 # 構成チャート付きレポートを生成（デフォルト）
-generate_report(result, "my_report.md", format = "full")
+generate_report(result, "my_report.md", dat = dat, format = "full")
 
 # 構成チャートを無効にする場合
-generate_report(result, "my_report.md", include_chart = FALSE)
+generate_report(result, "my_report.md", dat = dat, include_chart = FALSE)
 
 # 学術論文用にLaTeXシンボルを使用
-generate_report(result, "my_report.md", chart_symbol_set = "latex")
+generate_report(result, "my_report.md", dat = dat, chart_symbol_set = "latex")
 ```
 
 ## 単体の構成チャート関数

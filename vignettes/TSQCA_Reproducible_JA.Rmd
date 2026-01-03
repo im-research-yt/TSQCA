@@ -83,7 +83,7 @@ res_cts <- ctSweepS(
   return_details = TRUE
 )
 
-head(res_cts$summary)
+summary(res_cts)
 ```
 
 必要に応じて、結果を CSV として保存：
@@ -97,19 +97,24 @@ write.csv(res_cts$summary, file = "TSQCA_CTS_results.csv", row.names = FALSE)
 
 複数条件 X の閾値を同時にスイープする。
 ```{r, error=TRUE}
+# 各条件の閾値を指定するsweep_listを作成
+sweep_list <- list(
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
+)
+
 res_mcts <- ctSweepM(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
-  sweep_vars     = c("X2", "X3"),
-  sweep_range    = 6:9,
+  sweep_list     = sweep_list,
   thrY           = 7,
-  thrX_default   = 7,
   dir.exp        = c(1, 1, 1),
   return_details = TRUE
 )
 
-head(res_mcts$summary)
+summary(res_mcts)
 ```
 ```{r, eval=FALSE}
 write.csv(res_mcts$summary, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
@@ -121,7 +126,7 @@ write.csv(res_mcts$summary, file = "TSQCA_MCTS_results.csv", row.names = FALSE)
 
 アウトカム Y の閾値のみをスイープする。
 ```{r}
-sweep_range_ots <- 6:9
+sweep_range_ots <- 6:8
 
 res_ots <- otSweep(
   dat            = dat,
@@ -133,7 +138,7 @@ res_ots <- otSweep(
   return_details = TRUE
 )
 
-res_ots$summary
+summary(res_ots)
 ```
 ```{r, eval=FALSE}
 write.csv(res_ots$summary, file = "TSQCA_OTS_results.csv", row.names = FALSE)
@@ -146,12 +151,12 @@ write.csv(res_ots$summary, file = "TSQCA_OTS_results.csv", row.names = FALSE)
 X 側と Y 側を同時にスイープする二次元スイープ。
 ```{r}
 sweep_list_dts_X <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
-sweep_range_dts_Y <- 6:8
+sweep_range_dts_Y <- 6:7
 
 res_dts <- dtSweep(
   dat            = dat,
@@ -163,7 +168,7 @@ res_dts <- dtSweep(
   return_details = TRUE
 )
 
-head(res_dts$summary)
+summary(res_dts)
 ```
 ```{r, eval=FALSE}
 write.csv(res_dts$summary, file = "TSQCA_DTS_results.csv", row.names = FALSE)
@@ -181,7 +186,7 @@ res_all <- otSweep(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
-  sweep_range    = 6:9,
+  sweep_range    = 6:8,
   thrX           = thrX_vec,
   dir.exp        = c(1, 1, 1),
   extract_mode   = "all",
@@ -198,7 +203,7 @@ res_essential <- otSweep(
   dat            = dat,
   outcome        = "Y",
   conditions     = c("X1", "X2", "X3"),
-  sweep_range    = 6:9,
+  sweep_range    = 6:8,
   thrX           = thrX_vec,
   dir.exp        = c(1, 1, 1),
   extract_mode   = "essential",
@@ -217,12 +222,12 @@ head(res_essential$summary)
 
 ## FULLレポート
 ```{r, eval=FALSE}
-generate_report(res_ots, "TSQCA_OTS_report_full.md", format = "full")
+generate_report(res_ots, "TSQCA_OTS_report_full.md", dat = dat, format = "full")
 ```
 
 ## SIMPLEレポート（論文原稿用）
 ```{r, eval=FALSE}
-generate_report(res_ots, "TSQCA_OTS_report_simple.md", format = "simple")
+generate_report(res_ots, "TSQCA_OTS_report_simple.md", dat = dat, format = "simple")
 ```
 
 ---
@@ -303,10 +308,10 @@ cat(chart)
 レポート生成時：
 ```{r, eval=FALSE}
 # 構成チャートはデフォルトで含まれます
-generate_report(result, "report.md", format = "full")
+generate_report(result, "report.md", dat = dat, format = "full")
 
 # 学術論文用にLaTeXシンボルを使用
-generate_report(result, "report.md", chart_symbol_set = "latex")
+generate_report(result, "report.md", dat = dat, chart_symbol_set = "latex")
 ```
 
 ---

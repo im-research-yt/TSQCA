@@ -1,3 +1,32 @@
+# TSQCA 0.5.2
+
+*Release date: 2025-01-03*
+
+## Documentation Fixes
+
+### Vignette Examples Corrected
+
+Fixed non-working code examples in all vignettes (Tutorial and Reproducible, both EN/JA):
+
+* Updated argument names from deprecated `Yvar`/`Xvars` to `outcome`/`conditions`
+* Fixed `ctSweepM()` examples to use `sweep_list` parameter instead of old `sweep_vars`/`sweep_range`
+* Added required `dat` parameter to all `generate_report()` examples
+* Changed output from `head(res$summary)` to `summary(res)` for consistency with S3 methods
+* Reduced sweep ranges (e.g., 6:9 → 6:8, 6:8 → 6:7) for faster example execution
+
+### README Updates
+
+* Updated all code examples to use new argument names (`outcome`, `conditions`)
+* Added `dat` parameter to `generate_report()` examples
+* Consistent sweep ranges across all examples
+
+### Test Scripts Added
+
+* `test_quick.R` — Minimal verification script (6 tests)
+* `test_tutorial_code.R` — Comprehensive verification script (11 tests)
+
+---
+
 # TSQCA 0.5.1
 
 *Release date: 2025-01-01*

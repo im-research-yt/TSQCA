@@ -43,9 +43,9 @@ Use the `extract_mode` parameter to control output:
 # Detect and show all solutions
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "all"  # Show all solutions
 )
@@ -53,9 +53,9 @@ result <- otSweep(
 # Extract essential prime implicants only
 result_essential <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7),
   extract_mode = "essential"  # Show essential prime implicants
 )
@@ -69,17 +69,17 @@ New `generate_report()` function creates comprehensive markdown reports:
 # Run analysis with return_details = TRUE (now the default)
 result <- otSweep(
   dat = mydata,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
   thrX = c(X1 = 7, X2 = 7, X3 = 7)
 )
 
 # Generate full report
-generate_report(result, "my_analysis.md", format = "full")
+generate_report(result, "my_analysis.md", dat = mydata, format = "full")
 
 # Generate simple report (for journal manuscripts)
-generate_report(result, "my_analysis_simple.md", format = "simple")
+generate_report(result, "my_analysis_simple.md", dat = mydata, format = "simple")
 ```
 
 Reports include:
@@ -104,13 +104,13 @@ Configuration charts are now automatically included in reports. Use `generate_re
 
 ```r
 # Reports now include configuration charts by default
-generate_report(result, "my_report.md", format = "full")
+generate_report(result, "my_report.md", dat = mydata, format = "full")
 
 # Disable charts if needed
-generate_report(result, "my_report.md", include_chart = FALSE)
+generate_report(result, "my_report.md", dat = mydata, include_chart = FALSE)
 
 # Use LaTeX symbols for academic papers
-generate_report(result, "my_report.md", chart_symbol_set = "latex")
+generate_report(result, "my_report.md", dat = mydata, chart_symbol_set = "latex")
 ```
 
 ### Standalone Chart Functions
@@ -181,8 +181,8 @@ TSQCA is built on top of the [QCA package](https://cran.r-project.org/package=QC
 # TSQCA uses these same parameters
 result <- dtSweep(
   dat = sample_data,
-  Yvar = "Y",
-  Xvars = c("X1", "X2"),
+  outcome = "Y",
+  conditions = c("X1", "X2"),
   sweep_list_X = list(X1 = 6:7, X2 = 6:7),
   sweep_range_Y = 6:7,
   incl.cut = 0.8,   # QCA parameter
@@ -199,8 +199,8 @@ library(TSQCA)
 
 dat <- read.csv("sample_data.csv", fileEncoding = "UTF-8")
 
-Yvar  <- "Y"
-Xvars <- c("X1", "X2", "X3")
+outcome  <- "Y"
+conditions <- c("X1", "X2", "X3")
 
 str(dat)
 ```
@@ -233,8 +233,8 @@ sweep_list <- list(
 
 res_mcts <- ctSweepM(
   dat = dat,
-  Yvar = "Y",
-  Xvars = c("X1", "X2", "X3"),
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
   sweep_list = sweep_list,
   thrY = 7
 )
@@ -266,8 +266,8 @@ thrX_default <- 7      # Fixed thresholds for other X's
 
 res_cts <- ctSweepS(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  outcome        = outcome,
+  conditions     = conditions,
   sweep_var      = sweep_var,      # X to sweep
   sweep_range    = sweep_range,    # Threshold candidates for X
   thrY           = thrY,           # Fixed Y threshold
@@ -275,7 +275,7 @@ res_cts <- ctSweepS(
   return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_cts$summary)
+summary(res_cts)
 ```
 
 # 2. MCTS-QCA: multi-condition X sweep (ctSweepM)
@@ -283,42 +283,42 @@ head(res_cts$summary)
 ```r
 # Threshold candidates for each X
 sweep_list <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
 res_mcts <- ctSweepM(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  outcome        = outcome,
+  conditions     = conditions,
   sweep_list     = sweep_list,     # Threshold candidates for each X
   thrY           = 7,              # Fixed Y threshold
   return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_mcts$summary)
+summary(res_mcts)
 ```
 
 # 3. OTS-QCA: outcome Y sweep (otSweep)
 
 ```r
 thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # Fixed thresholds for X
-sweep_range_Y <- 6:9               # Candidate thresholds for Y
+sweep_range_Y <- 6:8               # Candidate thresholds for Y
 
 res_ots <- otSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  outcome        = outcome,
+  conditions     = conditions,
   sweep_range    = sweep_range_Y,  # Y threshold candidates
   thrX           = thrX,           # Fixed X thresholds
   return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_ots$summary)
+summary(res_ots)
 
 # Generate report for detailed analysis
-generate_report(res_ots, "ots_report.md", format = "full")
+generate_report(res_ots, "ots_report.md", dat = dat, format = "full")
 ```
 
 # 4. DTS-QCA: 2D sweep of X and Y (dtSweep)
@@ -326,24 +326,24 @@ generate_report(res_ots, "ots_report.md", format = "full")
 ```r
 # X-side threshold candidates (multiple conditions)
 sweep_list_X <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
 # Y-side threshold candidates
-sweep_range_Y <- 6:8
+sweep_range_Y <- 6:7
 
 res_dts <- dtSweep(
   dat            = dat,
-  Yvar           = Yvar,
-  Xvars          = Xvars,
+  outcome        = outcome,
+  conditions     = conditions,
   sweep_list_X   = sweep_list_X,   # X threshold candidates
   sweep_range_Y  = sweep_range_Y,  # Y threshold candidates
   return_details = TRUE            # Default in v0.2.0
 )
 
-head(res_dts$summary)
+summary(res_dts)
 ```
 
 ## Sample Data
