@@ -1,3 +1,72 @@
+# TSQCA 0.5.4
+
+*Release date: 2025-01-03*
+
+## Changes
+
+### Default Chart Level Changed to "term" (Fiss-style)
+
+The default value for `chart_level` parameter has been changed from `"summary"` to `"term"`.
+
+**Rationale:**
+The solution-term level format (Fiss, 2011 notation) is the standard for academic publications, where each column represents one prime implicant (configuration). The previous default (`"summary"`) aggregated all configurations at each threshold into a single column, which obscured the distinction between different sufficient paths.
+
+**Column header format updated:**
+- Old format: `thrY=6_C1`
+- New format: `thrY = 6 (C1)` (consistent with the paper format)
+
+**Affected functions:**
+- `generate_report()` — default `chart_level` is now `"term"`
+- `generate_cross_threshold_chart()` — default `chart_level` is now `"term"`
+
+**Migration:**
+If you prefer the previous behavior (threshold-level summary), explicitly specify `chart_level = "summary"`:
+
+```r
+generate_report(result, "report.md", chart_level = "summary")
+generate_cross_threshold_chart(result, conditions, chart_level = "summary")
+```
+
+---
+
+# TSQCA 0.5.3
+
+*Release date: 2025-01-03*
+
+## New Features
+
+### Solution-Term Level Configuration Charts (Fiss-style)
+
+Added support for solution-term level configuration charts following Fiss (2011) notation. This feature allows generating charts where each column represents a single prime implicant (configuration), which is the standard format for academic publications.
+
+**New parameter for `generate_report()`:**
+
+* `chart_level` — Character. Either `"summary"` (default) or `"term"`.
+  - `"summary"`: Threshold-level summaries where each column represents one threshold, showing all conditions that appear in any configuration at that threshold.
+  - `"term"`: Solution-term level (Fiss-style) where each column represents one prime implicant (sufficient configuration). Recommended for academic publications.
+
+**New functions:**
+
+* `generate_cross_threshold_chart()` — Generate configuration charts from sweep results with `chart_level` option.
+* `parse_solution_terms()` — Internal function to parse solution expressions into individual terms.
+* `get_condition_status()` — Internal function to determine condition presence/absence in a term.
+* `generate_term_level_chart()` — Internal function for term-level chart generation.
+* `generate_threshold_level_chart()` — Internal function for threshold-level chart generation.
+
+**Example:**
+
+```r
+# Threshold-level summary (default)
+generate_report(result, "report.md", chart_level = "summary")
+
+# Solution-term level (Fiss-style, recommended for publications)
+generate_report(result, "report.md", chart_level = "term")
+```
+
+When the solution is `X3 + X1*X2`, the term-level chart will show two separate columns (`thrY=7_C1` for `X3` and `thrY=7_C2` for `X1*X2`), while the summary-level chart shows one column (`thrY=7`) with all three conditions marked.
+
+---
+
 # TSQCA 0.5.2
 
 *Release date: 2025-01-03*

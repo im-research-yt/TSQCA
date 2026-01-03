@@ -13,6 +13,7 @@ generate_report(
   desc_vars = NULL,
   include_chart = TRUE,
   chart_symbol_set = c("unicode", "ascii", "latex"),
+  chart_level = c("term", "summary"),
   solution_note = TRUE,
   solution_note_style = c("simple", "detailed"),
   solution_note_lang = c("en", "ja")
@@ -38,6 +39,13 @@ If NULL and dat is provided, uses Yvar and Xvars from params.}
 
 \item{chart_symbol_set}{Character. Symbol set for configuration charts:
 \code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.}
+
+\item{chart_level}{Character. Chart aggregation level:
+\code{"term"} (default) produces solution-term level charts following Fiss (2011)
+notation, where each column represents one prime implicant (sufficient
+configuration). This format is recommended for academic publications.
+\code{"summary"} produces threshold-level summaries where each
+column represents one threshold, aggregating all configurations.}
 
 \item{solution_note}{Logical. If TRUE (default), adds a note when multiple
 equivalent solutions exist explaining that M1 is shown.}
@@ -76,6 +84,13 @@ generate_report(result, "my_report.md", format = "full",
 # Without configuration charts
 generate_report(result, "my_report.md", format = "simple",
                 include_chart = FALSE)
+
+# With Fiss-style term-level charts (default, recommended for publications)
+generate_report(result, "my_report.md", format = "full")
+
+# With threshold-level summary charts
+generate_report(result, "my_report.md", format = "full",
+                chart_level = "summary")
 
 # With detailed solution notes (including EPIs)
 generate_report(result, "my_report.md", format = "full",

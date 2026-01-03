@@ -1,5 +1,5 @@
 ## =========================================================
-## TSQCA v0.5.1 Quick Verification Script
+## TSQCA v0.5.3 Quick Verification Script
 ## =========================================================
 ## Minimal script to verify basic functionality
 ## =========================================================
@@ -59,21 +59,51 @@ res_dts <- dtSweep(
 )
 cat("OK (", nrow(res_dts$summary), " rows)\n", sep = "")
 
-# 5. generate_report
-cat("5. generate_report: ")
-report_file <- "test_ots_report.md"  # 作業ディレクトリに保存
+# 5. generate_report (default chart_level = "summary")
+cat("5. generate_report (chart_level='summary'): ")
+report_file <- "test_ots_report.md"
 generate_report(
   result = res_ots,
   output_file = report_file,
   dat = sample_data,
-  format = "full"
+  format = "full",
+  chart_level = "summary"
 )
 cat("OK (", file.info(report_file)$size, " bytes)\n", sep = "")
-cat("   -> Saved to: ", normalizePath(report_file), "\n", sep = "")
 
-# 6. config_chart_from_paths
-cat("6. config_chart_from_paths: ")
+# 6. generate_report with chart_level = "term"
+cat("6. generate_report (chart_level='term'): ")
+report_file_term <- "test_ots_report_term.md"
+generate_report(
+  result = res_ots,
+  output_file = report_file_term,
+  dat = sample_data,
+  format = "full",
+  chart_level = "term"
+)
+cat("OK (", file.info(report_file_term)$size, " bytes)\n", sep = "")
+
+# 7. config_chart_from_paths
+cat("7. config_chart_from_paths: ")
 chart <- config_chart_from_paths(c("A*B*~C", "A*D"))
+cat("OK\n")
+
+# 8. generate_cross_threshold_chart (summary level)
+cat("8. generate_cross_threshold_chart (summary): ")
+chart_summary <- generate_cross_threshold_chart(
+  res_ots, 
+  conditions = c("X1", "X2", "X3"),
+  chart_level = "summary"
+)
+cat("OK\n")
+
+# 9. generate_cross_threshold_chart (term level)
+cat("9. generate_cross_threshold_chart (term): ")
+chart_term <- generate_cross_threshold_chart(
+  res_ots, 
+  conditions = c("X1", "X2", "X3"),
+  chart_level = "term"
+)
 cat("OK\n")
 
 cat("\n=== All checks passed! ===\n")

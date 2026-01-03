@@ -2,6 +2,79 @@
 # Configuration Chart Generator for TSQCA
 ###############################################
 
+#' Parse solution expression into individual terms
+#'
+#' Splits a solution expression (ORed terms) into individual prime implicants.
+#'
+#' @param expr Character. Solution expression (e.g., "X3 + X1*X2").
+#'
+#' @return Character vector of terms (e.g., c("X3", "X1*X2")), or NULL if
+#'   no valid expression.
+#'
+#' @keywords internal
+parse_solution_terms <- function(expr) {
+  if (is.na(expr) || expr == "No solution" || expr == "" || is.null(expr)) {
+    return(NULL)
+  }
+  # Split by + (OR operator), allowing spaces
+  terms <- strsplit(expr, "\\s*\\+\\s*")[[1]]
+  # Trim whitespace
+  terms <- trimws(terms)
+  # Remove empty strings
+  terms <- terms[terms != ""]
+  if (length(terms) == 0) return(NULL)
+  return(terms)
+}
+
+
+#' Determine condition status in a term
+#'
+#' Checks whether a condition is present, absent (negated), or don't care
+#' in a given term.
+#'
+#' @param term Character. Single term (e.g., "X1*X2", "~X3").
+#' @param condition Character. Condition name (e.g., "X1").
+#'
+#' @return Character. One of "present", "absent", or "dontcare".
+#'
+#' @details Uses word boundary matching to avoid false positives when
+#'   condition names are substrings of each other (e.g., X1 vs X10).
+#'
+#' @keywords internal
+get_condition_status <- function(term, condition) {
+  # Remove spaces from term for consistent matching
+  term <- gsub("\\s+", "", term)
+  
+  # Escape special regex characters in condition name
+  cond_escaped <- gsub("([\\[\\]\\(\\)\\{\\}\\^\\$\\.\\|\\?\\+\\\\])", 
+                       "\\\\\\1", condition)
+  
+  # Negated condition check (~X1 or similar)
+  negated_pattern <- paste0("~", cond_escaped, "(?![A-Za-z0-9_]|$)")
+  # Also check for ~X1 at end of string
+  negated_pattern_end <- paste0("~", cond_escaped, "$")
+  if (grepl(negated_pattern, term, perl = TRUE) || 
+      grepl(negated_pattern_end, term, perl = TRUE)) {
+    return("absent")
+  }
+  
+  # Positive condition check (X1 but not ~X1)
+  # Pattern: X1 not preceded by ~ or alphanumeric, not followed by alphanumeric
+  positive_pattern <- paste0("(?<![~A-Za-z0-9_])", cond_escaped, "(?![A-Za-z0-9_])")
+  # Also check for condition at start of string
+  positive_pattern_start <- paste0("^", cond_escaped, "(?![A-Za-z0-9_]|$)")
+  positive_pattern_end <- paste0("(?<![~A-Za-z0-9_])", cond_escaped, "$")
+  
+  if (grepl(positive_pattern, term, perl = TRUE) ||
+      grepl(positive_pattern_start, term, perl = TRUE) ||
+      grepl(positive_pattern_end, term, perl = TRUE)) {
+    return("present")
+  }
+  
+  return("dontcare")
+}
+
+
 #' Symbol sets for configuration charts
 #' @keywords internal
 SYMBOL_SETS <- list(
@@ -300,6 +373,264 @@ config_matrix_to_md <- function(mat, row_header = "Condition", center_align = TR
   })
   
   paste(c(header, sep, rows), collapse = "\n")
+}
+
+
+#' Generate solution-term level chart (Fiss-style)
+#'
+#' Creates a configuration chart where each column represents a single
+#' prime implicant (configuration), following Fiss (2011) notation.
+#'
+#' @param sum_df Data frame. Summary data frame from sweep results with
+#'   expression column and threshold column(s).
+#' @param conditions Character vector. Condition names for row ordering.
+#' @param symbols List. Symbol set (present, absent) for the chart.
+#' @param language Character. Language for labels ("en" or "ja").
+#'
+#' @return Character string containing Markdown-formatted table.
+#'
+#' @keywords internal
+generate_term_level_chart <- function(sum_df, conditions, symbols, language = "en") {
+  
+  labels <- get_config_labels(language)
+  
+  # Step 1: Extract all terms from all thresholds
+  terms_list <- lapply(seq_len(nrow(sum_df)), function(i) {
+    expr <- sum_df$expression[i]
+    
+    # Identify threshold column (otSweep: thrY, ctSweepS: threshold, etc.)
+    thr_col <- intersect(c("thrY", "threshold", "thrX"), names(sum_df))[1]
+    if (is.na(thr_col) || is.null(thr_col)) {
+      thr <- paste0("row", i)
+    } else {
+      thr <- sum_df[[thr_col]][i]
+    }
+    
+    terms <- parse_solution_terms(expr)
+    if (is.null(terms)) return(NULL)
+    
+    data.frame(
+      thr = thr,
+      term_num = seq_along(terms),
+      term_expr = terms,
+      stringsAsFactors = FALSE
+    )
+  })
+  
+  terms_df <- do.call(rbind, terms_list)
+  
+  # No solutions found
+  if (is.null(terms_df) || nrow(terms_df) == 0) {
+    return(paste0("*", labels$no_solution, "*\n"))
+  }
+  
+  # Step 2: Generate column names (Fiss-style format)
+  col_names <- paste0("thrY = ", terms_df$thr, " (C", terms_df$term_num, ")")
+  
+  # Step 3: Initialize matrix (blank = don't care)
+  chart_matrix <- matrix(
+    "",
+    nrow = length(conditions),
+    ncol = nrow(terms_df),
+    dimnames = list(conditions, col_names)
+  )
+  
+  # Step 4: Fill in cells
+  for (j in seq_len(nrow(terms_df))) {
+    term <- terms_df$term_expr[j]
+    
+    for (cond in conditions) {
+      status <- get_condition_status(term, cond)
+      
+      chart_matrix[cond, j] <- switch(
+        status,
+        "present"  = symbols$present,
+        "absent"   = symbols$absent,
+        "dontcare" = ""
+      )
+    }
+  }
+  
+  # Step 5: Convert to markdown
+  table_str <- config_matrix_to_md(chart_matrix, labels$condition)
+  
+  # Add legend
+  legend_note <- if (language == "ja") symbols$note_ja else symbols$note_en
+  paste0(table_str, "\n\n*", legend_note, "*\n")
+}
+
+
+#' Generate threshold-level summary chart
+#'
+#' Creates a configuration chart where each column represents one threshold,
+#' showing all conditions that appear in any configuration at that threshold.
+#'
+#' @param sum_df Data frame. Summary data frame from sweep results.
+#' @param conditions Character vector. Condition names for row ordering.
+#' @param symbols List. Symbol set (present, absent) for the chart.
+#' @param language Character. Language for labels ("en" or "ja").
+#'
+#' @return Character string containing Markdown-formatted table.
+#'
+#' @keywords internal
+generate_threshold_level_chart <- function(sum_df, conditions, symbols, language = "en") {
+  
+  labels <- get_config_labels(language)
+  
+  # Identify threshold column
+  thr_col <- intersect(c("thrY", "threshold", "thrX"), names(sum_df))[1]
+  if (is.na(thr_col) || is.null(thr_col)) {
+    thr_col <- "row"
+    sum_df[[thr_col]] <- seq_len(nrow(sum_df))
+  }
+  
+  # Get unique thresholds
+  thresholds <- unique(sum_df[[thr_col]])
+  
+  # Build column names
+  col_names <- paste0("thrY=", thresholds)
+  
+  # Initialize matrix
+  chart_matrix <- matrix(
+    "",
+    nrow = length(conditions),
+    ncol = length(thresholds),
+    dimnames = list(conditions, col_names)
+  )
+  
+  # Fill in cells (aggregate across all terms at each threshold)
+  for (j in seq_along(thresholds)) {
+    thr <- thresholds[j]
+    
+    # Get all expressions at this threshold
+    exprs <- sum_df$expression[sum_df[[thr_col]] == thr]
+    
+    # Parse all terms
+    all_terms <- character(0)
+    for (expr in exprs) {
+      terms <- parse_solution_terms(expr)
+      if (!is.null(terms)) {
+        all_terms <- c(all_terms, terms)
+      }
+    }
+    
+    if (length(all_terms) == 0) next
+    
+    # Check each condition across all terms
+    for (cond in conditions) {
+      has_present <- FALSE
+      has_absent <- FALSE
+      
+      for (term in all_terms) {
+        status <- get_condition_status(term, cond)
+        if (status == "present") has_present <- TRUE
+        if (status == "absent") has_absent <- TRUE
+      }
+      
+      # If both present and absent appear, show presence (it appears in some config)
+      if (has_present) {
+        chart_matrix[cond, j] <- symbols$present
+      } else if (has_absent) {
+        chart_matrix[cond, j] <- symbols$absent
+      }
+      # else: leave blank (don't care across all configs)
+    }
+  }
+  
+  # Convert to markdown
+  table_str <- config_matrix_to_md(chart_matrix, labels$condition)
+  
+  # Add legend
+  legend_note <- if (language == "ja") symbols$note_ja else symbols$note_en
+  paste0(table_str, "\n\n*", legend_note, "*\n")
+}
+
+
+#' Generate cross-threshold configuration chart from sweep results
+#'
+#' Creates a configuration chart from threshold sweep results. Supports
+#' two levels of aggregation: solution-term level (Fiss-style, default) and
+#' threshold-level summary.
+#'
+#' @param result A result object from any Sweep function (otSweep, ctSweepS,
+#'   ctSweepM, or dtSweep).
+#' @param conditions Character vector. Condition names for row ordering.
+#'   If NULL, automatically extracted from expressions.
+#' @param symbol_set Character. One of \code{"unicode"}, \code{"ascii"}, 
+#'   or \code{"latex"}. Default is \code{"unicode"}.
+#' @param chart_level Character. Chart aggregation level:
+#'   \code{"term"} (default) produces solution-term level charts following Fiss (2011)
+#'   notation, where each column represents one prime implicant.
+#'   \code{"summary"} produces threshold-level summaries where
+#'   each column represents one threshold, aggregating all configurations.
+#' @param language Character. \code{"en"} for English, \code{"ja"} for Japanese.
+#'
+#' @return Character string containing Markdown-formatted table.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data(sample_data)
+#' result <- otSweep(
+#'   dat = sample_data,
+#'   outcome = "Y",
+#'   conditions = c("X1", "X2", "X3"),
+#'   sweep_range = 6:8,
+#'   thrX = c(X1 = 7, X2 = 7, X3 = 7)
+#' )
+#' 
+#' # Solution-term level, Fiss-style (default)
+#' chart <- generate_cross_threshold_chart(result, c("X1", "X2", "X3"))
+#' cat(chart)
+#' 
+#' # Threshold-level summary
+#' chart <- generate_cross_threshold_chart(result, c("X1", "X2", "X3"),
+#'                                          chart_level = "summary")
+#' cat(chart)
+#' }
+generate_cross_threshold_chart <- function(result,
+                                            conditions = NULL,
+                                            symbol_set = c("unicode", "ascii", "latex"),
+                                            chart_level = c("term", "summary"),
+                                            language = c("en", "ja")) {
+  
+  symbol_set <- match.arg(symbol_set)
+  chart_level <- match.arg(chart_level)
+  language <- match.arg(language)
+  symbols <- SYMBOL_SETS[[symbol_set]]
+  
+  # Get summary data frame
+  if (is.data.frame(result)) {
+    sum_df <- result
+  } else if (is.list(result) && "summary" %in% names(result)) {
+    sum_df <- result$summary
+  } else {
+    stop("'result' must be a data frame or a list with 'summary' element.")
+  }
+  
+  # Auto-detect conditions from expressions if not provided
+  if (is.null(conditions)) {
+    all_terms <- character(0)
+    for (expr in sum_df$expression) {
+      terms <- parse_solution_terms(expr)
+      if (!is.null(terms)) {
+        all_terms <- c(all_terms, terms)
+      }
+    }
+    conditions <- extract_conditions_from_paths(all_terms)
+  }
+  
+  if (length(conditions) == 0) {
+    return("*No conditions found.*\n")
+  }
+  
+  # Dispatch to appropriate chart generator
+  if (chart_level == "summary") {
+    generate_threshold_level_chart(sum_df, conditions, symbols, language)
+  } else {
+    generate_term_level_chart(sum_df, conditions, symbols, language)
+  }
 }
 
 

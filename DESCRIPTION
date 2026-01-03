@@ -1,7 +1,7 @@
 Package: TSQCA
 Type: Package
 Title: Threshold Sweep Extensions for Qualitative Comparative Analysis
-Version: 0.5.2
+Version: 0.5.4
 Authors@R: c(
     person("Yuki", "Toyoda", role = c("aut", "cre"),
            email = "yuki.toyoda.ds@hosei.ac.jp"),
@@ -32,7 +32,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2025-12-31 11:04:15 UTC; yukit
+Packaged: 2026-01-03 02:41:11 UTC; yukit
 Author: Yuki Toyoda [aut, cre],
   Japan Society for the Promotion of Science [fnd] (KAKENHI Grant Number
     JP20K01998)

@@ -19,6 +19,12 @@
 #'   (Fiss-style tables) in the report for each threshold.
 #' @param chart_symbol_set Character. Symbol set for configuration charts:
 #'   \code{"unicode"} (default), \code{"ascii"}, or \code{"latex"}.
+#' @param chart_level Character. Chart aggregation level:
+#'   \code{"term"} (default) produces solution-term level charts following Fiss (2011)
+#'   notation, where each column represents one prime implicant (sufficient
+#'   configuration). This format is recommended for academic publications.
+#'   \code{"summary"} produces threshold-level summaries where each
+#'   column represents one threshold, aggregating all configurations.
 #' @param solution_note Logical. If TRUE (default), adds a note when multiple
 #'   equivalent solutions exist explaining that M1 is shown.
 #' @param solution_note_style Character. Style of solution note:
@@ -51,6 +57,13 @@
 #' generate_report(result, "my_report.md", format = "simple",
 #'                 include_chart = FALSE)
 #' 
+#' # With Fiss-style term-level charts (default, recommended for publications)
+#' generate_report(result, "my_report.md", format = "full")
+#' 
+#' # With threshold-level summary charts
+#' generate_report(result, "my_report.md", format = "full",
+#'                 chart_level = "summary")
+#' 
 #' # With detailed solution notes (including EPIs)
 #' generate_report(result, "my_report.md", format = "full",
 #'                 solution_note_style = "detailed")
@@ -63,12 +76,14 @@ generate_report <- function(result,
                             desc_vars = NULL,
                             include_chart = TRUE,
                             chart_symbol_set = c("unicode", "ascii", "latex"),
+                            chart_level = c("term", "summary"),
                             solution_note = TRUE,
                             solution_note_style = c("simple", "detailed"),
                             solution_note_lang = c("en", "ja")) {
   
   format <- match.arg(format)
   chart_symbol_set <- match.arg(chart_symbol_set)
+  chart_level <- match.arg(chart_level)
   solution_note_style <- match.arg(solution_note_style)
   solution_note_lang <- match.arg(solution_note_lang)
   
@@ -94,10 +109,10 @@ generate_report <- function(result,
   # Dispatch to appropriate format
   if (format == "full") {
     write_full_report(result, con, dat, desc_vars, include_chart, chart_symbol_set,
-                      solution_note, solution_note_style, solution_note_lang)
+                      chart_level, solution_note, solution_note_style, solution_note_lang)
   } else {
     write_simple_report(result, con, include_chart, chart_symbol_set,
-                        solution_note, solution_note_style, solution_note_lang)
+                        chart_level, solution_note, solution_note_style, solution_note_lang)
   }
   
   message("Report generated: ", output_file)
@@ -109,6 +124,7 @@ generate_report <- function(result,
 #' @keywords internal
 write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
                               include_chart = TRUE, chart_symbol_set = "unicode",
+                              chart_level = "term",
                               solution_note = TRUE, solution_note_style = "simple",
                               solution_note_lang = "en") {
   
@@ -593,7 +609,43 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
   writeLines("\n---\n", con)
   
   # ============================================
-  # 5. Notes
+  # 5. Cross-Threshold Configuration Chart
+  # ============================================
+  if (include_chart && n_combinations <= MAX_DETAILS) {
+    section_num <- section_num + 1
+    writeLines(paste0("## ", section_num, ". Cross-Threshold Configuration Chart\n"), con)
+    
+    # Get conditions from params
+    conditions <- params$conditions
+    if (is.null(conditions)) conditions <- params$Xvars
+    
+    if (!is.null(conditions) && length(conditions) > 0) {
+      # Describe chart level
+      if (chart_level == "term") {
+        writeLines("*Configuration chart at solution-term level (Fiss, 2011 notation).*\n", con)
+        writeLines("*Each column represents one prime implicant (configuration).*\n\n", con)
+      } else {
+        writeLines("*Configuration chart at threshold-level summary.*\n", con)
+        writeLines("*Each column aggregates all conditions that appear in any configuration at that threshold.*\n\n", con)
+      }
+      
+      symbols <- SYMBOL_SETS[[chart_symbol_set]]
+      chart <- if (chart_level == "term") {
+        generate_term_level_chart(summary_df, conditions, symbols, solution_note_lang)
+      } else {
+        generate_threshold_level_chart(summary_df, conditions, symbols, solution_note_lang)
+      }
+      
+      writeLines(chart, con)
+    } else {
+      writeLines("*(Could not generate configuration chart - conditions not found)*\n", con)
+    }
+    
+    writeLines("\n---\n", con)
+  }
+  
+  # ============================================
+  # 6. Notes
   # ============================================
   section_num <- section_num + 1
   writeLines(paste0("## ", section_num, ". Notes\n"), con)
@@ -614,6 +666,7 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
 #' @keywords internal
 write_simple_report <- function(result, con, include_chart = TRUE, 
                                 chart_symbol_set = "unicode",
+                                chart_level = "term",
                                 solution_note = TRUE, solution_note_style = "simple",
                                 solution_note_lang = "en") {
   

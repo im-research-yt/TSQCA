@@ -11,6 +11,7 @@ write_full_report(
   desc_vars = NULL,
   include_chart = TRUE,
   chart_symbol_set = "unicode",
+  chart_level = "term",
   solution_note = TRUE,
   solution_note_style = "simple",
   solution_note_lang = "en"
