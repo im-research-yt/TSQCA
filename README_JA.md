@@ -1,6 +1,6 @@
 # TSQCA（日本語版）
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899390.svg)](https://doi.org/10.5281/zenodo.17899390)
 
 TSQCA は、Qualitative Comparative Analysis（QCA）に対して  
 **閾値スイープ型の分析（TS-QCA）**を実行する R パッケージです。
@@ -22,15 +22,15 @@ TS-QCA は、多数の閾値候補を体系的に試しながら以下を自動�
 - **OTS–QCA（otSweep）**：アウトカムの閾値だけを変化  
 - **DTS–QCA（dtSweep）**：条件とアウトカムの閾値を同時に変化（2次元スイープ）
 
-> **対象範囲:** バージョン 0.4.1 は**十分条件分析**に特化しています。必要条件分析は将来のバージョンで対応予定です。
+> **対象範囲:** TSQCA は**十分条件分析**に特化しています。必要条件分析は将来のバージョンで対応予定です。
 
 ---
 
-## 機能一覧 (v0.4.1)
+## 機能一覧
 
-### 複数解の検出 (v0.2.0+)
+### 複数解の検出
 
-QCAの最小化処理では、複数の等価な中間解が生成されることがあります。TSQCAはこれを検出・報告し、研究者が頑健なコア条件と解固有の周辺条件を識別できるようにしました。
+QCAの最小化処理では、複数の等価な中間解が生成されることがあります。TSQCAはこれを検出・報告し、研究者が頑健なEssential Prime Implicants（EPI）と解固有のSelective Prime Implicants（SPI）を識別できるようにしました。
 
 `extract_mode` パラメータで出力を制御できます：
 
@@ -38,9 +38,93 @@ QCAの最小化処理では、複数の等価な中間解が生成されるこ�
 |--------|------|------|
 | `"first"` | 最初の解（M1）のみを返す | デフォルト、後方互換 |
 | `"all"` | 全ての解を連結して返す | 全ての等価解を確認 |
-| `"core"` | 全ての解に共通するコア条件を返す | 頑健な知見の特定 |
+| `"essential"` | 全ての解に共通するEPIを返す | 頑健な知見の特定 |
 
-### S3メソッド (v0.4.0+)
+```r
+# 全ての等価解を表示
+result <- otSweep(
+  dat = mydata,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "all"
+)
+
+# Essential Prime Implicantsのみを抽出
+result_essential <- otSweep(
+  dat = mydata,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  extract_mode = "essential"
+)
+```
+
+### レポート自動生成
+
+`generate_report()` 関数で包括的なマークダウンレポートを生成：
+
+```r
+result <- otSweep(
+  dat = mydata,
+  outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX = c(X1 = 7, X2 = 7, X3 = 7)
+)
+
+# 全ての詳細を含む完全レポート
+generate_report(result, "my_analysis.md", dat = mydata, format = "full")
+
+# 論文原稿用の簡易レポート
+generate_report(result, "my_analysis_simple.md", dat = mydata, format = "simple")
+```
+
+レポートには以下が含まれます：
+- 分析設定（再現性のため）
+- EPI/SPIを含む解の式
+- 適合度指標（整合性、被覆値、PRI）
+- 閾値間比較表
+
+### コンフィグレーションチャート
+
+レポートにはFiss形式のコンフィグレーションチャート（Table 5形式）が自動で含まれます：
+
+```r
+# レポートにはデフォルトでチャートが含まれる
+generate_report(result, "my_report.md", dat = mydata, format = "full")
+
+# チャートを無効化
+generate_report(result, "my_report.md", dat = mydata, include_chart = FALSE)
+
+# 学術論文用にLaTeX記号を使用
+generate_report(result, "my_report.md", dat = mydata, chart_symbol_set = "latex")
+```
+
+スタンドアロンのチャート関数も利用可能：
+
+```r
+# パス文字列からチャートを生成
+paths <- c("A*B*~C", "A*D")
+chart <- config_chart_from_paths(paths)
+cat(chart)
+```
+
+出力：
+```
+| Condition | C1 | C2 |
+|:--:|:--:|:--:|
+| A | ● | ● |
+| B | ● |   |
+| C | ⊗ |   |
+| D |   | ● |
+```
+
+3種類のシンボルセット：`"unicode"`（● / ⊗）、`"ascii"`（O / X）、`"latex"`（$\bullet$ / $\otimes$）
+
+### S3メソッド
 
 全てのsweep関数はS3クラスをサポートするオブジェクトを返します：
 
@@ -53,18 +137,7 @@ print(result)    # クイック概要
 summary(result)  # 完全な詳細
 ```
 
-### QCA互換の引数名 (v0.3.0+)
-
-QCAパッケージの規約に合わせて引数名を変更：
-
-| 旧名称 | 新名称 | 説明 |
-|--------|--------|------|
-| `Yvar` | `outcome` | アウトカム変数名 |
-| `Xvars` | `conditions` | 条件変数名 |
-
-旧引数名は非推奨警告付きで引き続き使用可能です。
-
-### 否定アウトカムのサポート (v0.3.0+)
+### 否定アウトカムのサポート
 
 アウトカムの**不在**に対する十分条件を分析：
 
@@ -79,31 +152,16 @@ result <- otSweep(
 )
 ```
 
-### レポート自動生成 (v0.2.0+)
+### 用語について
 
-包括的なマークダウンレポートを生成：
+TSQCAはブール代数の正確な用語を使用しています：
 
-```r
-result <- otSweep(
-  dat = mydata,
-  outcome = "Y",
-  conditions = c("X1", "X2", "X3"),
-  sweep_range = 6:9,
-  thrX = c(X1 = 7, X2 = 7, X3 = 7)
-)
+| 用語 | 意味 |
+|------|------|
+| **Essential Prime Implicants (EPI)** | 全ての等価解（M1, M2...）に含まれる項 |
+| **Selective Prime Implicants (SPI)** | 一部の解にのみ含まれる項 |
 
-# 全ての詳細を含む完全レポート
-generate_report(result, "my_analysis.md", format = "full")
-
-# 論文原稿用の簡易レポート
-generate_report(result, "my_analysis_simple.md", format = "simple")
-```
-
-レポートには以下が含まれます：
-- 分析設定（再現性のため）
-- コア/周辺条件を含む解の式
-- 適合度指標（整合性、被覆値、PRI）
-- 閾値間比較表
+> **注意**: これはFiss (2011) の「Core Conditions」（簡潔解と中間解の比較）とは異なります。詳細は `docs/TSQCA_Terminology_Guide_JA.md` を参照してください。
 
 ---
 
@@ -234,7 +292,7 @@ res_cts <- ctSweepS(
   thrX_default = thrX_default
 )
 
-print(res_cts)
+summary(res_cts)
 ```
 
 ### 2. MCTS–QCA：複数条件スイープ（ctSweepM）
@@ -242,9 +300,9 @@ print(res_cts)
 ```r
 # 各条件に対する閾値候補の指定
 sweep_list <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
 res_mcts <- ctSweepM(
@@ -255,14 +313,14 @@ res_mcts <- ctSweepM(
   thrY       = 7
 )
 
-print(res_mcts)
+summary(res_mcts)
 ```
 
 ### 3. OTS–QCA：アウトカムスイープ（otSweep）
 
 ```r
 thrX <- c(X1 = 7, X2 = 7, X3 = 7)  # 条件の閾値（固定）
-sweep_range_Y <- 6:9               # アウトカムの閾値候補
+sweep_range_Y <- 6:8               # アウトカムの閾値候補
 
 res_ots <- otSweep(
   dat         = dat,
@@ -272,10 +330,10 @@ res_ots <- otSweep(
   thrX        = thrX
 )
 
-print(res_ots)
+summary(res_ots)
 
 # 詳細分析用のレポートを生成
-generate_report(res_ots, "ots_report.md", format = "full")
+generate_report(res_ots, "ots_report.md", dat = dat, format = "full")
 ```
 
 ### 4. DTS–QCA：2次元スイープ（dtSweep）
@@ -283,13 +341,13 @@ generate_report(res_ots, "ots_report.md", format = "full")
 ```r
 # 条件側の閾値候補
 sweep_list_X <- list(
-  X1 = 6:8,
-  X2 = 6:8,
-  X3 = 6:8
+  X1 = 6:7,
+  X2 = 6:7,
+  X3 = 6:7
 )
 
 # アウトカム側の閾値候補
-sweep_range_Y <- 6:8
+sweep_range_Y <- 6:7
 
 res_dts <- dtSweep(
   dat           = dat,
@@ -299,31 +357,14 @@ res_dts <- dtSweep(
   sweep_range_Y = sweep_range_Y
 )
 
-print(res_dts)
+summary(res_dts)
 ```
 
-### 5. extract_mode の使用
+## サンプルデータ
 
 ```r
-# 全ての等価解を表示
-result_all <- otSweep(
-  dat          = dat,
-  outcome      = "Y",
-  conditions   = c("X1", "X2", "X3"),
-  sweep_range  = 6:9,
-  thrX         = c(X1 = 7, X2 = 7, X3 = 7),
-  extract_mode = "all"
-)
-
-# コア条件のみを抽出（全ての解に共通）
-result_core <- otSweep(
-  dat          = dat,
-  outcome      = "Y",
-  conditions   = c("X1", "X2", "X3"),
-  sweep_range  = 6:9,
-  thrX         = c(X1 = 7, X2 = 7, X3 = 7),
-  extract_mode = "core"
-)
+data(sample_data)
+str(sample_data)
 ```
 
 ## 参考文献

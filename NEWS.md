@@ -1,4 +1,4 @@
-# TSQCA 0.5.4
+# TSQCA 1.0.0
 
 *Release date: 2025-01-03*
 
