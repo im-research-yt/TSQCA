@@ -1,6 +1,6 @@
 # TSQCA 1.0.0
 
-*Release date: 2025-01-03*
+*Release date: 2026-01-06*
 
 ## Changes
 
@@ -31,7 +31,7 @@ generate_cross_threshold_chart(result, conditions, chart_level = "summary")
 
 # TSQCA 0.5.3
 
-*Release date: 2025-01-03*
+*Release date: 2026-01-03*
 
 ## New Features
 
@@ -69,7 +69,7 @@ When the solution is `X3 + X1*X2`, the term-level chart will show two separate c
 
 # TSQCA 0.5.2
 
-*Release date: 2025-01-03*
+*Release date: 2026-01-03*
 
 ## Documentation Fixes
 
@@ -98,7 +98,7 @@ Fixed non-working code examples in all vignettes (Tutorial and Reproducible, bot
 
 # TSQCA 0.5.1
 
-*Release date: 2025-01-01*
+*Release date: 2026-01-01*
 
 ## New Features
 
