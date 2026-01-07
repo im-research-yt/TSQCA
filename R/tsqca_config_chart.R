@@ -327,7 +327,7 @@ build_config_matrix <- function(paths, conditions = NULL, symbols) {
   
   mat <- matrix("", nrow = n_conds, ncol = n_paths)
   rownames(mat) <- conditions
-  colnames(mat) <- paste0("C", seq_len(n_paths))
+  colnames(mat) <- paste0("M", seq_len(n_paths))
   
   for (j in seq_along(paths)) {
     parsed <- parse_path_conditions(paths[j])

@@ -114,7 +114,7 @@ cat(chart)
 
 Output:
 ```
-| Condition | C1 | C2 |
+| Condition | M1 | M2 |
 |:--:|:--:|:--:|
 | A | ● | ● |
 | B | ● |   |

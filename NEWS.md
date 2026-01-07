@@ -12,8 +12,8 @@ The default value for `chart_level` parameter has been changed from `"summary"` 
 The solution-term level format (Fiss, 2011 notation) is the standard for academic publications, where each column represents one prime implicant (configuration). The previous default (`"summary"`) aggregated all configurations at each threshold into a single column, which obscured the distinction between different sufficient paths.
 
 **Column header format updated:**
-- Old format: `thrY=6_C1`
-- New format: `thrY = 6 (C1)` (consistent with the paper format)
+- Old format: `thrY=6_M1`
+- New format: `thrY = 6 (M1)` (consistent with the paper format)
 
 **Affected functions:**
 - `generate_report()` — default `chart_level` is now `"term"`
@@ -63,7 +63,7 @@ generate_report(result, "report.md", chart_level = "summary")
 generate_report(result, "report.md", chart_level = "term")
 ```
 
-When the solution is `X3 + X1*X2`, the term-level chart will show two separate columns (`thrY=7_C1` for `X3` and `thrY=7_C2` for `X1*X2`), while the summary-level chart shows one column (`thrY=7`) with all three conditions marked.
+When the solution is `X3 + X1*X2`, the term-level chart will show two separate columns (`thrY=7_M1` for `X3` and `thrY=7_M2` for `X1*X2`), while the summary-level chart shows one column (`thrY=7`) with all three conditions marked.
 
 ---
 
