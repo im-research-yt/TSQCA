@@ -1,6 +1,10 @@
 # TSQCA
 
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/TSQCA)](https://CRAN.R-project.org/package=TSQCA)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/TSQCA)](https://CRAN.R-project.org/package=TSQCA)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899391.svg)](https://doi.org/10.5281/zenodo.17899391)
+<!-- badges: end -->
 
 [Japanese README](https://github.com/im-research-yt/TSQCA/blob/master/README_JA.md)
 
@@ -23,12 +27,34 @@ Implemented sweep types:
 - **OTS-QCA (otSweep)**: Sweep the threshold of Y only  
 - **DTS-QCA (dtSweep)**: Sweep X and Y thresholds simultaneously (2D sweep)
 
-> **Scope:** Version 0.1.0 focuses on **sufficiency analysis**. Necessity analysis is planned for future versions.
 
+> **Scope:** Version 0.1.2 focuses on **sufficiency analysis**.
 ## Installation
+
+### From CRAN (recommended)
 ```r
-install.packages("devtools")
+install.packages("TSQCA")
+```
+
+### Development version from GitHub
+```r
+# install.packages("devtools")
 devtools::install_github("im-research-yt/TSQCA")
+```
+
+## Links
+
+- **CRAN**: https://CRAN.R-project.org/package=TSQCA
+- **Documentation**: https://cran.r-project.org/web/packages/TSQCA/TSQCA.pdf
+- **Vignettes**: 
+  - [English Tutorial](https://cran.r-project.org/web/packages/TSQCA/vignettes/TSQCA_Tutorial_EN.html)
+  - [Japanese Tutorial](https://cran.r-project.org/web/packages/TSQCA/vignettes/TSQCA_Tutorial_JA.html)
+- **GitHub**: https://github.com/im-research-yt/TSQCA
+- **Bug Reports**: https://github.com/im-research-yt/TSQCA/issues
+
+## Citation
+```r
+citation("TSQCA")
 ```
 
 ## Relationship with QCA Package
