@@ -11,3 +11,8 @@
 ^doc$
 ^CRAN-SUBMISSION$
 ^Meta$
+"qcadata.csv" 
+^report_.*\.md$
+^test_.*\.R$
+^test_.*\.md$
+
