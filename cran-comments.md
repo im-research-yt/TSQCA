@@ -1,35 +1,37 @@
-R CMD check results
+## R CMD check results
 0 errors | 0 warnings | 1 note
 
-checking CRAN incoming feasibility ... NOTE
-Maintainer: 'Yuki Toyoda yuki.toyoda.ds@hosei.ac.jp'
+* checking CRAN incoming feasibility ... NOTE
+  Maintainer: 'Yuki Toyoda <yuki.toyoda.ds@hosei.ac.jp>'
 
-Resubmission
-This is an update from version 0.1.2 to 1.0.0.
-CRAN feedback addressed
-Per CRAN feedback on v0.1.2, references in the DESCRIPTION file now include
-author names and years in the format: authors (year) doi:...
+## Resubmission
+This is an update from version 1.0.0 to 1.1.0.
 
-Dusa (2019) doi:10.1007/978-3-319-75668-4
-Ragin (2008) doi:10.7208/chicago/9780226702797.001.0001
-Rubinson et al. (2019) doi:10.1177/00491241211036158
+## Changes in this version
 
-Changes in this version
-Major changes since 0.1.2:
+### Bug Fix (Critical)
+* Fixed `dir.exp = NULL` handling: In v1.0.0, `dir.exp = NULL` was incorrectly 
+  converted to `c(1, 1, ...)`, forcing intermediate solution calculation. 
+  Now correctly passed to `QCA::minimize()` without modification.
 
-Added S3 class system with print() and summary() methods for all result types
-Added generate_report() function for automatic markdown report generation
-Added Fiss-style configuration chart functions (generate_config_chart(), etc.)
-Added support for negated outcomes using tilde prefix (e.g., outcome = "~Y")
-Added extract_mode parameter for handling multiple equivalent solutions
-Renamed arguments from Yvar/Xvars to outcome/conditions for QCA package consistency
-Changed default chart_level from "summary" to "term" (Fiss-style format)
-Corrected terminology: "core" to "essential" for Essential Prime Implicants
+### Breaking Changes
+* Default arguments now match QCA package:
+
+  - `include`: Changed from `"?"` to `""` (complex solution by default)
+  - `dir.exp`: Now correctly preserved as `NULL` (no directional expectations)
+
+* This means TSQCA now produces **complex solutions** by default, 
+  matching `QCA::minimize()` default behavior.
+
+### Documentation
+* Added comprehensive examples showing all three solution types 
+  (complex, parsimonious, intermediate) in vignettes and function documentation.
+* Updated NEWS.md with migration guide for users upgrading from v1.0.0.
 
 See NEWS.md for full details.
-Test environments
 
-Local: Windows 11 x64, R 4.4.2
+## Test environments
+* Local: Windows 11 x64, R 4.4.2
 
-Downstream dependencies
+## Downstream dependencies
 There are currently no downstream dependencies for this package.
