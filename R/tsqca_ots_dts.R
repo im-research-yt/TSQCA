@@ -13,8 +13,9 @@
 #'   tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.
 #' @param conditions Character vector. Names of condition variables.
 #' @param sweep_range Numeric vector. Candidate thresholds for Y.
-#' @param thrX Named numeric vector. Fixed thresholds for X variables,
-#'   with names matching \code{conditions}.
+#' @param thrX Named numeric vector. Fixed thresholds for X variables.
+#'   Names must match the conditions that require binarization.
+#'   Variables listed in \code{pre_calibrated} do not need a \code{thrX} entry.
 #' @param pre_calibrated Character vector or \code{NULL}. Names of condition
 #'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
 #'   and should be passed through to \code{QCA::truthTable()} without
@@ -400,7 +401,8 @@ otSweep <- function(dat,
 #'   tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.
 #' @param conditions Character vector. Names of condition variables.
 #' @param sweep_list_X Named list. Each element is a numeric vector of
-#'   candidate thresholds for the corresponding X.
+#'   candidate thresholds for the corresponding X. Variables listed in
+#'   \code{pre_calibrated} do not need a \code{sweep_list_X} entry.
 #' @param sweep_range_Y Numeric vector. Candidate thresholds for Y.
 #' @param pre_calibrated Character vector or \code{NULL}. Names of condition
 #'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})

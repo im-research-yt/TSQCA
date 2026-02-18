@@ -1,3 +1,21 @@
+# TSQCA 1.3.1
+
+*Release date: 2026-02-18*
+
+## Documentation
+
+- Removed non-reproducible code example from the `pre_calibrated` vignette
+  section. The example referenced variables not included in the bundled
+  `sample_data`. The section now provides a prose description of the feature;
+  a worked example will be added when a suitable public dataset is available.
+- Corrected `@param` documentation for `thrX`, `thrX_default`, `sweep_list`,
+  and `sweep_list_X`: pre-calibrated variables do not require a threshold
+  entry (the previous documentation incorrectly stated otherwise).
+
+## Note
+
+This is a documentation-only patch. No changes to code logic or behavior.
+
 # TSQCA 1.3.0
 
 *Release date: 2026-02-18*

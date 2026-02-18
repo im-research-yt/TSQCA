@@ -18,6 +18,7 @@
 #' @param sweep_range Numeric vector. Candidate thresholds for \code{sweep_var}.
 #' @param thrY Numeric. Threshold for Y (fixed).
 #' @param thrX_default Numeric. Default threshold for non-swept X variables.
+#'   Variables listed in \code{pre_calibrated} do not require this threshold.
 #' @param pre_calibrated Character vector or \code{NULL}. Names of condition
 #'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
 #'   and should be passed through to \code{QCA::truthTable()} without
@@ -421,7 +422,8 @@ ctSweepS <- function(dat,
 #' @param conditions Character vector. Names of condition variables.
 #' @param sweep_list Named list. Each element is a numeric vector of
 #'   candidate thresholds for the corresponding X. Names must match
-#'   \code{conditions}.
+#'   \code{conditions}. Variables listed in \code{pre_calibrated} do not
+#'   need a \code{sweep_list} entry.
 #' @param thrY Numeric. Threshold for Y (fixed).
 #' @param pre_calibrated Character vector or \code{NULL}. Names of condition
 #'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})

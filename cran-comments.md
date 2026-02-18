@@ -1,46 +1,47 @@
-## CRAN Submission: TSQCA 1.3.0
+# CRAN Submission Comments — TSQCA 1.3.1
 
-### Summary of changes from v1.2.0
+## Resubmission note
 
-This release adds the Pre-Calibrated Variable Pass-Through (PCVP) feature,
-which allows researchers to use fuzzy-set membership scores (pre-calibrated
-via QCA::calibrate()) for some conditions while still sweeping others on
-their original scale. This enables mixed crisp/fuzzy analyses in all four
-sweep functions.
+We apologize for the short interval since the v1.3.0 release 
+(published 2026-01-08). This patch release addresses documentation-only 
+issues that we identified shortly after publication. No code logic has 
+been changed.
 
-Specific changes:
-- New `pre_calibrated` argument in `otSweep()`, `dtSweep()`, `ctSweepS()`,
-  and `ctSweepM()`. Variables listed in `pre_calibrated` are passed through
-  to `QCA::truthTable()` without binarization. Default is `NULL`, which
-  preserves v1.2.0 behavior (full backward compatibility).
-- New internal helpers `prepare_dat_bin()` and `validate_pre_calibrated()`
-  in `tsqca_core.R`, centralizing data preparation logic.
-- `generate_report()` now displays pre-calibrated conditions in the
-  Analysis Overview section.
-- Vignette `TSQCA_Tutorial_EN.Rmd` updated with new sections explaining
-  the `pre_calibrated` argument and guidance on choosing sweep variables.
+Specifically:
 
-### Test environments
+1. **Vignette correction**: Removed a code example in the 
+   `pre_calibrated` tutorial section that referenced variables not 
+   included in the bundled sample dataset (`sample_data`). The code 
+   block was marked `eval=FALSE` and thus did not cause runtime errors, 
+   but it was misleading to users who attempted to reproduce it. The 
+   section now provides a prose description of the feature only, with a 
+   note that a worked example will be added when a suitable public 
+   dataset becomes available.
 
-- Windows 11 x64, R 4.4.2 (local)
-- win-builder (planned before submission)
+2. **Documentation clarification**: Corrected the `@param` documentation 
+   for `thrX`, `thrX_default`, `sweep_list`, and `sweep_list_X` across 
+   all four sweep functions (`otSweep`, `ctSweepS`, `ctSweepM`, 
+   `dtSweep`). The previous documentation incorrectly stated that 
+   pre-calibrated variables require a `thrX` entry. In fact, the 
+   implementation has never required this; only the documentation was 
+   inaccurate.
 
-### R CMD check results
+We understand that frequent resubmissions are undesirable and will take 
+greater care to catch documentation issues before future releases. Thank 
+you for your time and patience.
+
+## Test environments
+
+* Windows 11 x64, R 4.4.2 (local)
+* R-hub (multiple platforms)
+
+## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-The NOTE is:
-  checking for future file timestamps ... unable to verify current time
+* NOTE: "unable to verify current time" — this is a network-dependent 
+  note unrelated to the package.
 
-This NOTE is due to a network restriction in the local build environment
-and is not related to the package itself. It is expected to be absent on
-CRAN infrastructure.
+## Downstream dependencies
 
-### Downstream dependencies
-
-There are no known downstream packages that depend on TSQCA on CRAN.
-
-### Response to previous CRAN review (if any)
-
-This is a new version submission. No previous CRAN review comments are
-outstanding.
+There are currently no downstream dependencies for this package.

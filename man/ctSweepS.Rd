@@ -12,6 +12,7 @@ ctSweepS(
   sweep_range,
   thrY,
   thrX_default = 7,
+  pre_calibrated = NULL,
   dir.exp = NULL,
   include = "",
   incl.cut = 0.8,
@@ -38,7 +39,18 @@ Must be one of \code{conditions}.}
 
 \item{thrY}{Numeric. Threshold for Y (fixed).}
 
-\item{thrX_default}{Numeric. Default threshold for non-swept X variables.}
+\item{thrX_default}{Numeric. Default threshold for non-swept X variables.
+Variables listed in \code{pre_calibrated} do not require this threshold.}
+
+\item{pre_calibrated}{Character vector or \code{NULL}. Names of condition
+variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
+and should be passed through to \code{QCA::truthTable()} without
+binarization. These variables must contain values in the \code{[0, 1]}
+range. Variables not listed here will be binarized using \code{thrX_default}
+as usual. Default is \code{NULL} (all variables binarized).
+It is recommended to sweep variables on their original (raw) scale rather
+than as pre-calibrated fuzzy values, because raw-scale thresholds are
+easier to interpret substantively.}
 
 \item{dir.exp}{Directional expectations for \code{minimize}.
 If \code{NULL} (default), no directional expectations are applied.

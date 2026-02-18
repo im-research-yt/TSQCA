@@ -10,6 +10,7 @@ otSweep(
   conditions = NULL,
   sweep_range,
   thrX,
+  pre_calibrated = NULL,
   dir.exp = NULL,
   include = "",
   incl.cut = 0.8,
@@ -31,8 +32,19 @@ tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.}
 
 \item{sweep_range}{Numeric vector. Candidate thresholds for Y.}
 
-\item{thrX}{Named numeric vector. Fixed thresholds for X variables,
-with names matching \code{conditions}.}
+\item{thrX}{Named numeric vector. Fixed thresholds for X variables.
+Names must match the conditions that require binarization.
+Variables listed in \code{pre_calibrated} do not need a \code{thrX} entry.}
+
+\item{pre_calibrated}{Character vector or \code{NULL}. Names of condition
+variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
+and should be passed through to \code{QCA::truthTable()} without
+binarization. These variables must contain values in the \code{[0, 1]}
+range. Variables not listed here will be binarized using \code{thrX}
+thresholds as usual. Default is \code{NULL} (all variables binarized).
+It is recommended to sweep variables on their original (raw) scale rather
+than as pre-calibrated fuzzy values, because raw-scale thresholds are
+easier to interpret substantively.}
 
 \item{dir.exp}{Directional expectations for \code{minimize}.
 If \code{NULL} (default), no directional expectations are applied.

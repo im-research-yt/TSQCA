@@ -254,73 +254,43 @@ sapply(dat[, c("X1", "X2", "X3")], function(x) {
 
 ## Using Pre-Calibrated Fuzzy Conditions (`pre_calibrated`)
 
-In some research designs, you may wish to use fuzzy-set membership scores
-(values in [0, 1] produced by `QCA::calibrate()`) for some conditions while
-still sweeping others on their raw scale. The `pre_calibrated` argument
-enables this **mixed crisp/fuzzy** workflow.
+Version 1.3.0 introduces the `pre_calibrated` argument to all four sweep
+functions (`otSweep`, `ctSweepS`, `ctSweepM`, `dtSweep`). This argument
+enables a **mixed crisp/fuzzy** workflow: some conditions can be passed as
+fuzzy-set membership scores (values in [0, 1] produced by
+`QCA::calibrate()`), while other conditions are swept on their raw scale
+as usual.
 
-Variables listed in `pre_calibrated` are passed directly to
-`QCA::truthTable()` without any binarization. All other conditions are
-binarized using `qca_bin()` as usual.
+### How it works
 
-```{r, eval=FALSE}
-library(QCA)
+- Variables listed in `pre_calibrated` are passed directly to
+  `QCA::truthTable()` **without binarization**.
+- All other conditions are binarized using `qca_bin()` at the thresholds
+  specified in `thrX`.
+- Pre-calibrated variables do not require a `thrX` entry, since no
+  binarization is applied to them.
 
-# Step 1: Pre-calibrate AGE as a fuzzy "youth" set
-dat$AGE <- calibrate(raw_age, type = "fuzzy",
-                     thresholds = "e=70, c=50, i=30")
+### Validation
 
-# Step 2: Run OTS-QCA — AGE passes through as fuzzy; others are binarized
-result <- otSweep(
-  dat            = dat,
-  outcome        = "INT",
-  conditions     = c("CHT", "PRC", "UNQ", "AGE", "GEN"),
-  sweep_range    = 6:9,
-  thrX           = c(CHT = 7, PRC = 7, UNQ = 7, AGE = 0.5, GEN = 1),
-  pre_calibrated = c("AGE"),
-  include        = "?",
-  dir.exp        = c(1, 1, 1, "-", "-"),
-  incl.cut       = 0.80,
-  n.cut          = 2,
-  pri.cut        = 0.50
-)
-```
+The function raises an error if:
 
-**Note on `thrX` for pre-calibrated variables:** The `thrX` value for a
-pre-calibrated variable (e.g., `AGE = 0.5` above) is not used for
-binarization, but must still be specified. Setting it to `0.5` is
-conventional, as this corresponds to the fuzzy crossover point.
-
-**Validation:** The function will raise an error if:
-
-- A variable listed in `pre_calibrated` is not found in `conditions`
-- Its values fall outside the [0, 1] range (raw-scale values passed by mistake)
+- A variable listed in `pre_calibrated` is not found in `conditions`.
+- Its values fall outside the [0, 1] range (indicating that a raw-scale
+  variable was passed by mistake).
 
 A warning is issued if the variable contains `NA` values.
 
-## Choosing Sweep Variables: Raw Scale vs. Pre-Calibrated Values
+### Sweep variables vs. pre-calibrated variables
 
-A natural question arises when some conditions are pre-calibrated: **should
-sweep variables also be pre-calibrated before sweeping?**
+Sweep variables should be kept on their **raw (original) scale**. When you
+sweep a variable on its raw scale (e.g., Likert scores 6, 7, 8), each
+threshold carries direct substantive meaning. Pre-calibrating a sweep
+variable into fuzzy values and then sweeping over those values (e.g., 0.3,
+0.5, 0.7) makes interpretation indirect and harder to justify.
 
-The answer is: **sweep variables should be kept on their raw (original) scale.**
-
-### Why raw scale is preferable for sweep variables
-
-The purpose of threshold sweep in TS-QCA is to assess how sensitive the
-solution is to the choice of binarization threshold. When you sweep a variable
-on its raw scale — for example, a Likert satisfaction score from 1 to 10 —
-the threshold values (e.g., 6, 7, 8) carry direct substantive meaning:
-"cases scoring 6 or above are considered to have high satisfaction." This
-makes it straightforward to explain and justify each threshold to reviewers
-and readers.
-
-If you instead pre-calibrate a sweep variable into fuzzy membership values
-(0 to 1) and then sweep thresholds over those values (e.g., 0.3, 0.5, 0.7),
-the interpretation becomes indirect: the threshold no longer refers to the
-original measurement scale, but to an intermediate transformation. The
-analytical logic is less transparent, and the choice of sweep thresholds is
-harder to justify on substantive grounds.
+If a variable appears in both `pre_calibrated` and a sweep list, TSQCA
+issues a warning and uses the pre-calibrated values, ignoring the sweep
+thresholds.
 
 ### Recommended practice
 
@@ -330,15 +300,7 @@ harder to justify on substantive grounds.
 | Conditions with theoretically grounded fuzzy calibration | Pre-calibrate and list in `pre_calibrated` |
 | Binary conditions (0/1) | Use `thrX = 1`; optionally list in `pre_calibrated` |
 
-### A note on the warning message
-
-If you list a variable in both `pre_calibrated` and a sweep list
-(`sweep_list_X` in `dtSweep`, or `sweep_list` in `ctSweepM`), TSQCA will
-issue a warning and use the pre-calibrated values, ignoring the sweep
-thresholds. This warning is intentional: it flags a situation where the
-analysis may not behave as expected, and reminds you that sweeping
-pre-calibrated values has limited interpretive value compared to sweeping
-on the original scale.
+*A worked example with sample data will be added in a future release.*
 
 ---
 

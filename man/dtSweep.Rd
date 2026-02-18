@@ -10,6 +10,7 @@ dtSweep(
   conditions = NULL,
   sweep_list_X,
   sweep_range_Y,
+  pre_calibrated = NULL,
   dir.exp = NULL,
   include = "",
   incl.cut = 0.8,
@@ -30,9 +31,20 @@ tilde prefix (e.g., \code{"~Y"}) following QCA package conventions.}
 \item{conditions}{Character vector. Names of condition variables.}
 
 \item{sweep_list_X}{Named list. Each element is a numeric vector of
-candidate thresholds for the corresponding X.}
+candidate thresholds for the corresponding X. Variables listed in
+\code{pre_calibrated} do not need a \code{sweep_list_X} entry.}
 
 \item{sweep_range_Y}{Numeric vector. Candidate thresholds for Y.}
+
+\item{pre_calibrated}{Character vector or \code{NULL}. Names of condition
+variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
+and should be passed through to \code{QCA::truthTable()} without
+binarization. These variables must contain values in the \code{[0, 1]}
+range. Variables not listed here will be binarized using \code{sweep_list_X}
+thresholds as usual. Default is \code{NULL} (all variables binarized).
+It is recommended to sweep variables on their original (raw) scale rather
+than as pre-calibrated fuzzy values, because raw-scale thresholds are
+easier to interpret substantively.}
 
 \item{dir.exp}{Directional expectations for \code{minimize}.
 If \code{NULL} (default), no directional expectations are applied.
