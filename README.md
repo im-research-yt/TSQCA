@@ -1,10 +1,13 @@
 # TSQCA
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899390.svg)](https://doi.org/10.5281/zenodo.17899390)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18170812.svg)](https://doi.org/10.5281/zenodo.18170812)
 
-TSQCA is an R package implementing **Threshold-Sweep QCA (TS-QCA)**,  
-a framework for systematically varying the thresholds used to binarize  
+**Current stable version: 1.3.1**
+
+TSQCA is an R package implementing **Threshold-Sweep QCA (TS-QCA)**,
+a framework for systematically varying the thresholds used to binarize
 the outcome and conditions in crisp-set QCA.
+
 
 After calibration, QCA results may change depending on how thresholds are set.  
 TS-QCA evaluates this sensitivity by automatically:
