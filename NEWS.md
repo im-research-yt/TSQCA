@@ -1,4 +1,60 @@
+# TSQCA 1.3.0
+
+*Release date: 2026-02-18*
+
+## New Features
+
+### Pre-Calibrated Variable Pass-Through (PCVP)
+
+All four sweep functions (`otSweep`, `dtSweep`, `ctSweepS`, `ctSweepM`) now
+support a `pre_calibrated` argument. Variables listed in `pre_calibrated` are
+passed through to `QCA::truthTable()` without binarization, enabling mixed
+crisp/fuzzy analyses where some conditions are pre-calibrated via
+`QCA::calibrate()` while others are binarized by threshold sweep.
+
+**Usage:**
+```r
+# AGE is pre-calibrated as a fuzzy set; other conditions are binarized
+result <- otSweep(
+  dat            = dat,
+  outcome        = "INT",
+  conditions     = c("CHT", "PRC", "UNQ", "AGE", "GEN"),
+  sweep_range    = 6:9,
+  thrX           = c(CHT = 7, PRC = 7, UNQ = 7, AGE = 0.5, GEN = 1),
+  pre_calibrated = c("AGE"),
+  include        = "?",
+  dir.exp        = c(1, 1, 1, "-", "-"),
+  incl.cut       = 0.80,
+  n.cut          = 2,
+  pri.cut        = 0.50
+)
+```
+
+**Validation:** The function raises an error if a pre-calibrated variable is
+not found in `conditions`, or if its values fall outside the `[0, 1]` range.
+A warning is issued if a pre-calibrated variable is also listed as a sweep
+target (in `sweep_list_X` / `sweep_list`), since threshold sweeping has no
+effect on fixed fuzzy values.
+
+**Backward compatibility:** When `pre_calibrated = NULL` (the default), all
+functions produce exactly the same output as v1.2.0.
+
+## Internal Changes
+
+* New internal helper `prepare_dat_bin()` in `tsqca_core.R` centralizes
+  data preparation logic, replacing the inline binarization code that was
+  duplicated across all four sweep functions.
+* New internal helper `validate_pre_calibrated()` in `tsqca_core.R` performs
+  input validation for the `pre_calibrated` parameter.
+* `pre_calibrated` is now stored in the `params` object returned by all sweep
+  functions (when `return_details = TRUE`).
+* `generate_report()` now displays pre-calibrated conditions in the Analysis
+  Overview section.
+
+---
+
 # TSQCA 1.2.0
+
 
 *Release date: 2026-01-19*
 

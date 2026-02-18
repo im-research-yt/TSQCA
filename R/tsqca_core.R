@@ -16,6 +16,87 @@ qca_bin <- function(x, thr) {
   ifelse(x >= thr, 1L, 0L)
 }
 
+#' Prepare analysis data frame for QCA::truthTable()
+#'
+#' Constructs the data frame to be passed to \code{QCA::truthTable()}.
+#' For pre-calibrated variables, the original values are passed through
+#' without binarization. For all other variables, \code{qca_bin()} is applied.
+#'
+#' @param dat Original data frame.
+#' @param outcome_clean Character. Outcome variable name (without \code{~}).
+#' @param conditions Character vector. Condition variable names.
+#' @param thrY Numeric. Threshold for outcome binarization.
+#' @param thrX_vec Named numeric vector. Thresholds for conditions.
+#' @param pre_calibrated Character vector or NULL. Names of pre-calibrated
+#'   variables to pass through without binarization.
+#'
+#' @return Data frame with column \code{Y} (binarized outcome) and condition
+#'   columns (binarized or passed through).
+#' @keywords internal
+prepare_dat_bin <- function(dat, outcome_clean, conditions,
+                            thrY, thrX_vec,
+                            pre_calibrated = NULL) {
+
+  # Outcome: always binarize (threshold sweeping is the core purpose of TS-QCA)
+  dat_bin <- data.frame(Y = qca_bin(dat[[outcome_clean]], thrY))
+
+  # Conditions: binarize or pass through
+  for (x in conditions) {
+    if (!is.null(pre_calibrated) && x %in% pre_calibrated) {
+      # Pass through: use original values (fuzzy membership or binary 0/1)
+      dat_bin[[x]] <- dat[[x]]
+    } else {
+      # Binarize: apply threshold
+      dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
+    }
+  }
+
+  dat_bin
+}
+
+#' Validate the pre_calibrated parameter
+#'
+#' Checks that all names in \code{pre_calibrated} exist in \code{conditions}
+#' and that the corresponding values in \code{dat} are within the \code{[0, 1]}
+#' range required for fuzzy membership scores.
+#'
+#' @param pre_calibrated Character vector or NULL.
+#' @param conditions Character vector. Valid condition variable names.
+#' @param dat Data frame containing the variables.
+#'
+#' @return Invisible NULL. Raises errors or warnings as needed.
+#' @keywords internal
+validate_pre_calibrated <- function(pre_calibrated, conditions, dat) {
+  if (is.null(pre_calibrated)) return(invisible(NULL))
+
+  # All names must exist in conditions
+  invalid <- setdiff(pre_calibrated, conditions)
+  if (length(invalid) > 0) {
+    stop("pre_calibrated variable(s) not found in conditions: ",
+         paste(invalid, collapse = ", "),
+         call. = FALSE)
+  }
+
+  # Values must be in [0, 1]
+  for (v in pre_calibrated) {
+    vals <- dat[[v]]
+    if (any(is.na(vals))) {
+      warning("pre_calibrated variable '", v, "' contains NA values.",
+              call. = FALSE)
+    }
+    rng <- range(vals, na.rm = TRUE)
+    if (rng[1] < 0 || rng[2] > 1) {
+      stop("pre_calibrated variable '", v,
+           "' has values outside [0, 1] range: [",
+           round(rng[1], 4), ", ", round(rng[2], 4), "]. ",
+           "Apply QCA::calibrate() before passing to the sweep function.",
+           call. = FALSE)
+    }
+  }
+
+  invisible(NULL)
+}
+
 #' Get the number of intermediate solutions
 #'
 #' @param sol A solution object returned by \code{QCA::minimize()}.

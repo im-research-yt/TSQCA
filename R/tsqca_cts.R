@@ -18,6 +18,15 @@
 #' @param sweep_range Numeric vector. Candidate thresholds for \code{sweep_var}.
 #' @param thrY Numeric. Threshold for Y (fixed).
 #' @param thrX_default Numeric. Default threshold for non-swept X variables.
+#' @param pre_calibrated Character vector or \code{NULL}. Names of condition
+#'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
+#'   and should be passed through to \code{QCA::truthTable()} without
+#'   binarization. These variables must contain values in the \code{[0, 1]}
+#'   range. Variables not listed here will be binarized using \code{thrX_default}
+#'   as usual. Default is \code{NULL} (all variables binarized).
+#'   It is recommended to sweep variables on their original (raw) scale rather
+#'   than as pre-calibrated fuzzy values, because raw-scale thresholds are
+#'   easier to interpret substantively.
 #' @param dir.exp Directional expectations for \code{minimize}.
 #'   If \code{NULL} (default), no directional expectations are applied.
 #'   To compute the \strong{intermediate solution}, specify a numeric vector
@@ -134,6 +143,7 @@ ctSweepS <- function(dat,
                      outcome = NULL, conditions = NULL,
                      sweep_var, sweep_range,
                      thrY, thrX_default = 7,
+                     pre_calibrated = NULL,
                      dir.exp = NULL, include = "",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "essential"),
@@ -212,7 +222,10 @@ ctSweepS <- function(dat,
   } else if (!is.null(local_dir.exp) && is.null(names(local_dir.exp))) {
     names(local_dir.exp) <- conditions
   }
-  
+
+  # Validate pre_calibrated (once, before loop)
+  validate_pre_calibrated(pre_calibrated, conditions, dat)
+
   for (thr in sweep_range) {
     
     # vector of thresholds for all X
@@ -220,11 +233,12 @@ ctSweepS <- function(dat,
     names(thrX_vec) <- conditions
     thrX_vec[sweep_var] <- thr
     
-    # Binarize Y and X (use cleaned outcome name)
-    dat_bin <- data.frame(Y = qca_bin(dat[[outcome_clean]], thrY))
-    for (x in conditions) {
-      dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
-    }
+    # Prepare data: binarize or pass through based on pre_calibrated
+    dat_bin <- prepare_dat_bin(
+      dat, outcome_clean, conditions,
+      thrY, thrX_vec,
+      pre_calibrated = pre_calibrated
+    )
     
     # Determine outcome string for truthTable (with ~ if negated)
     outcome_tt <- if (negate_outcome) "~Y" else "Y"
@@ -371,6 +385,7 @@ ctSweepS <- function(dat,
         outcome = outcome,
         conditions = conditions,
         negate_outcome = negate_outcome,
+        pre_calibrated = pre_calibrated,
         sweep_var = sweep_var,
         sweep_range = sweep_range,
         thrY = thrY,
@@ -408,6 +423,15 @@ ctSweepS <- function(dat,
 #'   candidate thresholds for the corresponding X. Names must match
 #'   \code{conditions}.
 #' @param thrY Numeric. Threshold for Y (fixed).
+#' @param pre_calibrated Character vector or \code{NULL}. Names of condition
+#'   variables that have been pre-calibrated (e.g., via \code{QCA::calibrate()})
+#'   and should be passed through to \code{QCA::truthTable()} without
+#'   binarization. These variables must contain values in the \code{[0, 1]}
+#'   range. Variables not listed here will be binarized using \code{sweep_list}
+#'   thresholds as usual. Default is \code{NULL} (all variables binarized).
+#'   It is recommended to sweep variables on their original (raw) scale rather
+#'   than as pre-calibrated fuzzy values, because raw-scale thresholds are
+#'   easier to interpret substantively.
 #' @param dir.exp Directional expectations for \code{minimize}.
 #'   If \code{NULL} (default), no directional expectations are applied.
 #'   To compute the \strong{intermediate solution}, specify a numeric vector
@@ -542,6 +566,7 @@ ctSweepS <- function(dat,
 ctSweepM <- function(dat, 
                      outcome = NULL, conditions = NULL,
                      sweep_list, thrY,
+                     pre_calibrated = NULL,
                      dir.exp = NULL, include = "",
                      incl.cut = 0.8, n.cut = 1, pri.cut = 0,
                      extract_mode = c("first", "all", "essential"),
@@ -625,7 +650,28 @@ ctSweepM <- function(dat,
   } else if (!is.null(local_dir.exp) && is.null(names(local_dir.exp))) {
     names(local_dir.exp) <- conditions
   }
-  
+
+  # Validate pre_calibrated (once, before loop)
+  validate_pre_calibrated(pre_calibrated, conditions, dat)
+
+  # Warn if pre_calibrated variable is also a sweep target in sweep_list
+  if (!is.null(pre_calibrated)) {
+    swept_vars <- names(sweep_list)[
+      sapply(sweep_list, function(x) length(x) > 1)
+    ]
+    conflict <- intersect(pre_calibrated, swept_vars)
+    if (length(conflict) > 0) {
+      warning("Variable(s) ", paste(conflict, collapse = ", "),
+              " are both pre_calibrated and in sweep_list. ",
+              "Pre-calibrated values will be used; sweep thresholds ignored. ",
+              "It is recommended to sweep variables on their original (raw) scale, ",
+              "not as pre-calibrated fuzzy values, because threshold values on a ",
+              "raw scale (e.g., Likert 1-10) are easier to interpret substantively. ",
+              "See the package vignette section 'Choosing Sweep Variables' for details.",
+              call. = FALSE)
+    }
+  }
+
   for (i in seq_len(n_combos)) {
     
     thrX_vec <- as.numeric(combo_mat[i, ])
@@ -634,10 +680,16 @@ ctSweepM <- function(dat,
     thrX_label <- paste(names(thrX_vec), thrX_vec,
                         sep = "=", collapse = ", ")
     
-    # Binarize outcome (use cleaned name)
+    # Prepare data: binarize or pass through based on pre_calibrated
+    # Note: prepare_dat_bin uses conditions (all vars); thrX_vec covers sweep_list vars only.
+    # For conditions not in sweep_list, they are handled via pre_calibrated or thrX_vec lookup.
     dat_bin <- data.frame(Y = qca_bin(dat[[outcome_clean]], thrY))
-    for (x in names(thrX_vec)) {
-      dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
+    for (x in conditions) {
+      if (!is.null(pre_calibrated) && x %in% pre_calibrated) {
+        dat_bin[[x]] <- dat[[x]]
+      } else if (x %in% names(thrX_vec)) {
+        dat_bin[[x]] <- qca_bin(dat[[x]], thrX_vec[x])
+      }
     }
     
     # Determine outcome string for truthTable (with ~ if negated)
@@ -765,6 +817,7 @@ ctSweepM <- function(dat,
         outcome = outcome,
         conditions = conditions,
         negate_outcome = negate_outcome,
+        pre_calibrated = pre_calibrated,
         sweep_list = sweep_list,
         thrY = thrY,
         incl.cut = incl.cut,

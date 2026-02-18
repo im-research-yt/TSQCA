@@ -167,6 +167,10 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
     if (!is.null(conditions_var)) {
       writeLines(paste0("| Condition Variables | ", paste(conditions_var, collapse = ", "), " |"), con)
     }
+    if (!is.null(params$pre_calibrated)) {
+      pc_str <- paste(params$pre_calibrated, collapse = ", ")
+      writeLines(paste0("| Pre-Calibrated Conditions | ", pc_str, " (passed through, no binarization) |"), con)
+    }
     if (!is.null(params$thrX)) {
       thrX_str <- paste(names(params$thrX), params$thrX, sep = "=", collapse = ", ")
       writeLines(paste0("| X Thresholds | ", thrX_str, " |"), con)
