@@ -15,7 +15,8 @@ write_full_report(
   solution_note = TRUE,
   solution_note_style = "simple",
   solution_note_lang = "en",
-  include_raw_output = TRUE
+  include_raw_output = TRUE,
+  use_fiss = FALSE
 )
 }
 \description{

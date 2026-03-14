@@ -31,6 +31,12 @@
 #'   \code{"simple"} (default) or \code{"detailed"} (includes EPIs).
 #' @param solution_note_lang Character. Language for solution notes:
 #'   \code{"en"} (default) or \code{"ja"}.
+#' @param include_fiss_core Logical. If TRUE and \code{result$fiss_core} exists
+#'   (i.e., \code{\link{compute_fiss_core}} has been run), the configuration
+#'   charts use full Fiss (2011) four-symbol notation distinguishing core
+#'   (present in both parsimonious and intermediate solutions) from peripheral
+#'   conditions (intermediate only). If FALSE (default) or if \code{fiss_core}
+#'   data is absent, the standard two-symbol chart is used.
 #' @param include_raw_output Logical. If TRUE (default), includes the raw QCA
 #'   package output (print(sol)) for each threshold for verification purposes.
 #'
@@ -66,9 +72,10 @@
 #' generate_report(result, "my_report.md", format = "full",
 #'                 chart_level = "summary")
 #' 
-#' # With detailed solution notes (including EPIs)
-#' generate_report(result, "my_report.md", format = "full",
-#'                 solution_note_style = "detailed")
+#' # With Fiss core/peripheral chart (requires compute_fiss_core)
+#' res_fiss <- compute_fiss_core(result, conditions = c("X1", "X2", "X3"))
+#' generate_report(res_fiss, "my_report.md", format = "full",
+#'                 include_fiss_core = TRUE)
 #' }
 generate_report <- function(result,
                             output_file = "qca_report.md",
@@ -82,6 +89,7 @@ generate_report <- function(result,
                             solution_note = TRUE,
                             solution_note_style = c("simple", "detailed"),
                             solution_note_lang = c("en", "ja"),
+                            include_fiss_core = FALSE,
                             include_raw_output = TRUE) {
   
   format <- match.arg(format)
@@ -89,6 +97,9 @@ generate_report <- function(result,
   chart_level <- match.arg(chart_level)
   solution_note_style <- match.arg(solution_note_style)
   solution_note_lang <- match.arg(solution_note_lang)
+  
+  # Resolve fiss_core availability
+  use_fiss <- isTRUE(include_fiss_core) && !is.null(result$fiss_core)
   
   # Validate input
   if (!is.list(result)) {
@@ -113,11 +124,11 @@ generate_report <- function(result,
   if (format == "full") {
     write_full_report(result, con, dat, desc_vars, include_chart, chart_symbol_set,
                       chart_level, solution_note, solution_note_style, solution_note_lang,
-                      include_raw_output)
+                      include_raw_output, use_fiss)
   } else {
     write_simple_report(result, con, include_chart, chart_symbol_set,
                         chart_level, solution_note, solution_note_style, solution_note_lang,
-                        include_raw_output)
+                        include_raw_output, use_fiss)
   }
   
   message("Report generated: ", output_file)
@@ -132,7 +143,8 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
                               chart_level = "term",
                               solution_note = TRUE, solution_note_style = "simple",
                               solution_note_lang = "en",
-                              include_raw_output = TRUE) {
+                              include_raw_output = TRUE,
+                              use_fiss = FALSE) {
   
   summary_df <- result$summary
   details <- result$details
@@ -494,31 +506,64 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
       if (include_chart && !is.null(sol_list) && length(sol_list) > 0) {
         writeLines("#### Configuration Chart\n", con)
         
-        # Always show M1 with note if multiple solutions exist
-        paths <- sol_list[[1]]
-        if (!is.character(paths)) {
-          paths <- as.character(paths)
-        }
-        
-        if (length(paths) > 0) {
-          # Get EPIs if using detailed style
-          epi_list <- NULL
-          if (solution_note_style == "detailed" && length(sol_list) > 1) {
-            epi_info <- identify_epi(sol_list)
-            epi_list <- epi_info$epi
+        # Fiss 4-symbol chart (per-threshold)
+        thr_key <- as.character(key)
+        if (use_fiss && !is.null(result$fiss_core[[thr_key]])) {
+          fc <- result$fiss_core[[thr_key]]
+          if (!is.null(fc$classification)) {
+            writeLines(paste0(
+              "*Fiss (2011) notation: core conditions (appear in both parsimonious ",
+              "and intermediate solutions) are shown with large symbols; ",
+              "peripheral conditions (intermediate only) with small symbols.*\n"
+            ), con)
+            writeLines(paste0(
+              "- Parsimonious: `", fc$parsim_expression, "`\n"
+            ), con)
+            writeLines(paste0(
+              "- Intermediate: `", fc$interm_expression, "`\n\n"
+            ), con)
+            
+            conditions <- result$params$conditions
+            interm_terms <- unique(fc$classification$term_expr)
+            symbols_fiss <- SYMBOL_SETS_FISS[[chart_symbol_set]]
+            thr_label <- paste0("thrY=", thr_key)
+            
+            mat <- build_fiss_matrix(
+              interm_terms   = interm_terms,
+              classification = fc$classification,
+              conditions     = conditions,
+              symbols        = symbols_fiss,
+              thr_label      = thr_label
+            )
+            table_str <- config_matrix_to_md(mat, "Condition")
+            legend <- if (solution_note_lang == "ja") symbols_fiss$note_ja else symbols_fiss$note_en
+            writeLines(paste0(table_str, "\n\n*", legend, "*\n"), con)
+          } else {
+            writeLines("*No solution at this threshold.*\n", con)
           }
+        } else {
+          # Standard 2-symbol chart
+          paths <- sol_list[[1]]
+          if (!is.character(paths)) paths <- as.character(paths)
           
-          chart <- config_chart_from_paths(
-            paths, 
-            symbol_set = chart_symbol_set,
-            language = solution_note_lang,
-            n_sol = length(sol_list),
-            solution_note = solution_note,
-            solution_note_style = solution_note_style,
-            epi_list = epi_list
-          )
-          writeLines(chart, con)
-          writeLines("\n", con)
+          if (length(paths) > 0) {
+            epi_list <- NULL
+            if (solution_note_style == "detailed" && length(sol_list) > 1) {
+              epi_info <- identify_epi(sol_list)
+              epi_list <- epi_info$epi
+            }
+            chart <- config_chart_from_paths(
+              paths,
+              symbol_set = chart_symbol_set,
+              language = solution_note_lang,
+              n_sol = length(sol_list),
+              solution_note = solution_note,
+              solution_note_style = solution_note_style,
+              epi_list = epi_list
+            )
+            writeLines(chart, con)
+            writeLines("\n", con)
+          }
         }
       }
       
@@ -664,23 +709,40 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
     if (is.null(conditions)) conditions <- params$Xvars
     
     if (!is.null(conditions) && length(conditions) > 0) {
-      # Describe chart level
-      if (chart_level == "term") {
-        writeLines("*Configuration chart at solution-term level (Fiss, 2011 notation).*\n", con)
-        writeLines("*Each column represents one prime implicant (configuration).*\n\n", con)
-      } else {
-        writeLines("*Configuration chart at threshold-level summary.*\n", con)
-        writeLines("*Each column aggregates all conditions that appear in any configuration at that threshold.*\n\n", con)
-      }
       
-      symbols <- SYMBOL_SETS[[chart_symbol_set]]
-      chart <- if (chart_level == "term") {
-        generate_term_level_chart(summary_df, conditions, symbols, solution_note_lang)
+      if (use_fiss) {
+        # --- Fiss 4-symbol cross-threshold chart ---
+        writeLines(paste0(
+          "*Fiss (2011) four-symbol notation. ",
+          "Large symbols (\u25CF/\u2297) = core conditions (parsimonious + intermediate). ",
+          "Small symbols (\u2299/\u2298) = peripheral conditions (intermediate only). ",
+          "Blank = don't care.*\n\n"
+        ), con)
+        chart <- generate_fiss_chart(
+          result,
+          conditions = conditions,
+          symbol_set = chart_symbol_set,
+          language   = solution_note_lang
+        )
+        writeLines(chart, con)
       } else {
-        generate_threshold_level_chart(summary_df, conditions, symbols, solution_note_lang)
+        # --- Standard 2-symbol cross-threshold chart ---
+        if (chart_level == "term") {
+          writeLines("*Configuration chart at solution-term level (Fiss, 2011 notation).*\n", con)
+          writeLines("*Each column represents one prime implicant (configuration).*\n\n", con)
+        } else {
+          writeLines("*Configuration chart at threshold-level summary.*\n", con)
+          writeLines("*Each column aggregates all conditions that appear in any configuration at that threshold.*\n\n", con)
+        }
+        
+        symbols <- SYMBOL_SETS[[chart_symbol_set]]
+        chart <- if (chart_level == "term") {
+          generate_term_level_chart(summary_df, conditions, symbols, solution_note_lang)
+        } else {
+          generate_threshold_level_chart(summary_df, conditions, symbols, solution_note_lang)
+        }
+        writeLines(chart, con)
       }
-      
-      writeLines(chart, con)
     } else {
       writeLines("*(Could not generate configuration chart - conditions not found)*\n", con)
     }
@@ -703,6 +765,13 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
   writeLines("- **inclN**: Necessity consistency (>= 0.9 typically indicates necessary condition).", con)
   writeLines("- **RoN**: Relevance of Necessity.", con)
   writeLines("- **covN**: Necessity coverage.", con)
+  if (use_fiss) {
+    writeLines("", con)
+    writeLines("**Fiss (2011) Core/Peripheral Classification:**", con)
+    writeLines("- **Core condition** (\u25CF/\u2297): Appears in BOTH the parsimonious and intermediate solutions.", con)
+    writeLines("- **Peripheral condition** (\u2299/\u2298): Appears in the intermediate solution ONLY.", con)
+    writeLines("- Reference: Fiss, P. C. (2011). Building better causal theories: A fuzzy set approach to typologies in organization research. *Academy of Management Journal*, 54(2), 393-420.", con)
+  }
   
   writeLines("\n---\n", con)
   
@@ -731,7 +800,8 @@ write_simple_report <- function(result, con, include_chart = TRUE,
                                 chart_level = "term",
                                 solution_note = TRUE, solution_note_style = "simple",
                                 solution_note_lang = "en",
-                                include_raw_output = TRUE) {
+                                include_raw_output = TRUE,
+                                use_fiss = FALSE) {
   
   summary_df <- result$summary
   details <- result$details
@@ -827,30 +897,50 @@ write_simple_report <- function(result, con, include_chart = TRUE,
       if (include_chart) {
         writeLines("\n**Configuration Chart:**\n", con)
         
-        # Always show M1 with note if multiple solutions exist
-        paths <- sol_list[[1]]
-        if (!is.character(paths)) {
-          paths <- as.character(paths)
-        }
-        
-        if (length(paths) > 0) {
-          # Get EPIs if using detailed style
-          epi_list <- NULL
-          if (solution_note_style == "detailed" && length(sol_list) > 1) {
-            epi_info <- identify_epi(sol_list)
-            epi_list <- epi_info$epi
+        thr_key <- as.character(key)
+        if (use_fiss && !is.null(result$fiss_core[[thr_key]])) {
+          fc <- result$fiss_core[[thr_key]]
+          if (!is.null(fc$classification)) {
+            writeLines(paste0(
+              "*Fiss (2011) notation. ",
+              "Parsimonious: `", fc$parsim_expression, "` / ",
+              "Intermediate: `", fc$interm_expression, "`*\n\n"
+            ), con)
+            conditions <- result$params$conditions
+            interm_terms <- unique(fc$classification$term_expr)
+            symbols_fiss <- SYMBOL_SETS_FISS[[chart_symbol_set]]
+            thr_label <- paste0("thrY=", thr_key)
+            mat <- build_fiss_matrix(
+              interm_terms   = interm_terms,
+              classification = fc$classification,
+              conditions     = conditions,
+              symbols        = symbols_fiss,
+              thr_label      = thr_label
+            )
+            table_str <- config_matrix_to_md(mat, "Condition")
+            legend <- if (solution_note_lang == "ja") symbols_fiss$note_ja else symbols_fiss$note_en
+            writeLines(paste0(table_str, "\n\n*", legend, "*\n"), con)
           }
-          
-          chart <- config_chart_from_paths(
-            paths, 
-            symbol_set = chart_symbol_set,
-            language = solution_note_lang,
-            n_sol = length(sol_list),
-            solution_note = solution_note,
-            solution_note_style = solution_note_style,
-            epi_list = epi_list
-          )
-          writeLines(chart, con)
+        } else {
+          paths <- sol_list[[1]]
+          if (!is.character(paths)) paths <- as.character(paths)
+          if (length(paths) > 0) {
+            epi_list <- NULL
+            if (solution_note_style == "detailed" && length(sol_list) > 1) {
+              epi_info <- identify_epi(sol_list)
+              epi_list <- epi_info$epi
+            }
+            chart <- config_chart_from_paths(
+              paths,
+              symbol_set = chart_symbol_set,
+              language = solution_note_lang,
+              n_sol = length(sol_list),
+              solution_note = solution_note,
+              solution_note_style = solution_note_style,
+              epi_list = epi_list
+            )
+            writeLines(chart, con)
+          }
         }
       }
       

@@ -1,34 +1,37 @@
-# CRAN Submission Comments — TSQCA 1.3.1
+# CRAN Submission Comments — TSQCA 1.3.2
 
 ## Resubmission note
 
-We apologize for the short interval since the v1.3.0 release 
-(published 2026-01-08). This patch release addresses documentation-only 
-issues that we identified shortly after publication. No code logic has 
-been changed.
+We apologize for the short interval since the v1.3.1 release (2026-02-18).
+This release adds a substantive new feature — Fiss (2011) core/peripheral
+condition classification — which was identified as a methodologically
+important gap immediately after v1.3.1 was published. No existing code or
+behavior has been changed.
 
-Specifically:
+## New in this release
 
-1. **Vignette correction**: Removed a code example in the 
-   `pre_calibrated` tutorial section that referenced variables not 
-   included in the bundled sample dataset (`sample_data`). The code 
-   block was marked `eval=FALSE` and thus did not cause runtime errors, 
-   but it was misleading to users who attempted to reproduce it. The 
-   section now provides a prose description of the feature only, with a 
-   note that a worked example will be added when a suitable public 
-   dataset becomes available.
+### Fiss (2011) Core/Peripheral Classification
 
-2. **Documentation clarification**: Corrected the `@param` documentation 
-   for `thrX`, `thrX_default`, `sweep_list`, and `sweep_list_X` across 
-   all four sweep functions (`otSweep`, `ctSweepS`, `ctSweepM`, 
-   `dtSweep`). The previous documentation incorrectly stated that 
-   pre-calibrated variables require a `thrX` entry. In fact, the 
-   implementation has never required this; only the documentation was 
-   inaccurate.
+Three new exported functions:
 
-We understand that frequent resubmissions are undesirable and will take 
-greater care to catch documentation issues before future releases. Thank 
-you for your time and patience.
+- `compute_fiss_core()`: Augments any sweep result with core/peripheral
+  classification by comparing the stored intermediate solution to a
+  re-computed parsimonious solution at each threshold.
+- `generate_fiss_chart()`: Generates Markdown-formatted configuration
+  charts using four symbols (core present/absent, peripheral present/absent)
+  following Fiss (2011, AMJ).
+- `print_fiss_summary()`: Prints a human-readable per-threshold breakdown.
+
+`generate_report()` gains `include_fiss_core = FALSE` (default) which
+activates four-symbol charts when set to TRUE on an augmented result.
+
+### Documentation
+
+- New vignette sections in both `TSQCA_Tutorial_EN.Rmd` and
+  `TSQCA_Reproducible_EN.Rmd` covering the Fiss workflow end-to-end.
+- New man pages: `compute_fiss_core.Rd`, `generate_fiss_chart.Rd`,
+  `print_fiss_summary.Rd`, `SYMBOL_SETS_FISS.Rd`.
+- Updated `generate_report.Rd` with `include_fiss_core` parameter.
 
 ## Test environments
 
@@ -39,8 +42,8 @@ you for your time and patience.
 
 0 errors | 0 warnings | 1 note
 
-* NOTE: "unable to verify current time" — this is a network-dependent 
-  note unrelated to the package.
+* NOTE: "unable to verify current time" — network-dependent note
+  unrelated to the package.
 
 ## Downstream dependencies
 

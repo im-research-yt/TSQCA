@@ -765,7 +765,17 @@ get_config_labels <- function(language) {
       table_based_on_m1 = "\u672c\u8868\u306fM1\u306b\u57fa\u3065\u304f\u69cb\u6210\u3092\u793a\u3059\u3002",
       all_share_epi = "\u5168\u89e3\u306b\u5171\u901a\u3059\u308bEssential Prime Implicants: {epi}",
       all_share_epi_single = "\u5168\u89e3\u306b\u5171\u901a\u3059\u308bEssential Prime Implicant: {epi}",
-      no_epi = "\u5168\u3066\u306e\u9805\u304cSelective Prime Implicants\u3067\u3042\u308b\u3002"
+      no_epi = "\u5168\u3066\u306e\u9805\u304cSelective Prime Implicants\u3067\u3042\u308b\u3002",
+      # Fiss core/peripheral labels (Japanese)
+      fiss_core       = "\u30b3\u30a2\u6761\u4ef6",
+      fiss_peripheral = "\u5468\u8fba\u6761\u4ef6",
+      fiss_parsim     = "\u7c21\u6f54\u89e3",
+      fiss_interm     = "\u4e2d\u9593\u89e3",
+      fiss_note       = paste0(
+        "\u30b3\u30a2\u6761\u4ef6\uff1a\u7c21\u6f54\u89e3\u304b\u3064\u4e2d\u9593\u89e3\u306b\u5171\u901a\u3059\u308b\u6761\u4ef6\u3002",
+        "\u5468\u8fba\u6761\u4ef6\uff1a\u4e2d\u9593\u89e3\u306e\u307f\u306b\u73fe\u308c\u308b\u6761\u4ef6\u3002",
+        "Fiss (2011) \u306b\u57fa\u3065\u304f\u3002"
+      )
     )
   } else {
     list(
@@ -787,7 +797,17 @@ get_config_labels <- function(language) {
       table_based_on_m1 = "This table presents configurations based on M1.",
       all_share_epi = "All solutions share the essential prime implicants: {epi}.",
       all_share_epi_single = "All solutions share the essential prime implicant: {epi}.",
-      no_epi = "Solutions differ in all prime implicants (no essential prime implicants)."
+      no_epi = "Solutions differ in all prime implicants (no essential prime implicants).",
+      # Fiss core/peripheral labels (English)
+      fiss_core       = "Core condition",
+      fiss_peripheral = "Peripheral condition",
+      fiss_parsim     = "Parsimonious solution",
+      fiss_interm     = "Intermediate solution",
+      fiss_note       = paste0(
+        "Core conditions appear in both the parsimonious and intermediate solutions. ",
+        "Peripheral conditions appear in the intermediate solution only. ",
+        "Based on Fiss (2011)."
+      )
     )
   }
 }

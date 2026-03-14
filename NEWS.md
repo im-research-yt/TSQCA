@@ -1,3 +1,112 @@
+# TSQCA 1.3.2
+
+*Release date: 2026-03-14*
+
+## New Features
+
+### Fiss (2011) Core/Peripheral Condition Classification
+
+Three new functions implement the core/peripheral distinction introduced by
+Fiss (2011, *Academy of Management Journal*), which distinguishes between
+conditions that are central to a causal configuration and those that merely
+supplement it:
+
+- **`compute_fiss_core(result, conditions)`** — Augments any sweep result
+  object with core/peripheral classification. For each threshold, it
+  automatically re-runs `QCA::minimize()` with `dir.exp = NULL` to obtain
+  the parsimonious solution, then compares it to the already-stored
+  intermediate solution. Conditions appearing in both solutions are
+  classified as **core**; conditions appearing only in the intermediate
+  solution are classified as **peripheral**.
+
+- **`generate_fiss_chart(result, conditions, symbol_set, language)`** —
+  Generates a Markdown-formatted cross-threshold configuration chart using
+  four distinct symbols:
+
+  | Symbol (unicode) | Symbol (latex) | Symbol (ascii) | Meaning |
+  |-----------------|----------------|----------------|---------|
+  | ● | `$\bullet$` | O | Core condition present |
+  | ⊗ | `$\otimes$` | X | Core condition absent |
+  | ⊙ | `$\odot$` | o | Peripheral condition present |
+  | ⊘ | `$\oslash$` | x | Peripheral condition absent |
+
+- **`print_fiss_summary(result, thr_key, language)`** — Prints a
+  human-readable summary of the core/peripheral classification for a
+  specific threshold value.
+
+**Usage:**
+```r
+# Step 1: Run intermediate sweep (include = "?" + dir.exp required)
+res <- otSweep(
+  dat = sample_data, outcome = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8, thrX = c(X1 = 7, X2 = 7, X3 = 7),
+  include = "?", dir.exp = c(1, 1, 1),
+  return_details = TRUE
+)
+
+# Step 2: Compute Fiss classification
+res_fiss <- compute_fiss_core(res, conditions = c("X1", "X2", "X3"))
+
+# Step 3: Generate Fiss-style four-symbol chart
+cat(generate_fiss_chart(res_fiss, symbol_set = "unicode"))
+cat(generate_fiss_chart(res_fiss, symbol_set = "latex"))   # for papers
+
+# Step 4: Inspect a specific threshold
+print_fiss_summary(res_fiss, thr_key = "7")
+```
+
+**Prerequisites:** `compute_fiss_core()` requires
+`return_details = TRUE`, `include = "?"`, and `dir.exp` to be specified
+in the original sweep. If any of these are missing, an informative error
+is raised.
+
+### Fiss Integration in `generate_report()`
+
+`generate_report()` gains a new `include_fiss_core` argument (default
+`FALSE`). When set to `TRUE` on a result augmented by `compute_fiss_core()`,
+all configuration charts in the report use the four-symbol Fiss notation
+and the Notes section includes the Fiss (2011) reference and symbol legend.
+
+```r
+res_fiss <- compute_fiss_core(res)
+generate_report(res_fiss, "report.md",
+                include_fiss_core = TRUE,
+                chart_symbol_set  = "unicode")
+```
+
+### Updated Label Dictionary (`get_config_labels`)
+
+Both English and Japanese label dictionaries in `get_config_labels()` now
+include Fiss-specific entries:
+`fiss_core`, `fiss_peripheral`, `fiss_parsim`, `fiss_interm`, `fiss_note`.
+
+## Internal Changes
+
+- Added `SYMBOL_SETS_FISS` constant (analogous to `SYMBOL_SETS`) with
+  four-symbol sets for unicode, latex, and ascii output formats.
+- Added internal helpers: `extract_cond_status_map()`,
+  `classify_term_conditions()`, `run_parsimonious()`,
+  `extract_sol_terms()`, `build_fiss_matrix()`.
+- `write_full_report()` and `write_simple_report()` accept a new
+  `use_fiss` logical parameter propagated from `generate_report()`.
+
+## Documentation
+
+- Vignette `TSQCA_Tutorial_EN.Rmd` gains a new section **"Fiss (2011)
+  Core/Peripheral Classification (New in v1.3.2)"** with full workflow
+  and interpretation guidance.
+- Vignette `TSQCA_Reproducible_EN.Rmd` gains a new Section 12 with
+  complete reproducible Fiss workflow code.
+- New Rd documentation files for `compute_fiss_core`,
+  `generate_fiss_chart`, `print_fiss_summary`, and `SYMBOL_SETS_FISS`.
+
+## Reference
+
+Fiss, P. C. (2011). Building better causal theories: A fuzzy set approach
+to typologies in organization research. *Academy of Management Journal*,
+54(2), 393–420. <doi:10.5465/amj.2011.60263120>
+
 # TSQCA 1.3.1
 
 *Release date: 2026-02-18*

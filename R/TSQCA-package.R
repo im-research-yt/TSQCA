@@ -154,6 +154,10 @@
 #'   \item{\code{\link{ctSweepS}}}{Execute CTS-QCA (Condition Threshold Sweep)}
 #'   \item{\code{\link{ctSweepM}}}{Execute MCTS-QCA (Multi-dimensional CTS)}
 #'   \item{\code{\link{dtSweep}}}{Execute DTS-QCA (Dual Threshold Sweep)}
+#'   \item{\code{\link{compute_fiss_core}}}{Compute Fiss (2011) core/peripheral classification}
+#'   \item{\code{\link{generate_fiss_chart}}}{Generate four-symbol Fiss configuration chart}
+#'   \item{\code{\link{print_fiss_summary}}}{Print core/peripheral summary for a threshold}
+#'   \item{\code{\link{generate_report}}}{Generate comprehensive Markdown report}
 #' }
 #'
 #' @references 
@@ -162,6 +166,10 @@
 #' 
 #' Dusa, A. (2024). \emph{QCA: Qualitative Comparative Analysis}. 
 #' R package version 3.22. \url{https://CRAN.R-project.org/package=QCA}
+#' 
+#' Fiss, P. C. (2011). Building better causal theories: A fuzzy set approach
+#' to typologies in organization research. \emph{Academy of Management Journal},
+#' 54(2), 393-420. \doi{10.5465/amj.2011.60263120}
 #'
 #' @seealso 
 #' \itemize{

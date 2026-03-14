@@ -873,6 +873,126 @@ result$params$outcome
 
 ---
 
+# Fiss (2011) Core/Peripheral Classification (New in v1.3.2)
+
+## What Is the Core/Peripheral Distinction?
+
+Fiss (2011) introduced a critical refinement to QCA configuration tables
+that is now standard in the *Academy of Management Journal* and other top
+management journals. Beyond simply indicating whether a condition is present
+or absent in a solution, Fiss distinguishes between:
+
+| Type | Definition | Symbol |
+|------|------------|--------|
+| **Core condition** | Appears in BOTH the parsimonious AND intermediate solutions | ● (large) |
+| **Peripheral condition** | Appears in the intermediate solution ONLY | ⊙ (small) |
+
+The intuition is straightforward: conditions that survive even the most
+aggressive simplification (parsimonious solution) are more central to the
+causal story than conditions that only appear when theoretical constraints
+are applied (intermediate solution).
+
+> **Why this matters:** Prior to v1.3.2, TSQCA configuration charts treated
+> all conditions as equivalent, using only two symbols. This is technically
+> incorrect per Fiss (2011) and may raise concerns from reviewers at
+> journals that require Fiss notation.
+
+## The Four-Symbol Set
+
+```
+● = core condition present      (large filled circle)
+⊗ = core condition absent       (large circle-times)
+⊙ = peripheral condition present (small circled dot)
+⊘ = peripheral condition absent  (small circled slash)
+  = don't care (blank)
+```
+
+For LaTeX / academic PDF output: `$\bullet$`, `$\otimes$`, `$\odot$`, `$\oslash$`.
+
+## Workflow
+
+`compute_fiss_core()` requires three conditions from the original sweep:
+
+1. `include = "?"` — logical remainders must be enabled
+2. `dir.exp` specified — intermediate solution must have been requested
+3. `return_details = TRUE` — truth tables must be stored
+
+```{r, eval=FALSE}
+library(TSQCA)
+data(sample_data)
+
+# Step 1: Run intermediate sweep (all three conditions above are met)
+res <- otSweep(
+  dat        = sample_data,
+  outcome    = "Y",
+  conditions = c("X1", "X2", "X3"),
+  sweep_range = 6:8,
+  thrX       = c(X1 = 7, X2 = 7, X3 = 7),
+  include    = "?",           # required
+  dir.exp    = c(1, 1, 1),   # required
+  return_details = TRUE       # required
+)
+
+# Step 2: Compute Fiss core/peripheral classification
+# For each threshold, compute_fiss_core() re-runs QCA::minimize()
+# with dir.exp = NULL to obtain the parsimonious solution,
+# then compares it to the stored intermediate solution.
+res_fiss <- compute_fiss_core(res, conditions = c("X1", "X2", "X3"))
+
+# Step 3: Inspect a specific threshold
+print_fiss_summary(res_fiss, thr_key = "7")
+
+# Step 4: Generate Fiss-style four-symbol chart
+cat(generate_fiss_chart(res_fiss, symbol_set = "unicode"))
+
+# For academic papers (LaTeX)
+cat(generate_fiss_chart(res_fiss, symbol_set = "latex"))
+
+# Step 5: Include in report
+generate_report(
+  res_fiss,
+  output_file      = "fiss_report.md",
+  format           = "full",
+  include_fiss_core = TRUE,          # activates four-symbol charts
+  chart_symbol_set  = "unicode"
+)
+```
+
+## Reading the Output
+
+`print_fiss_summary()` shows the classification term-by-term:
+
+```
+=== Fiss Core/Peripheral Classification (thrY = 7) ===
+Parsimonious : X1*X2
+Intermediate : X3 + X1*X2
+
+[Term M1] X3
+  Periph. present : X3
+
+[Term M2] X1*X2
+  Core present    : X1, X2
+```
+
+**Interpretation:** X1 and X2 are core (they appear in the parsimonious
+solution `X1*X2`). X3 is peripheral — it only appears when theory-guided
+directional expectations are applied (intermediate solution), suggesting
+it plays a supporting rather than essential causal role.
+
+## What If All Conditions Are Core?
+
+When the parsimonious and intermediate solutions are identical, all
+conditions are core and no conditions are peripheral. This indicates
+maximum theoretical parsimony.
+
+## Reference
+
+Fiss, P. C. (2011). Building better causal theories: A fuzzy set approach
+to typologies in organization research. *Academy of Management Journal*,
+54(2), 393–420. doi:10.5465/amj.2011.60263120
+
+---
+
 # Configuration Charts (New in v0.5.0)
 
 TSQCA can generate Fiss-style configuration charts (Table 5 format) commonly used in QCA publications.
@@ -952,6 +1072,17 @@ Using CTS, MCTS, OTS, and DTS sweeps, researchers can:
 - identify stable causal patterns,
 - detect threshold-sensitive relationships,
 - and strengthen QCA validity.
+
+**New in v1.3.2:**
+
+- `compute_fiss_core()`: Augments sweep results with Fiss (2011) core/peripheral classification
+- `generate_fiss_chart()`: Four-symbol configuration charts (●/⊗/⊙/⊘) for academic publications
+- `print_fiss_summary()`: Human-readable core/peripheral breakdown per threshold
+- `generate_report(..., include_fiss_core = TRUE)`: Reports with full Fiss notation
+
+**New in v1.3.0:**
+
+- `pre_calibrated` argument: mixed crisp/fuzzy workflow for all four sweep functions
 
 **New in v1.1.0:**
 

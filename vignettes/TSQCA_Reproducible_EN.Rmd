@@ -18,6 +18,10 @@ It is designed to be inserted directly into a research article's appendix
 or provided as supplementary analysis documentation.
 All code is fully executable and ordered for reproducibility.
 
+> **Note (v1.3.2)**: New Section 12 provides complete reproducible code for
+> Fiss (2011) core/peripheral classification using `compute_fiss_core()`,
+> `generate_fiss_chart()`, and `print_fiss_summary()`.
+
 > **Note (v1.2.0)**: If you previously used intermediate solutions (with `dir.exp`), please re-run your analyses. Version 1.2.0 fixed a bug where intermediate solutions were incorrectly extracted. Reports now also display the Solution Type and include optional QCA package output for verification.
 
 ---
@@ -448,7 +452,118 @@ For more information on TS-QCA methodology, see:
 
 
 
-# 12. Session Information
+---
+
+# 12. Fiss (2011) Core/Peripheral Classification (New in v1.3.2)
+
+This section provides fully reproducible code for Fiss-style four-symbol
+configuration charts. Run sections 1–6 first to ensure `res_ots_int` is available.
+
+## 12.1 Compute Core/Peripheral Classification
+
+```{r, eval=FALSE}
+# Requires: include = "?", dir.exp specified, return_details = TRUE
+# res_ots_int was created in Section 6 above.
+
+res_fiss <- compute_fiss_core(
+  res_ots_int,
+  conditions = c("X1", "X2", "X3")
+)
+
+# Inspect available thresholds
+names(res_fiss$fiss_core)
+```
+
+## 12.2 Print Per-Threshold Summary
+
+```{r, eval=FALSE}
+# English
+print_fiss_summary(res_fiss, thr_key = "7")
+
+# Japanese
+print_fiss_summary(res_fiss, thr_key = "7", language = "ja")
+```
+
+Example output:
+
+```
+=== Fiss Core/Peripheral Classification (thrY = 7) ===
+Parsimonious : X1*X2
+Intermediate : X3 + X1*X2
+
+[Term M1] X3
+  Periph. present : X3
+
+[Term M2] X1*X2
+  Core present    : X1, X2
+```
+
+## 12.3 Generate Four-Symbol Chart
+
+```{r, eval=FALSE}
+# Unicode (Markdown / screen)
+cat(generate_fiss_chart(res_fiss, symbol_set = "unicode"))
+
+# LaTeX (for PDF/journal submission)
+cat(generate_fiss_chart(res_fiss, symbol_set = "latex"))
+
+# ASCII (maximum compatibility)
+cat(generate_fiss_chart(res_fiss, symbol_set = "ascii"))
+```
+
+Symbol legend:
+
+| Symbol (unicode) | LaTeX | ASCII | Meaning |
+|-----------------|-------|-------|---------|
+| ● | `$\bullet$` | O | Core condition present |
+| ⊗ | `$\otimes$` | X | Core condition absent |
+| ⊙ | `$\odot$` | o | Peripheral condition present |
+| ⊘ | `$\oslash$` | x | Peripheral condition absent |
+| (blank) | (blank) | (blank) | Don't care |
+
+## 12.4 Include in Report
+
+```{r, eval=FALSE}
+# Full report with Fiss four-symbol charts
+generate_report(
+  res_fiss,
+  output_file       = "TSQCA_Fiss_report.md",
+  format            = "full",
+  dat               = dat,
+  include_fiss_core = TRUE,       # activates four-symbol charts
+  chart_symbol_set  = "unicode",
+  include_raw_output = TRUE
+)
+```
+
+## 12.5 Accessing the Classification Data
+
+```{r, eval=FALSE}
+# Access raw classification data frame for a given threshold
+classif_7 <- res_fiss$fiss_core[["7"]]$classification
+classif_7
+
+# Filter core conditions only
+classif_7[classif_7$type == "core" & classif_7$status != "dontcare", ]
+
+# Filter peripheral conditions only
+classif_7[classif_7$type == "peripheral" & classif_7$status != "dontcare", ]
+
+# Parsimonious and intermediate expressions
+res_fiss$fiss_core[["7"]]$parsim_expression
+res_fiss$fiss_core[["7"]]$interm_expression
+```
+
+## 12.6 Note on Computational Cost
+
+`compute_fiss_core()` runs `QCA::minimize()` once per threshold (to obtain
+the parsimonious solution). The total computation time is therefore
+approximately double that of the original sweep. For large sweeps
+(many thresholds or conditions), this is worth keeping in mind.
+
+---
+
+# 13. Session Information
 ```{r}
 sessionInfo()
 ```

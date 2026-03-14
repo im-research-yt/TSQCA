@@ -17,6 +17,7 @@ generate_report(
   solution_note = TRUE,
   solution_note_style = c("simple", "detailed"),
   solution_note_lang = c("en", "ja"),
+  include_fiss_core = FALSE,
   include_raw_output = TRUE
 )
 }
@@ -57,6 +58,13 @@ equivalent solutions exist explaining that M1 is shown.}
 \item{solution_note_lang}{Character. Language for solution notes:
 \code{"en"} (default) or \code{"ja"}.}
 
+\item{include_fiss_core}{Logical. If TRUE and \code{result$fiss_core} exists
+(i.e., \code{\link{compute_fiss_core}} has been run), the configuration
+charts use full Fiss (2011) four-symbol notation distinguishing core
+(present in both parsimonious and intermediate solutions) from peripheral
+conditions (intermediate only). If FALSE (default) or if \code{fiss_core}
+data is absent, the standard two-symbol chart is used.}
+
 \item{include_raw_output}{Logical. If TRUE (default), includes the raw QCA
 package output (print(sol)) for each threshold for verification purposes.}
 }
@@ -96,8 +104,9 @@ generate_report(result, "my_report.md", format = "full")
 generate_report(result, "my_report.md", format = "full",
                 chart_level = "summary")
 
-# With detailed solution notes (including EPIs)
-generate_report(result, "my_report.md", format = "full",
-                solution_note_style = "detailed")
+# With Fiss core/peripheral chart (requires compute_fiss_core)
+res_fiss <- compute_fiss_core(result, conditions = c("X1", "X2", "X3"))
+generate_report(res_fiss, "my_report.md", format = "full",
+                include_fiss_core = TRUE)
 }
 }
