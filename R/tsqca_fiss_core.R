@@ -271,7 +271,7 @@ extract_sol_terms <- function(sol) {
 #' @seealso \code{\link{generate_fiss_chart}}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(ThSQCA)
 #' data(sample_data)
 #'
@@ -496,7 +496,7 @@ build_fiss_matrix <- function(interm_terms, classification,
 #' @seealso \code{\link{compute_fiss_core}}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(sample_data)
 #' res <- otSweep(
 #'   dat = sample_data, outcome = "Y",
@@ -596,11 +596,7 @@ generate_fiss_chart <- function(result,
 #'
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' res_fiss <- compute_fiss_core(res)
-#' print_fiss_summary(res_fiss, thr_key = "7")
-#' }
+
 print_fiss_summary <- function(result, thr_key, language = c("en", "ja")) {
 
   language <- match.arg(language)

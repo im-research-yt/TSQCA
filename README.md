@@ -1,5 +1,6 @@
 # ThSQCA
 
+[![CRAN status](https://www.r-pkg.org/badges/version/ThSQCA)](https://CRAN.R-project.org/package=ThSQCA)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17899390.svg)](https://doi.org/10.5281/zenodo.17899390)
 
 ThSQCA is an R package implementing **Threshold-Sweep QCA (TS-QCA)**,  
@@ -236,6 +237,8 @@ ThSQCA uses precise Boolean algebra terminology:
 
 ```r
 install.packages("devtools")
+install.packages("ThSQCA")
+# Or development version from GitHub:
 devtools::install_github("im-research-yt/ThSQCA")
 ```
 

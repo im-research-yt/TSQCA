@@ -179,7 +179,7 @@
 #' }
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Load package
 #' library(ThSQCA)
 #' data(sample_data)
