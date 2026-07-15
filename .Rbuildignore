@@ -1,6 +1,6 @@
-^.*\.Rproj$
+^ThSQCA\.Rproj$
 ^\.Rproj\.user$
-^\.positai$
-^\.claude$
 ^cran-comments\.md$
-^CRAN-SUBMISSION$
+^\.github$
+^\.git$
+^ThSQCA2\.0\.2\.Rproj$
