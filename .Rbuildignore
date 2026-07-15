@@ -1,6 +1,4 @@
-^ThSQCA\.Rproj$
+^.*\.Rproj$
 ^\.Rproj\.user$
 ^cran-comments\.md$
 ^\.github$
-^\.git$
-^ThSQCA2\.0\.2\.Rproj$
