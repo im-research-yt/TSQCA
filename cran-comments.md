@@ -1,73 +1,42 @@
-# CRAN Submission Comments — ThSQCA 2.0.0
+# Submission of ThSQCA 2.0.4
 
-## Package rename
+This is a bug fix release for the package currently on CRAN (version 2.0.2).
+Version 2.0.3 was prepared but not submitted, so its NEWS entry is included
+here.
 
-This package supersedes TSQCA (v1.3.2, currently on CRAN).
+## Summary of changes
 
-The package was renamed from TSQCA to ThSQCA following a reviewer
-recommendation to avoid confusion with Time-Series QCA (the prefix
-"ts" is the base R class for time-series objects).
+This release corrects which fit measures (consistency `inclS` and coverage
+`covS`) are reported alongside a displayed solution.
 
-All functions (otSweep, ctSweepS, ctSweepM, dtSweep, etc.) and
-internal logic are identical to TSQCA v1.3.2. Only the package
-name changes.
+`QCA::minimize()` stores fit measures in different places depending on the
+result: in `$IC$sol.incl.cov` for a single minimal solution, in
+`$IC$individual[[k]]` and `$IC$overall` when several minimal solutions are tied,
+and in `$i.sol$C1P1$IC` for the intermediate solution when `dir.exp` is used.
+Previous versions could read the aggregate value, or the parsimonious value,
+while displaying a different solution, so the printed formula and the printed
+fit measures did not correspond. The extractors now read the fit of the solution
+that is actually displayed, and the report writer passes the matching object at
+every call site.
 
-A deprecated version of TSQCA (v1.3.3) with a startup warning
-directing users to ThSQCA will be submitted concurrently.
+The affected measure is mainly `covS`; `inclS` differs only marginally in the
+multiple-solution case, but can differ substantially in the intermediate case.
+Crisp-set results, single-solution cells, cells with no solution, and all
+solution formulas are unchanged. No computation was altered: only the selection
+of which stored value is read.
+
+Regression tests were added for each case, including tests that run
+`generate_report()` end to end and parse its output.
 
 ## Test environments
 
-* Windows 11 x64, R 4.4.2 (local)
+* local: Windows 11 x64 (build 26200), R 4.6.0 (2026-04-24 ucrt)
+* win-builder: R-devel
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-* NOTE: "unable to verify current time" — network-dependent note
-  unrelated to the package.
+## Reverse dependencies
 
-## Downstream dependencies
-
-There are currently no downstream dependencies for this package.
-
----
-
-## Resubmission (2nd)
-
-Addressed issues raised by CRAN team (Konstanze Lauseker):
-
-1. Removed single quotes around acronyms in DESCRIPTION.
-   Quotes are now used only around package/software names
-   ('QCA', 'TSQCA') as required by CRAN policy.
-
-2. Replaced \dontrun{} with \donttest{} in all examples
-   (ThSQCA-package.R, tsqca_config_chart.R, tsqca_fiss_core.R,
-   tsqca_report.R). The examples are executable but may take
-   more than 5 seconds.
-
-3. Fixed generate_report() to write output to tempdir() by default
-   instead of the user's working directory (R/tsqca_report.R).
-   All examples now use file.path(tempdir(), ...) as the output path.
-
----
-
-## Resubmission (3rd)
-
-Following further review by Konstanze Lauseker, who noted that
-\dontrun{} was still present in some examples:
-
-Rather than adding comments explaining why the examples could not
-be run, we have removed those examples entirely. The removed
-examples were illustrative-only and used undefined objects or
-placeholder data not included in the package. All remaining
-functionality is demonstrated by the other examples using the
-bundled sample_data dataset.
-
-Removed examples:
-- generate_config_chart: used undefined 'data' object and
-  placeholder conditions not in sample_data
-- print_fiss_summary: used undefined object 'res'
-- generate_report (Fiss core example): required a specific
-  otSweep() configuration not shown in the example
-
-There are now zero \dontrun{} instances in the package.
+There are no reverse dependencies on CRAN.

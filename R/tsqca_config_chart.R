@@ -570,7 +570,7 @@ generate_threshold_level_chart <- function(sum_df, conditions, symbols, language
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' data(sample_data)
 #' result <- otSweep(
 #'   dat = sample_data,
@@ -655,7 +655,26 @@ generate_cross_threshold_chart <- function(result,
 #'
 #' @export
 #'
-
+#' @examples
+#' \dontrun{
+#' # After running QCA::minimize()
+#' library(QCA)
+#' tt <- truthTable(data, outcome = "Y", conditions = c("A", "B", "C"))
+#' sol <- minimize(tt, include = "?", details = TRUE)
+#' 
+#' # Generate configuration chart
+#' chart <- generate_config_chart(sol)
+#' cat(chart)
+#'
+#' # For LaTeX/PDF output (e.g., rticles)
+#' chart <- generate_config_chart(sol, symbol_set = "latex")
+#'
+#' # ASCII for maximum compatibility
+#' chart <- generate_config_chart(sol, symbol_set = "ascii")
+#'
+#' # Japanese labels
+#' chart <- generate_config_chart(sol, language = "ja")
+#' }
 generate_config_chart <- function(sol,
                                    symbol_set = c("unicode", "ascii", "latex"),
                                    include_metrics = TRUE,
@@ -911,23 +930,24 @@ build_single_chart <- function(paths, sol, symbols, labels,
 #' @keywords internal
 extract_path_metrics_for_chart <- function(sol, solution_index = 1) {
   if (is.null(sol)) return(NULL)
-  
-  # Try various paths to get incl.cov data frame
-  
-  # Path 1: sol$IC$incl.cov (single solution without dir.exp)
+
+  # Mirror the displayed-paths source (i.sol first for intermediate), as in
+  # extract_solution_metrics_for_chart.
+
+  # Path A (intermediate): per-term table from the intermediate solution, BEFORE
+  # sol$IC$incl.cov (which is the parsimonious per-term table).
+  if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    ic <- try(sol$i.sol$C1P1$IC$incl.cov, silent = TRUE)
+    if ((inherits(ic, "try-error") || is.null(ic)) && length(sol$i.sol) >= solution_index) {
+      ic <- try(sol$i.sol[[solution_index]]$IC$incl.cov, silent = TRUE)
+    }
+    if (!inherits(ic, "try-error") && !is.null(ic)) return(ic)
+  }
+  # Path B: single solution without dir.exp.
   if (!is.null(sol$IC$incl.cov)) {
     return(sol$IC$incl.cov)
   }
-  
-  # Path 2: Through i.sol
-  if (!is.null(sol$i.sol) && length(sol$i.sol) >= solution_index) {
-    isol <- sol$i.sol[[solution_index]]
-    if (!is.null(isol$IC$incl.cov)) {
-      return(isol$IC$incl.cov)
-    }
-  }
-  
-  # Path 3: Through IC$individual
+  # Path C: multiple solutions - the displayed solution's per-term table.
   if (!is.null(sol$IC$individual)) {
     indiv <- sol$IC$individual
     if (length(indiv) >= solution_index) {
@@ -936,7 +956,7 @@ extract_path_metrics_for_chart <- function(sol, solution_index = 1) {
       }
     }
   }
-  
+
   NULL
 }
 
@@ -945,34 +965,32 @@ extract_path_metrics_for_chart <- function(sol, solution_index = 1) {
 #' @keywords internal
 extract_solution_metrics_for_chart <- function(sol, solution_index = 1) {
   if (is.null(sol)) return(NULL)
-  
-  # Path 1: sol$IC$sol.incl.cov
-  if (!is.null(sol$IC$sol.incl.cov)) {
-    return(list(
-      inclS = sol$IC$sol.incl.cov$inclS,
-      covS  = sol$IC$sol.incl.cov$covS
-    ))
-  }
-  
-  # Path 2: Through i.sol
-  if (!is.null(sol$i.sol) && length(sol$i.sol) >= solution_index) {
-    isol <- sol$i.sol[[solution_index]]
-    if (!is.null(isol$IC$sol.incl.cov)) {
-      return(list(
-        inclS = isol$IC$sol.incl.cov$inclS,
-        covS  = isol$IC$sol.incl.cov$covS
-      ))
+  mk <- function(ic) if (!is.null(ic)) list(inclS = ic$inclS[1], covS = ic$covS[1]) else NULL
+
+  # The displayed paths come from get_solution_list(), which uses sol$i.sol first
+  # (intermediate, when dir.exp was given) and only then sol$solution. The fit must
+  # follow the same source, so:
+  #
+  # Path A (intermediate): read the intermediate solution's own fit. Checked BEFORE
+  # sol$IC, whose sol.incl.cov / overall describe the PARSIMONIOUS solution.
+  if (!is.null(sol$i.sol) && length(sol$i.sol) > 0) {
+    ic <- try(sol$i.sol$C1P1$IC$sol.incl.cov, silent = TRUE)
+    if ((inherits(ic, "try-error") || is.null(ic)) && length(sol$i.sol) >= solution_index) {
+      ic <- try(sol$i.sol[[solution_index]]$IC$sol.incl.cov, silent = TRUE)
     }
+    if (!inherits(ic, "try-error") && !is.null(ic)) return(mk(ic))
   }
-  
-  # Path 3: Through IC$overall
-  if (!is.null(sol$IC$overall$sol.incl.cov)) {
-    return(list(
-      inclS = sol$IC$overall$sol.incl.cov$inclS,
-      covS  = sol$IC$overall$sol.incl.cov$covS
-    ))
+  # Path B (single parsimonious/complex solution).
+  if (!is.null(sol$IC$sol.incl.cov)) return(mk(sol$IC$sol.incl.cov))
+  # Path C (multiple solutions): the displayed solution's OWN fit, not the overall
+  # (disjunction-of-all) aggregate.
+  if (!is.null(sol$IC$individual) && length(sol$IC$individual) >= solution_index) {
+    ic <- try(sol$IC$individual[[solution_index]]$sol.incl.cov, silent = TRUE)
+    if (!inherits(ic, "try-error") && !is.null(ic)) return(mk(ic))
   }
-  
+  # Path D (last-resort fallback): overall aggregate.
+  if (!is.null(sol$IC$overall$sol.incl.cov)) return(mk(sol$IC$overall$sol.incl.cov))
+
   NULL
 }
 

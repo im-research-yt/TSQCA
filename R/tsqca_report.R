@@ -44,7 +44,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' data(sample_data)
 #' thrX <- c(X1 = 7, X2 = 7, X3 = 7)
 #' 
@@ -58,25 +58,27 @@
 #' )
 #' 
 #' # With descriptive statistics and configuration charts
-#' generate_report(result, file.path(tempdir(), "my_report.md"), format = "full", 
+#' generate_report(result, "my_report.md", format = "full", 
 #'                 dat = sample_data, include_chart = TRUE)
 #' 
 #' # Without configuration charts
-#' generate_report(result, file.path(tempdir(), "my_report.md"), format = "simple",
+#' generate_report(result, "my_report.md", format = "simple",
 #'                 include_chart = FALSE)
 #' 
 #' # With Fiss-style term-level charts (default, recommended for publications)
-#' generate_report(result, file.path(tempdir(), "my_report.md"), format = "full")
+#' generate_report(result, "my_report.md", format = "full")
 #' 
 #' # With threshold-level summary charts
-#' generate_report(result, file.path(tempdir(), "my_report.md"), format = "full",
+#' generate_report(result, "my_report.md", format = "full",
 #'                 chart_level = "summary")
 #' 
+#' # With Fiss core/peripheral chart (requires compute_fiss_core)
+#' res_fiss <- compute_fiss_core(result, conditions = c("X1", "X2", "X3"))
+#' generate_report(res_fiss, "my_report.md", format = "full",
+#'                 include_fiss_core = TRUE)
 #' }
-#'
-
 generate_report <- function(result,
-                            output_file = file.path(tempdir(), "qca_report.md"),
+                            output_file = "qca_report.md",
                             format = c("full", "simple"),
                             title = "QCA Analysis Report",
                             dat = NULL,
@@ -475,8 +477,17 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
       
       # ---- Solution Fit ----
       writeLines("#### Solution Fit\n", con)
-      # Use sol$IC directly for better compatibility with multiple solutions
-      metrics <- extract_all_metrics(sol$IC, sol)
+      # Report the fit of the DISPLAYED solution. When dir.exp yields an
+      # intermediate solution, its fit lives in sol$i.sol$C1P1$IC; sol$IC
+      # describes the parsimonious solution and must not be used here. This
+      # mirrors the intermediate-aware call further below.
+      ic_for_metrics <- if (!is.null(sol$i.sol) && length(sol$i.sol) > 0 &&
+                            !is.null(sol$i.sol$C1P1$IC)) {
+        sol$i.sol$C1P1$IC
+      } else {
+        sol$IC
+      }
+      metrics <- extract_all_metrics(ic_for_metrics, sol)
       writeLines("| Metric | Value |", con)
       writeLines("|--------|-------|", con)
       writeLines(paste0("| Consistency (inclS) | ", 
@@ -646,7 +657,15 @@ write_full_report <- function(result, con, dat = NULL, desc_vars = NULL,
         stringsAsFactors = FALSE
       ))
     } else {
-      metrics <- extract_all_metrics(sol$IC, sol)
+      # Report the fit of the DISPLAYED solution (intermediate when dir.exp is
+      # used); sol$IC is the parsimonious solution and would misreport it.
+      ic_for_metrics <- if (!is.null(sol$i.sol) && length(sol$i.sol) > 0 &&
+                            !is.null(sol$i.sol$C1P1$IC)) {
+        sol$i.sol$C1P1$IC
+      } else {
+        sol$IC
+      }
+      metrics <- extract_all_metrics(ic_for_metrics, sol)
       n_sol <- get_n_solutions(sol)
       
       # Count essential prime implicants (i.sol first for true Intermediate)
